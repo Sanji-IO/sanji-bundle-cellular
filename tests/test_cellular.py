@@ -25,6 +25,24 @@ except ImportError as e:
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
+filetext = "\
+lease {\n\
+  interface \"eth0\";\n\
+  fixed-address 192.168.10.26;\n\
+  option subnet-mask 255.255.0.0;\n\
+  option routers 192.168.31.115;\n\
+  option dhcp-lease-time 5566;\n\
+  option dhcp-message-type 5;\n\
+  option domain-name-servers 8.8.8.58,20.20.20.20,40.40.4.1;\n\
+  option dhcp-server-identifier 192.168.31.115;\n\
+  option domain-name \"MXcloud115\";\n\
+  renew 3 2014/10/29 12:52:19;\n\
+  rebind 3 2014/10/29 13:37:52;\n\
+  expire 3 2014/10/29 13:49:28;\n\
+  }\n\
+  "
+filetext_fail = " "
+
 
 class TestCellular(unittest.TestCase):
 
@@ -33,7 +51,6 @@ class TestCellular(unittest.TestCase):
             pass
         self.cellular = Cellular(connection=Mockup())
         self.cellular.get_signal_by_id = zombiefn
-        self.cellular.run = zombiefn
 
     def tearDown(self):
         self.cellular = None
@@ -219,6 +236,56 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.side_effect = Exception
             res = self.cellular.set_offline_by_id('1')
             self.assertEqual(res, 'fail')
+
+    def test_search_name(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_name(filetext)
+        self.assertEqual(res, 'eth0')
+
+    def test_search_name_fail(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_name(filetext_fail)
+        self.assertEqual(res, 'N/A')
+
+    def test_search_router(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_router(filetext)
+        self.assertEqual(res, '192.168.31.115')
+
+    def test_search_router_fail(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_router(filetext_fail)
+        self.assertEqual(res, 'N/A')
+
+    def test_search_dns(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_dns(filetext)
+        self.assertEqual(res, '8.8.8.58,20.20.20.20,40.40.4.1')
+
+    def test_search_dns_fail(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_dns(filetext_fail)
+        self.assertEqual(res, 'N/A')
+
+    def test_search_ip(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_ip(filetext)
+        self.assertEqual(res, '192.168.10.26')
+
+    def test_search_ip_fail(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_ip(filetext_fail)
+        self.assertEqual(res, 'N/A')
+
+    def test_search_subnet(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_subnet(filetext)
+        self.assertEqual(res, '255.255.0.0')
+
+    def test_search_subnet_fail(self):
+        self.cellular = Cellular(connection=Mockup())
+        res = self.cellular.search_subnet(filetext_fail)
+        self.assertEqual(res, 'N/A')
 
     def test_init(self):
         with patch("cellular.ModelInitiator") as model:

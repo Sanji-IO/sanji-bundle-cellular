@@ -16,15 +16,55 @@ logger = logging.getLogger()
 
 class Cellular(Sanji):
     search_router_pattern =\
-        re.compile(ur'routers ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
+        re.compile(ur'option routers ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
     search_dns_pattern =\
-        re.compile(ur'domain-name-servers (.*);')
+        re.compile(ur'option domain-name-servers (.*);')
     search_ip_pattern =\
         re.compile(ur'fixed-address ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
     search_subnet_pattern =\
-        re.compile(ur'subnet-mask ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
+        re.compile(ur'option subnet-mask ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
     search_name_pattern =\
         re.compile(ur'interface "([a-z]+[0-9])"')
+
+    def search_name(self, filetext):
+        name = re.search(self.search_name_pattern, filetext)
+        if name:
+            logger.debug("name is %s" % name.group(1))
+            return name.group(1)
+        else:
+            return 'N/A'
+
+    def search_router(self, filetext):
+        router = re.search(self.search_router_pattern, filetext)
+        if router:
+            logger.debug("router is %s" % router.group(1))
+            return router.group(1)
+        else:
+            return 'N/A'
+
+    def search_dns(self, filetext):
+        dns = re.search(self.search_dns_pattern, filetext)
+        if dns:
+            logger.debug("dns is %s" % dns.group(1))
+            return dns.group(1)
+        else:
+            return 'N/A'
+
+    def search_ip(self, filetext):
+        ip = re.search(self.search_ip_pattern, filetext)
+        if ip:
+            logger.debug("ip is %s" % ip.group(1))
+            return ip.group(1)
+        else:
+            return 'N/A'
+
+    def search_subnet(self, filetext):
+        subnet = re.search(self.search_subnet_pattern, filetext)
+        if subnet:
+            logger.debug("subnet is %s" % subnet.group(1))
+            return subnet.group(1)
+        else:
+            return 'N/A'
 
     def get_signal_by_id(self, dev_id):
         try:
@@ -156,58 +196,36 @@ class Cellular(Sanji):
                                     continue
 
                                 # parse name
-                                name = re.search(self.search_name_pattern,
-                                                 filetext)
-                                if name:
-                                    model['name'] = name.group(1)
-                                    logger.debug("name is %s" % name.group(1))
+                                model['name'] = self.search_name(filetext)
 
                                 # parse router
-                                router = re.search(self.search_router_pattern,
-                                                   filetext)
-                                if router:
-                                    model['router'] = router.group(1)
-                                    logger.debug("router is %s" %
-                                                 router.group(1))
-                                    try:
-                                        self.publish.direct.\
-                                            put("/network/routers",
-                                                data={"name": model['name'],
-                                                      "gateway":
-                                                      model['router']})
-                                    except Exception:
-                                        logger.debug("Fail put %s-%s" %
-                                                     model['name'],
-                                                     model['router'])
+                                model['router'] = self.search_router(filetext)
+                                try:
+                                    self.publish.direct.put(
+                                        "/network/routers",
+                                        data={"name": model['name'],
+                                              "gateway":
+                                              model['router']})
+                                except Exception:
+                                    logger.debug("Fail put %s-%s" %
+                                                 model['name'],
+                                                 model['router'])
 
                                 # parse dns
-                                dns = re.search(self.search_dns_pattern,
-                                                filetext)
-                                if dns:
-                                    model['dns'] = dns.group(1)
-                                    logger.debug("dns is %s" % dns.group(1))
-                                    try:
-                                        self.publish.direct.\
-                                            put("/network/dns",
-                                                data={"dns": model['dns']})
-                                    except Exception:
-                                        logger.debug("Fail put %s-%s" %
-                                                     model['dns'])
+                                model['dns'] = self.search_dns(filetext)
+                                try:
+                                    self.publish.direct.\
+                                        put("/network/dns",
+                                            data={"dns": model['dns']})
+                                except Exception:
+                                    logger.debug("Fail put %s-%s" %
+                                                 model['dns'])
 
                                 # parse ip
-                                ip = re.search(self.search_ip_pattern,
-                                               filetext)
-                                if ip:
-                                    model['ip'] = ip.group(1)
-                                    logger.debug("ip is %s" % ip.group(1))
+                                model['ip'] = self.search_ip(filetext)
 
                                 # parse subnet
-                                subnet = re.search(self.search_subnet_pattern,
-                                                   filetext)
-                                if subnet:
-                                    model['subnet'] = subnet.group(1)
-                                    logger.debug("subnet is %s" %
-                                                 subnet.group(1))
+                                model['subnet'] = self.search_subnet(filetext)
 
                                 self.model.save_db()
                     else:
