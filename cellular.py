@@ -66,6 +66,67 @@ class Cellular(Sanji):
         else:
             return 'N/A'
 
+    def is_target_device_appear(self, name):
+        if os.path.exists(name):
+            return True
+        else:
+            return False
+
+    def is_leases_file_appear(self):
+        try:
+            with open('/var/lib/dhcp/dhclient.leases',
+                      'r') as leases:
+                filetext = leases.read()
+                return filetext
+        except Exception:
+            logger.debug("File open failure")
+            return False
+
+    def reconnect_if_disconnected(self):
+        for model in self.model.db:
+            if self.is_target_device_appear(model['modemPort']):
+                dev_id = str(model['id'])
+                # update signal
+                model['signal'] = self.get_signal_by_id(dev_id)
+                logger.debug("Signal %s on device path %s"
+                             % (model['signal'],
+                                model['modemPort']))
+
+                # check network availability
+                # if network status down, turn up
+                if model['enable'] == 1:
+                        logger.debug("Enable is 1")
+                        if self.get_status_by_id(dev_id) == \
+                                "'disconnected'":
+                            logger.debug("Start connect")
+                            self.set_offline_by_id(dev_id)
+                            self.set_online_by_id(dev_id)
+                            # update info according to dhclient.leases
+                            filetext = self.is_leases_file_appear()
+                            if filetext:
+                                # parse name
+                                model['name'] = self.search_name(filetext)
+
+                                # parse router
+                                model['router'] = self.search_router(filetext)
+
+                                # parse dns
+                                model['dns'] = self.search_dns(filetext)
+
+                                # parse ip
+                                model['ip'] = self.search_ip(filetext)
+
+                                # parse subnet
+                                model['subnet'] = self.search_subnet(filetext)
+
+                                self.model.save_db()
+                else:
+                        if self.get_status_by_id(dev_id) == "'connected'":
+                            self.set_offline_by_id(dev_id)
+
+            else:
+                    model['signal'] = 99
+
     def get_signal_by_id(self, dev_id):
         try:
             tmp = subprocess.check_output(
@@ -168,74 +229,9 @@ class Cellular(Sanji):
 
     def run(self):
         while True:
-            for model in self.model.db:
-                if os.path.exists(model['modemPort']):
-                    dev_id = str(model['id'])
-                    # update signal
-                    model['signal'] = self.get_signal_by_id(dev_id)
-                    logger.debug("Signal %s on device path %s"
-                                 % (model['signal'],
-                                    model['modemPort']))
-
-                    # check network availability
-                    # if network status down, turn up
-                    if model['enable'] == 1:
-                            logger.debug("Enable is 1")
-                            if self.get_status_by_id(dev_id) == \
-                                    "'disconnected'":
-                                logger.debug("Start connect")
-                                self.set_offline_by_id(dev_id)
-                                self.set_online_by_id(dev_id)
-                                # update info according to dhclient.leases
-                                try:
-                                    with open('/var/lib/dhcp/dhclient.leases',
-                                              'r') as leases:
-                                        filetext = leases.read()
-                                except Exception:
-                                    logger.debug("File open failure")
-                                    continue
-
-                                # parse name
-                                model['name'] = self.search_name(filetext)
-
-                                # parse router
-                                model['router'] = self.search_router(filetext)
-                                try:
-                                    self.publish.direct.put(
-                                        "/network/routers",
-                                        data={"name": model['name'],
-                                              "gateway":
-                                              model['router']})
-                                except Exception:
-                                    logger.debug("Fail put %s-%s" %
-                                                 model['name'],
-                                                 model['router'])
-
-                                # parse dns
-                                model['dns'] = self.search_dns(filetext)
-                                try:
-                                    self.publish.direct.\
-                                        put("/network/dns",
-                                            data={"dns": model['dns']})
-                                except Exception:
-                                    logger.debug("Fail put %s-%s" %
-                                                 model['dns'])
-
-                                # parse ip
-                                model['ip'] = self.search_ip(filetext)
-
-                                # parse subnet
-                                model['subnet'] = self.search_subnet(filetext)
-
-                                self.model.save_db()
-                    else:
-                            if self.get_status_by_id(dev_id) == "'connected'":
-                                self.set_offline_by_id(dev_id)
-
-                else:
-                        model['signal'] = 99
-
+            self.reconnect_if_disconnected()
             sleep(30)
+
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
     logging.basicConfig(level=0, format=FORMAT)

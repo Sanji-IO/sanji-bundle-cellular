@@ -10,7 +10,8 @@ import unittest
 from sanji.connection.mockup import Mockup
 from sanji.message import Message
 from mock import patch
-# from mock import mock_open
+from mock import mock_open
+from mock import Mock
 
 try:
     sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
@@ -25,32 +26,31 @@ except ImportError as e:
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
-filetext = "\
-lease {\n\
-  interface \"eth0\";\n\
-  fixed-address 192.168.10.26;\n\
-  option subnet-mask 255.255.0.0;\n\
-  option routers 192.168.31.115;\n\
-  option dhcp-lease-time 5566;\n\
-  option dhcp-message-type 5;\n\
-  option domain-name-servers 8.8.8.58,20.20.20.20,40.40.4.1;\n\
-  option dhcp-server-identifier 192.168.31.115;\n\
-  option domain-name \"MXcloud115\";\n\
-  renew 3 2014/10/29 12:52:19;\n\
-  rebind 3 2014/10/29 13:37:52;\n\
-  expire 3 2014/10/29 13:49:28;\n\
-  }\n\
-  "
-filetext_fail = " "
-
 
 class TestCellular(unittest.TestCase):
+
+    filetext = "\
+    lease {\n\
+      interface \"eth0\";\n\
+      fixed-address 192.168.10.26;\n\
+      option subnet-mask 255.255.0.0;\n\
+      option routers 192.168.31.115;\n\
+      option dhcp-lease-time 5566;\n\
+      option dhcp-message-type 5;\n\
+      option domain-name-servers 8.8.8.58,20.20.20.20,40.40.4.1;\n\
+      option dhcp-server-identifier 192.168.31.115;\n\
+      option domain-name \"MXcloud115\";\n\
+      renew 3 2014/10/29 12:52:19;\n\
+      rebind 3 2014/10/29 13:37:52;\n\
+      expire 3 2014/10/29 13:49:28;\n\
+      }\n\
+      "
+    filetext_fail = " "
 
     def setUp(self):
         def zombiefn():
             pass
         self.cellular = Cellular(connection=Mockup())
-        self.cellular.get_signal_by_id = zombiefn
 
     def tearDown(self):
         self.cellular = None
@@ -239,53 +239,102 @@ class TestCellular(unittest.TestCase):
 
     def test_search_name(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_name(filetext)
+        res = self.cellular.search_name(self.filetext)
         self.assertEqual(res, 'eth0')
 
     def test_search_name_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_name(filetext_fail)
+        res = self.cellular.search_name(self.filetext_fail)
         self.assertEqual(res, 'N/A')
 
     def test_search_router(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_router(filetext)
+        res = self.cellular.search_router(self.filetext)
         self.assertEqual(res, '192.168.31.115')
 
     def test_search_router_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_router(filetext_fail)
+        res = self.cellular.search_router(self.filetext_fail)
         self.assertEqual(res, 'N/A')
 
     def test_search_dns(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_dns(filetext)
+        res = self.cellular.search_dns(self.filetext)
         self.assertEqual(res, '8.8.8.58,20.20.20.20,40.40.4.1')
 
     def test_search_dns_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_dns(filetext_fail)
+        res = self.cellular.search_dns(self.filetext_fail)
         self.assertEqual(res, 'N/A')
 
     def test_search_ip(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_ip(filetext)
+        res = self.cellular.search_ip(self.filetext)
         self.assertEqual(res, '192.168.10.26')
 
     def test_search_ip_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_ip(filetext_fail)
+        res = self.cellular.search_ip(self.filetext_fail)
         self.assertEqual(res, 'N/A')
 
     def test_search_subnet(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_subnet(filetext)
+        res = self.cellular.search_subnet(self.filetext)
         self.assertEqual(res, '255.255.0.0')
 
     def test_search_subnet_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_subnet(filetext_fail)
+        res = self.cellular.search_subnet(self.filetext_fail)
         self.assertEqual(res, 'N/A')
+
+    def test_reconnect_if_disconnected(self):
+        self.cellular.model.db = [{'enable': 1,
+                                   'modemPort': '/dev/ttyS0', 'id': '0'}]
+        self.cellular.get_signal_by_id = Mock(return_value=99)
+        self.cellular.is_target_device_appear = Mock(return_value=False)
+        self.cellular.get_status_by_id = Mock(return_value='disconnected')
+        self.cellular.reconnect_if_disconnected()
+        self.assertEqual(self.cellular.model.db[0]['signal'], 99)
+
+    def test_reconnect_if_disconnected_when_disconnect_and_enable_true(self):
+        self.cellular.model.db = [{'enable': 1,
+                                   'modemPort': '/dev/ttyS0', 'id': '0'}]
+        self.cellular.is_target_device_appear = Mock(return_value=True)
+        self.cellular.get_signal_by_id = Mock(return_value=78)
+        self.cellular.get_status_by_id = Mock(return_value="'disconnected'")
+        self.cellular.reconnect_if_disconnected()
+        self.assertEqual(self.cellular.model.db[0]['signal'], 78)
+
+    def test_reconnect_if_disconnected_when_disconnect_and_enable_false(self):
+        self.cellular.model.db = [{'enable': 0,
+                                   'modemPort': '/dev/ttyS0', 'id': '0'}]
+        self.cellular.is_target_device_appear = Mock(return_value=True)
+        self.cellular.get_signal_by_id = Mock(return_value=78)
+        self.cellular.get_status_by_id = Mock(return_value="'connected'")
+        self.cellular.search_name = Mock(return_value='eth0')
+        self.cellular.filetext = Mock(return_value=self.filetext)
+        self.cellular.search_name = Mock(return_value=self.filetext)
+        self.cellular.reconnect_if_disconnected()
+        self.cellular.is_leases_file_appear()
+        self.assertEqual(self.cellular.model.db[0]['signal'], 78)
+
+    def test_is_leases_file_appear_true(self):
+        m = mock_open()
+        with patch("cellular.open", m, create=True):
+            res = self.cellular.is_leases_file_appear()
+            self.assertEqual(res, '')
+
+    def test_is_leases_file_appear_false(self):
+        res = self.cellular.is_leases_file_appear()
+        self.assertEqual(res, False)
+
+    def test_is_target_device_appear(self):
+        res = self.cellular.is_target_device_appear('/dev/ttyS0')
+        self.assertEqual(res, True)
+
+    def test_is_target_device_appear_false(self):
+        res = self.cellular.is_target_device_appear('/dev/asdfasdf')
+        self.assertEqual(res, False)
 
     def test_init(self):
         with patch("cellular.ModelInitiator") as model:
