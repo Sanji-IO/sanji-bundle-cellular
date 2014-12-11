@@ -80,7 +80,7 @@ class Cellular(Sanji):
                 return filetext
         except Exception:
             logger.debug("File open failure")
-            return False
+            return ''
 
     def reconnect_if_disconnected(self):
         for model in self.model.db:

@@ -326,7 +326,7 @@ class TestCellular(unittest.TestCase):
 
     def test_is_leases_file_appear_false(self):
         res = self.cellular.is_leases_file_appear()
-        self.assertEqual(res, False)
+        self.assertEqual(res, '')
 
     def test_is_target_device_appear(self):
         res = self.cellular.is_target_device_appear('data/cellular.json')
