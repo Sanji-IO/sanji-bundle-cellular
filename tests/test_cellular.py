@@ -329,7 +329,7 @@ class TestCellular(unittest.TestCase):
         self.assertEqual(res, False)
 
     def test_is_target_device_appear(self):
-        res = self.cellular.is_target_device_appear('/dev/ttyS0')
+        res = self.cellular.is_target_device_appear('data/cellular.json')
         self.assertEqual(res, True)
 
     def test_is_target_device_appear_false(self):
