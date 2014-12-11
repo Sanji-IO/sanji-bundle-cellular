@@ -48,8 +48,6 @@ class TestCellular(unittest.TestCase):
     filetext_fail = " "
 
     def setUp(self):
-        def zombiefn():
-            pass
         self.cellular = Cellular(connection=Mockup())
 
     def tearDown(self):
@@ -94,7 +92,7 @@ class TestCellular(unittest.TestCase):
             "method": "put",
             "param": {"id": "1"},
             "resource": "/network/cellulars"
-            }
+        }
 
         # case 1: data
         def resp1(code=200, data=None):
@@ -177,7 +175,7 @@ class TestCellular(unittest.TestCase):
             "id": 1,
             "method": "get",
             "resource": "/network/cellulars"
-            }
+        }
 
         # case 1: data
         def resp1(code=200, data=None):
@@ -214,7 +212,7 @@ class TestCellular(unittest.TestCase):
     def test_set_online_by_id(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
-            subprocess.call.return_value = True
+            subprocess.check_output.return_value = True
             self.cellular.set_online_by_id('1')
 
     def test_set_online_by_id_exception(self):
@@ -222,12 +220,12 @@ class TestCellular(unittest.TestCase):
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
             res = self.cellular.set_online_by_id('1')
-            self.assertEqual(res, 'fail')
+            self.assertFalse(res)
 
     def test_set_offline_by_id(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
-            subprocess.call.return_value = True
+            subprocess.check_output.return_value = True
             self.cellular.set_offline_by_id('1')
 
     def test_set_offline_by_id_exception(self):
@@ -235,7 +233,7 @@ class TestCellular(unittest.TestCase):
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
             res = self.cellular.set_offline_by_id('1')
-            self.assertEqual(res, 'fail')
+            self.assertFalse(res)
 
     def test_search_name(self):
         self.cellular = Cellular(connection=Mockup())
@@ -302,6 +300,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
         self.cellular.get_status_by_id = Mock(return_value="'disconnected'")
+        self.cellular.set_online_by_id = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
 

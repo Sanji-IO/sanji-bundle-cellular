@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+
 import os
 import logging
 import subprocess
@@ -31,40 +32,40 @@ class Cellular(Sanji):
         if name:
             logger.debug("name is %s" % name.group(1))
             return name.group(1)
-        else:
-            return 'N/A'
+
+        return 'N/A'
 
     def search_router(self, filetext):
         router = re.search(self.search_router_pattern, filetext)
         if router:
             logger.debug("router is %s" % router.group(1))
             return router.group(1)
-        else:
-            return 'N/A'
+
+        return 'N/A'
 
     def search_dns(self, filetext):
         dns = re.search(self.search_dns_pattern, filetext)
         if dns:
             logger.debug("dns is %s" % dns.group(1))
             return dns.group(1)
-        else:
-            return 'N/A'
+
+        return 'N/A'
 
     def search_ip(self, filetext):
         ip = re.search(self.search_ip_pattern, filetext)
         if ip:
             logger.debug("ip is %s" % ip.group(1))
             return ip.group(1)
-        else:
-            return 'N/A'
+
+        return 'N/A'
 
     def search_subnet(self, filetext):
         subnet = re.search(self.search_subnet_pattern, filetext)
         if subnet:
             logger.debug("subnet is %s" % subnet.group(1))
             return subnet.group(1)
-        else:
-            return 'N/A'
+
+        return 'N/A'
 
     def is_target_device_appear(self, name):
         if os.path.exists(name):
@@ -74,8 +75,7 @@ class Cellular(Sanji):
 
     def is_leases_file_appear(self):
         try:
-            with open('/var/lib/dhcp/dhclient.leases',
-                      'r') as leases:
+            with open('/var/lib/dhcp/dhclient.leases', 'r') as leases:
                 filetext = leases.read()
                 return filetext
         except Exception:
@@ -84,48 +84,53 @@ class Cellular(Sanji):
 
     def reconnect_if_disconnected(self):
         for model in self.model.db:
-            if self.is_target_device_appear(model['modemPort']):
-                dev_id = str(model['id'])
-                # update signal
-                model['signal'] = self.get_signal_by_id(dev_id)
-                logger.debug("Signal %s on device path %s"
-                             % (model['signal'],
-                                model['modemPort']))
 
-                # check network availability
-                # if network status down, turn up
-                if model['enable'] == 1:
-                        logger.debug("Enable is 1")
-                        if self.get_status_by_id(dev_id) == \
-                                "'disconnected'":
-                            logger.debug("Start connect")
-                            self.set_offline_by_id(dev_id)
-                            self.set_online_by_id(dev_id)
-                            # update info according to dhclient.leases
-                            filetext = self.is_leases_file_appear()
-                            if filetext:
-                                # parse name
-                                model['name'] = self.search_name(filetext)
+            if not self.is_target_device_appear(model['modemPort']):
+                model['signal'] = 99
+                continue
 
-                                # parse router
-                                model['router'] = self.search_router(filetext)
+            dev_id = str(model['id'])
+            # update signal
+            model['signal'] = self.get_signal_by_id(dev_id)
+            logger.debug("Signal %s on device path %s"
+                         % (model['signal'],
+                            model['modemPort']))
 
-                                # parse dns
-                                model['dns'] = self.search_dns(filetext)
+            # check network availability
+            # if network status down, turn up otherwise disconnect
+            if model['enable'] != 1 and \
+               self.get_status_by_id(dev_id) == "'connected'":
+                self.set_offline_by_id(dev_id)
+                continue
 
-                                # parse ip
-                                model['ip'] = self.search_ip(filetext)
+            logger.debug("Enable is 1")
+            if self.get_status_by_id(dev_id) == "'connected'":
+                continue
 
-                                # parse subnet
-                                model['subnet'] = self.search_subnet(filetext)
+            logger.debug("Start connect")
+            self.set_offline_by_id(dev_id)
+            self.set_online_by_id(dev_id)
+            # update info according to dhclient.leases
+            filetext = self.is_leases_file_appear()
+            if filetext == '':
+                continue
 
-                                self.model.save_db()
-                else:
-                        if self.get_status_by_id(dev_id) == "'connected'":
-                            self.set_offline_by_id(dev_id)
+            # parse name
+            model['name'] = self.search_name(filetext)
 
-            else:
-                    model['signal'] = 99
+            # parse router
+            model['router'] = self.search_router(filetext)
+
+            # parse dns
+            model['dns'] = self.search_dns(filetext)
+
+            # parse ip
+            model['ip'] = self.search_ip(filetext)
+
+            # parse subnet
+            model['subnet'] = self.search_subnet(filetext)
+
+            self.model.save_db()
 
     def get_signal_by_id(self, dev_id):
         try:
@@ -142,37 +147,36 @@ class Cellular(Sanji):
 
     def get_status_by_id(self, dev_id):
         try:
-                tmp = subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
-                                              dev_id +
-                                              " --wds-get-packet-service-status\
-                                              |awk '{print $4}'|\
-                                              tr -d [:space:]",
-                                              shell=True)
-                return tmp
+            tmp = subprocess.check_output(
+                "qmicli -p -d /dev/cdc-wdm" + dev_id +
+                " --wds-get-packet-service-status |awk '{print $4}'|\
+                 tr -d [:space:]", shell=True)
+
+            return tmp
         except Exception:
-                return 'disconnected'
+            return 'disconnected'
 
     def set_online_by_id(self, dev_id):
         try:
-                subprocess.check_output("rm -rf /var/lib/dhcp/dhclient.leases",
-                                        shell=True)
-                subprocess.check_output("qmi-network /dev/cdc-wdm" +
-                                        dev_id + " start", shell=True)
-                subprocess.check_output("dhclient wwan" +
-                                        dev_id, shell=True)
-                return 'success'
+            subprocess.check_output("rm -rf /var/lib/dhcp/dhclient.leases",
+                                    shell=True)
+            subprocess.check_output("qmi-network /dev/cdc-wdm" +
+                                    dev_id + " start", shell=True)
+            subprocess.check_output("dhclient wwan" + dev_id, shell=True)
+
+            return True
         except Exception:
-                return 'fail'
+                return False
 
     def set_offline_by_id(self, dev_id):
         try:
-                subprocess.check_output("dhclient -r wwan" +
-                                        dev_id, shell=True)
-                subprocess.check_output("qmi-network /dev/cdc-wdm" +
-                                        dev_id + " stop", shell=True)
-                return 'success'
+            subprocess.check_output(["dhclient", "-r", "wwan" + dev_id])
+            subprocess.check_output(
+                ["qmi-network", "/dev/cdc-wdm" + dev_id, "stop"])
+
+            return True
         except Exception:
-                return 'fail'
+            return False
 
     def init(self, *args, **kwargs):
         path_root = os.path.abspath(os.path.dirname(__file__))
@@ -180,17 +184,14 @@ class Cellular(Sanji):
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
-            return response(code=200, data=self.model.db)
+        return response(data=self.model.db)
 
     @Route(methods="get", resource="/network/cellulars/:id")
     def get_root_by_id(self, message, response):
-            if int(message.param['id']) > len(self.model.db):
-                    return response(code=400, data={
-                        "message": "No such resources"})
-            else:
-                    return response(code=200,
-                                    data=self.model.db
-                                    [int(message.param['id'])])
+        if int(message.param['id']) > len(self.model.db):
+            return response(code=400, data={"message": "No such resources"})
+
+        return response(data=self.model.db[int(message.param['id'])])
 
     @Route(methods="put", resource="/network/cellulars/:id")
     def put_root_by_id(self, message, response):
@@ -198,9 +199,12 @@ class Cellular(Sanji):
             return response(code=400, data={"message": "Invalid Input."})
 
         id = int(message.param['id'])
+        print "id %s" % id
+        # if id not in self.model.db:
+        #     return response(code=404, data={"message": "ID not found."})
 
         if "enable" in message.data:
-                self.model.db[id]["enable"] = message.data["enable"]
+            self.model.db[id]["enable"] = message.data["enable"]
 
         if "apn" in message.data:
             self.model.db[id]["apn"] = message.data["apn"]
@@ -221,11 +225,11 @@ class Cellular(Sanji):
             self.model.db[id]["pinCode"] = message.data["pinCode"]
 
         if "enableAuth" in message.data:
-                self.model.db[id]["enableAuth"] = message.data["enableAuth"]
+            self.model.db[id]["enableAuth"] = message.data["enableAuth"]
 
         self.model.save_db()
-        return response(code=200,
-                        data=self.model.db[int(message.param['id'])])
+
+        return response(data=self.model.db[int(message.param['id'])])
 
     def run(self):
         while True:
