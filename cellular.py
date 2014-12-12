@@ -186,7 +186,7 @@ class Cellular(Sanji):
     def get_root_by_id(self, message, response):
             if int(message.param['id']) > len(self.model.db):
                     return response(code=400, data={
-                        "message": "No such resources"})
+                        "message": "No such id resources."})
             else:
                     return response(code=200,
                                     data=self.model.db
@@ -201,27 +201,22 @@ class Cellular(Sanji):
 
         if "enable" in message.data:
                 self.model.db[id]["enable"] = message.data["enable"]
-
-        if "apn" in message.data:
+        elif "apn" in message.data:
             self.model.db[id]["apn"] = message.data["apn"]
-
-        if "username" in message.data:
+        elif "username" in message.data:
             self.model.db[id]["username"] = message.data["username"]
-
-        if "name" in message.data:
+        elif "name" in message.data:
             self.model.db[id]["name"] = message.data["name"]
-
-        if "dialNumber" in message.data:
+        elif "dialNumber" in message.data:
             self.model.db[id]["dialNumber"] = message.data["dialNumber"]
-
-        if "password" in message.data:
+        elif "password" in message.data:
             self.model.db[id]["password"] = message.data["password"]
-
-        if "pinCode" in message.data:
+        elif "pinCode" in message.data:
             self.model.db[id]["pinCode"] = message.data["pinCode"]
-
-        if "enableAuth" in message.data:
+        elif "enableAuth" in message.data:
                 self.model.db[id]["enableAuth"] = message.data["enableAuth"]
+        else:
+            return response(code=400, data={"message": "No such resources."})
 
         self.model.save_db()
         return response(code=200,
