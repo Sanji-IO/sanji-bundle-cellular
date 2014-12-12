@@ -327,23 +327,6 @@ class TestCellular(unittest.TestCase):
         # case 1: data
         def resp1(code=200, data=None):
             self.assertEqual(200, code)
-            self.assertDictContainsSubset(data[1], {"id": 1,
-                                                    "apn": "internet",
-                                                    "username": "",
-                                                    "enable": 0,
-                                                    "name": "ppp",
-                                                    "ip": "",
-                                                    "gateway": "",
-                                                    "dns": "",
-                                                    "dialNumber": "*99#",
-                                                    "password": "",
-                                                    "pinCode": "",
-                                                    "modemPort":
-                                                    "/dev/cdc-wdm1",
-                                                    "enableAuth": 0,
-                                                    "modes": "default",
-                                                    "delay": 40
-                                                    })
         message = Message(test_msg)
         self.cellular.get_root(message, response=resp1, test=True)
 
