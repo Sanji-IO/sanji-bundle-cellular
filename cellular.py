@@ -141,18 +141,25 @@ class Cellular(Sanji):
                 | cut -d \" \" -f 1 \
                 |tr -d [:cntrl:]",
                 shell=True)
-            return tmp
+            if tmp.isdigit():
+                return tmp
+            else:
+                return 99
         except Exception:
             return 99
 
     def get_status_by_id(self, dev_id):
         try:
-            tmp = subprocess.check_output(
-                "qmicli -p -d /dev/cdc-wdm" + dev_id +
-                " --wds-get-packet-service-status |awk '{print $4}'|\
-                 tr -d [:space:]", shell=True)
-
-            return tmp
+                tmp = subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
+                                              dev_id +
+                                              " --wds-get-packet-service-status\
+                                              |awk '{print $4}'|\
+                                              tr -d [:space:]",
+                                              shell=True)
+                if tmp == 'connected':
+                    return tmp
+                else:
+                    return 'disconnected'
         except Exception:
             return 'disconnected'
 
@@ -188,48 +195,64 @@ class Cellular(Sanji):
 
     @Route(methods="get", resource="/network/cellulars/:id")
     def get_root_by_id(self, message, response):
-        if int(message.param['id']) > len(self.model.db):
-            return response(code=400, data={"message": "No such resources"})
-
-        return response(data=self.model.db[int(message.param['id'])])
+            if int(message.param['id']) > len(self.model.db):
+                    return response(code=400, data={
+                        "message": "No such id resources."})
+            else:
+                    return response(code=200,
+                                    data=self.model.db
+                                    [int(message.param['id'])])
 
     @Route(methods="put", resource="/network/cellulars/:id")
     def put_root_by_id(self, message, response):
         if not hasattr(message, "data"):
             return response(code=400, data={"message": "Invalid Input."})
 
+        is_match_param = 0
+
         id = int(message.param['id'])
-        print "id %s" % id
-        # if id not in self.model.db:
-        #     return response(code=404, data={"message": "ID not found."})
+        if id > len(self.model.db):
+                return response(code=400, data={
+                    "message": "No such id resources."})
 
         if "enable" in message.data:
             self.model.db[id]["enable"] = message.data["enable"]
+            is_match_param = 1
 
         if "apn" in message.data:
             self.model.db[id]["apn"] = message.data["apn"]
+            is_match_param = 1
 
         if "username" in message.data:
             self.model.db[id]["username"] = message.data["username"]
+            is_match_param = 1
 
         if "name" in message.data:
             self.model.db[id]["name"] = message.data["name"]
+            is_match_param = 1
 
         if "dialNumber" in message.data:
             self.model.db[id]["dialNumber"] = message.data["dialNumber"]
+            is_match_param = 1
 
         if "password" in message.data:
             self.model.db[id]["password"] = message.data["password"]
+            is_match_param = 1
 
         if "pinCode" in message.data:
             self.model.db[id]["pinCode"] = message.data["pinCode"]
+            is_match_param = 1
 
         if "enableAuth" in message.data:
             self.model.db[id]["enableAuth"] = message.data["enableAuth"]
+            is_match_param = 1
+
+        if is_match_param == 0:
+            return response(code=400, data={"message": "No such resources."})
 
         self.model.save_db()
-
-        return response(data=self.model.db[int(message.param['id'])])
+        return response(code=200,
+                        data=self.model.db[id])
 
     def run(self):
         while True:
