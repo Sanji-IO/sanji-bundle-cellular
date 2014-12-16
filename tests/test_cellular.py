@@ -598,7 +598,7 @@ class TestCellular(unittest.TestCase):
 
     def test_init(self):
         with patch("cellular.ModelInitiator") as model:
-            model.return_value.db.__getitem__.return_value = 1
+            model.return_value.db.__getitem__.return_value = False
             self.cellular.init()
 
 if __name__ == "__main__":
