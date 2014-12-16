@@ -483,7 +483,7 @@ class TestCellular(unittest.TestCase):
     def test_set_preference_by_id(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
-            subprocess.call.return_value = True
+            subprocess.check_output.return_value = True
             res = self.cellular.set_preference_by_id('1')
             self.assertEqual(res, True)
 
