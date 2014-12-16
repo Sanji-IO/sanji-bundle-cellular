@@ -47,9 +47,10 @@ class TestCellular(unittest.TestCase):
       "
     filetext_fail = " "
 
-    def setUp(self):
+    @patch("cellular.Cellular.set_pincode_by_id")
+    def setUp(self, set_pincode_by_id):
+        set_pincode_by_id.return_value = True
         self.cellular = Cellular(connection=Mockup())
-        self.cellular.set_pincode_by_id = Mock(return_value=True)
 
     def tearDown(self):
         self.cellular = None

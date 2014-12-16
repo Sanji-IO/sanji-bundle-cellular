@@ -256,8 +256,6 @@ class Cellular(Sanji):
         self.pdh = ''
         self.status = ''
         self.model = ModelInitiator("cellular", path_root)
-        for model in self.model.db:
-            self.set_pincode_by_id(model['id'], model["pinCode"])
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
@@ -355,6 +353,8 @@ class Cellular(Sanji):
                         data=self.model.db[id])
 
     def run(self):
+        for model in self.model.db:
+            self.set_pincode_by_id(model['id'], model["pinCode"])
         while True:
             self.reconnect_if_disconnected()
             sleep(30)
