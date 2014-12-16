@@ -157,11 +157,11 @@ class Cellular(Sanji):
 
     def get_status_by_id(self, dev_id):
         try:
-            command = "qmicli -p -d /dev/cdc-wdm" + dev_id +\
-                      " --wds-get-packet-service-status"
+            command = ("qmicli -p -d /dev/cdc-wdm" + dev_id +
+                       " --wds-get-packet-service-status")
             if len(self.cid) != 0:
-                command += " --client-cid=" + self.cid +\
-                           " --client-no-release-cid",
+                command += (" --client-cid=" + self.cid +
+                            " --client-no-release-cid")
 
             out = subprocess.check_output(command, shell=True)
             status = re.search(self.search_link_pattern, out)

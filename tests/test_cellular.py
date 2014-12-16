@@ -49,6 +49,7 @@ class TestCellular(unittest.TestCase):
 
     def setUp(self):
         self.cellular = Cellular(connection=Mockup())
+        self.cellular.set_pincode_by_id = Mock(return_value=True)
 
     def tearDown(self):
         self.cellular = None
@@ -392,16 +393,6 @@ class TestCellular(unittest.TestCase):
                                          response=test_pincode_with_valid_data,
                                          test=True)
 
-        def test_pincode_with_invalid_data(code=400, data=None):
-            self.assertEqual(400, code)
-            self.assertEqual(data, {"message": "PIN invalid."})
-        test_msg["data"] = {"pinCode": "000000"}
-        message = Message(test_msg)
-        self.cellular.\
-            put_root_by_id(message,
-                           response=test_pincode_with_invalid_data,
-                           test=True)
-
     def get_test_cases(self):
         test_msg = {
             "id": 1,
@@ -501,15 +492,6 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.side_effect = Exception
             res = self.cellular.set_preference_by_id('1')
             self.assertFalse(res)
-
-    def test_set_pincode_by_id(self):
-        self.cellular.model.db = [{'pinCode': '0000',
-                                   'id': '0',
-                                   'modemPort': '/dev/ttyS0'}]
-        with patch("cellular.subprocess") as subprocess:
-            subprocess.check_output.return_value = True
-            res = self.cellular.set_pincode_by_id('0', '0000')
-            self.assertTrue(res)
 
     def test_search_name(self):
         self.cellular = Cellular(connection=Mockup())
@@ -632,6 +614,43 @@ class TestCellular(unittest.TestCase):
             model.return_value.db.__getitem__.return_value = 1
             self.cellular.set_pincode_by_id = Mock(return_value=True)
             self.cellular.init()
+
+
+class TestCellularPinCodeById(unittest.TestCase):
+
+    def setUp(self):
+        self.cellular = Cellular(connection=Mockup())
+
+    def tearDown(self):
+        self.cellular = None
+
+    def test_set_pincode_by_id(self):
+        self.cellular.model.db = [{'pinCode': '0000',
+                                   'id': '0',
+                                   'modemPort': '/dev/ttyS0'}]
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value = True
+            res = self.cellular.set_pincode_by_id('0', '0000')
+            self.assertTrue(res)
+
+    def test_put_cases(self):
+        test_msg = {
+            "id": 12345,
+            "method": "put",
+            "param": {"id": "1"},
+            "resource": "/network/cellulars"
+        }
+
+        def test_pincode_with_invalid_data(code=400, data=None):
+            self.assertEqual(400, code)
+            self.assertEqual(data, {"message": "PIN invalid."})
+        test_msg["data"] = {"pinCode": "000000"}
+        message = Message(test_msg)
+        self.cellular.\
+            put_root_by_id(message,
+                           response=test_pincode_with_invalid_data,
+                           test=True)
+
 
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
