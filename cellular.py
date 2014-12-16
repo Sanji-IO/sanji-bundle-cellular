@@ -241,7 +241,7 @@ class Cellular(Sanji):
     def set_pincode_by_id(self, dev_id, pinCode):
         did = int(dev_id)
         pin_len = len(pinCode)
-        if ((pin_len == 4) or (pin_len == 0)):
+        if pin_len == 4:
                 command = "qmicli -p -d " + self.model.db[did]['modemPort'] +\
                           " --dms-uim-verify-pin=PIN," +\
                           self.model.db[did]['pinCode']
@@ -257,12 +257,7 @@ class Cellular(Sanji):
         self.status = ''
         self.model = ModelInitiator("cellular", path_root)
         for model in self.model.db:
-            if len(model['pinCode']) > 3:
-                subprocess.check_output("qmicli -p -d " +
-                                        model['modemPort'] +
-                                        " --dms-uim-verify-pin=PIN," +
-                                        model['pinCode'],
-                                        shell=True)
+            self.set_pincode_by_id(model['id'], model["pinCode"])
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
@@ -317,7 +312,6 @@ class Cellular(Sanji):
             is_match_param = 1
 
         if "pinCode" in message.data:
-            print "PIN CODE %s" % message.data["pinCode"]
             res = self.set_pincode_by_id(id, message.data["pinCode"])
             if res is True:
                 self.model.db[id]["pinCode"] = message.data["pinCode"]
