@@ -13,6 +13,7 @@
 		"pinCode": "",
 		"modemPort": "/dev/cdc-wdm0",
 		"enableAuth": 0,
+    "authType": "",
 		"modes": "default",
 		"delay": 40
 	},
@@ -30,6 +31,7 @@
 		"pinCode": "",
 		"modemPort": "/dev/cdc-wdm1",
 		"enableAuth": 0,
+    "authType": "",
 		"modes": "default",
 		"delay": 40
 	}

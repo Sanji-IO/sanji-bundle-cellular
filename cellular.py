@@ -26,6 +26,12 @@ class Cellular(Sanji):
         re.compile(ur'option subnet-mask ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
     search_name_pattern =\
         re.compile(ur'interface "([a-z]+[0-9])"')
+    search_cid_pattern =\
+        re.compile(ur'CID: \'([0-9]+)\'')
+    search_pdh_pattern =\
+        re.compile(ur'Packet data handle: \'([0-9]+)\'')
+    search_link_pattern =\
+        re.compile(ur'Connection status: \'([a-z]+)\'')
 
     def search_name(self, filetext):
         name = re.search(self.search_name_pattern, filetext)
@@ -99,17 +105,18 @@ class Cellular(Sanji):
             # check network availability
             # if network status down, turn up otherwise disconnect
             if model['enable'] != 1 and \
-               self.get_status_by_id(dev_id) == "'connected'":
+               self.get_status_by_id(dev_id) == 'connected':
                 self.set_offline_by_id(dev_id)
                 continue
 
             logger.debug("Enable is 1")
-            if self.get_status_by_id(dev_id) == "'connected'":
+            if self.get_status_by_id(dev_id) == 'connected':
                 continue
 
             logger.debug("Start connect")
             self.set_offline_by_id(dev_id)
             self.set_online_by_id(dev_id)
+            sleep(5)
             # update info according to dhclient.leases
             filetext = self.is_leases_file_appear()
             if filetext == '':
@@ -141,7 +148,7 @@ class Cellular(Sanji):
                 | cut -d \" \" -f 1 \
                 |tr -d [:cntrl:]",
                 shell=True)
-            if tmp.isdigit():
+            if len(tmp) > 1:
                 return tmp
             else:
                 return 99
@@ -150,44 +157,109 @@ class Cellular(Sanji):
 
     def get_status_by_id(self, dev_id):
         try:
-                tmp = subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
-                                              dev_id +
-                                              " --wds-get-packet-service-status\
-                                              |awk '{print $4}'|\
-                                              tr -d [:space:]",
-                                              shell=True)
-                if tmp == 'connected':
-                    return tmp
-                else:
-                    return 'disconnected'
+            if len(self.cid) == 0:
+                out =\
+                    subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
+                                            dev_id +
+                                            " --wds-get-packet-service-status",
+                                            shell=True)
+            else:
+                out =\
+                    subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
+                                            dev_id +
+                                            " --wds-get-packet-service-status"
+                                            + " --client-cid=" + self.cid +
+                                            " --client-no-release-cid",
+                                            shell=True)
+            status = re.search(self.search_link_pattern, out)
+            self.status = status.group(1)
+            return status.group(1)
         except Exception:
+            if self.status != 'connected':
+                self.cid = ''
+                self.pdh = ''
             return 'disconnected'
 
     def set_online_by_id(self, dev_id):
+        did = int(dev_id)
         try:
             subprocess.check_output("rm -rf /var/lib/dhcp/dhclient.leases",
                                     shell=True)
-            subprocess.check_output("qmi-network /dev/cdc-wdm" +
-                                    dev_id + " start", shell=True)
+
+            command = "qmicli -p -d /dev/cdc-wdm" + dev_id +\
+                      " --wds-start-network=" + self.model.db[did]['apn']
+
+            if self.model.db[did]['enableAuth'] == 0:
+                command += " --client-no-release-cid"
+            else:
+                command += "," + self.model.db[did]['authType'] +\
+                           "," + self.model.db[did]['username'] +\
+                           "," + self.model.db[did]['password'] +\
+                           " --client-no-release-cid"
+
+            if len(self.cid) != 0:
+                command += " --client-cid=" + self.cid
+
+            out = subprocess.check_output(command, shell=True)
+            cid = re.search(self.search_cid_pattern, out)
+            pdh = re.search(self.search_pdh_pattern, out)
             subprocess.check_output("dhclient wwan" + dev_id, shell=True)
+            self.cid = cid.group(1)
+            self.pdh = pdh.group(1)
 
             return True
         except Exception:
                 return False
 
     def set_offline_by_id(self, dev_id):
+        self.pdh = ''
+        self.cid = ''
+        self.status = ''
         try:
             subprocess.check_output(["dhclient", "-r", "wwan" + dev_id])
-            subprocess.check_output(
-                ["qmi-network", "/dev/cdc-wdm" + dev_id, "stop"])
+            if len(self.cid) == 0:
+                logger.debug("Network already stopped")
+            elif len(self.pdh) == 0:
+                subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
+                                        dev_id + " --wds-noop" +
+                                        " --client-cid=" +
+                                        self.cid,
+                                        shell=True)
+            else:
+                subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
+                                        dev_id +
+                                        " --wds-stop-network=" +
+                                        self.pdh +
+                                        " --client-cid=" +
+                                        self.cid, shell=True)
+            return True
+        except Exception:
+            return False
 
+    def set_preference_by_id(self, dev_id):
+        did = int(dev_id)
+        try:
+            command = "qmicli -p -d /dev/cdc-wdm" + dev_id +\
+                      " --nas-set-system-selection-preference=" +\
+                      self.model.db[did]['modes']
+            subprocess.check_output(command, shell=True)
             return True
         except Exception:
             return False
 
     def init(self, *args, **kwargs):
         path_root = os.path.abspath(os.path.dirname(__file__))
+        self.cid = ''
+        self.pdh = ''
+        self.status = ''
         self.model = ModelInitiator("cellular", path_root)
+        for model in self.model.db:
+            if len(model['pinCode']) > 3:
+                subprocess.check_output("qmicli -p -d " +
+                                        model['modemPort'] +
+                                        " --dms-uim-verify-pin=PIN," +
+                                        model['pinCode'],
+                                        shell=True)
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
@@ -240,12 +312,45 @@ class Cellular(Sanji):
             is_match_param = 1
 
         if "pinCode" in message.data:
-            self.model.db[id]["pinCode"] = message.data["pinCode"]
+            pin_len = len(message.data["pinCode"])
+            if ((pin_len == 4) or (pin_len == 0)):
+                self.model.db[id]["pinCode"] = message.data["pinCode"]
+                subprocess.check_output("qmicli -p -d " +
+                                        self.model.db[id]['modemPort'] +
+                                        " --dms-uim-verify-pin=PIN," +
+                                        self.model.db[id]['pinCode'],
+                                        shell=True)
+                is_match_param = 1
+            else:
+                return response(code=400, data={"message": "PIN invalid."})
+
+        # None / PAP / CHAP / BOTH
+        if "authType" in message.data:
+            if (message.data["authType"] == "PAP" or
+                    message.data["authType"] == "CHAP" or
+                    message.data["authType"] == "BOTH"):
+                self.model.db[id]["authType"] = message.data["authType"]
+                is_match_param = 1
+            else:
+                return response(code=400, data={"message": "Data invalid."})
+
+        if "modes" in message.data:
+            self.model.db[id]["modes"] = message.data["modes"]
+            self.set_preference_by_id(id)
             is_match_param = 1
 
         if "enableAuth" in message.data:
-            self.model.db[id]["enableAuth"] = message.data["enableAuth"]
-            is_match_param = 1
+            if (message.data["enableAuth"] == 1):
+                # authType / username / password MUST ready before enable
+                if (len(self.model.db[id]["authType"]) > 0 and
+                        len(self.model.db[id]["username"]) > 0 and
+                        len(self.model.db[id]["password"]) > 0):
+                    self.model.db[id]["enableAuth"] =\
+                        message.data["enableAuth"]
+                    is_match_param = 1
+                else:
+                    return response(code=400, data={"message":
+                                    "require field is empty."})
 
         if is_match_param == 0:
             return response(code=400, data={"message": "No such resources."})

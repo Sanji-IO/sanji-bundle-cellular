@@ -54,7 +54,7 @@ class TestCellular(unittest.TestCase):
         self.cellular = None
 
     @patch("cellular.subprocess")
-    def test1_put(self, subprocess):
+    def put_simple_test_cases(self, subprocess):
         subprocess.check_output.return_value = True
         subprocess.call.return_value = True
         test_msg = {
@@ -65,39 +65,44 @@ class TestCellular(unittest.TestCase):
         }
 
         # case 1: no data attribute
-        def resp1(code=200, data=None):
+        def test_put_with_no_data(code=200, data=None):
             self.assertEqual(400, code)
             self.assertEqual(data, {"message": "Invalid Input."})
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp1, test=True)
+        self.cellular.put_root_by_id(message, response=test_put_with_no_data,
+                                     test=True)
 
         # case 2: data dict is empty or no enable exist
-        def resp2(code=200, data=None):
+        def test_put_with_random_data(code=200, data=None):
             self.assertEqual(400, code)
             self.assertEqual(data, {"message": "No such resources."})
         test_msg["data"] = dict()
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp2, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_put_with_random_data,
+                                     test=True)
 
         # case 3: data not found
-        def resp3(code=200, data=None):
+        def test_put_with_unknown_data(code=200, data=None):
             self.assertEqual(400, code)
             self.assertEqual(data, {"message": "No such resources."})
         test_msg["data"] = {"path": "abcde"}
         message = Message(test_msg)
         self.cellular.id = 1
-        self.cellular.put_root_by_id(message, response=resp3, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_put_with_unknown_data,
+                                     test=True)
 
-    def test2_put(self):
+    def put_complicate_test_cases(self):
         test_msg = {
             "id": 1,
             "method": "put",
             "param": {"id": "1"},
-            "resource": "/network/cellulars"
+            "resource": "/network/cellulars/1"
         }
 
         # case 1: data valid. test do not check message coming back
-        def resp1(code=200, data=None):
+        def test_multi_input_with_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "internet",
@@ -110,6 +115,7 @@ class TestCellular(unittest.TestCase):
                                                  "dialNumber": "9999",
                                                  "password": "",
                                                  "pinCode": "",
+                                                 "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
                                                  "modes": "default",
@@ -117,15 +123,19 @@ class TestCellular(unittest.TestCase):
                                                  })
         test_msg["data"] = {"username": "whoru", "dialNumber": "9999"}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp1, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_multi_input_with_valid_data,
+                                     test=True)
 
         # case 2: data
-        def resp2(code=200, data=None):
+        def test_get_root(code=200, data=None):
             self.assertEqual(200, code)
-        self.cellular.get_root_by_id(message, response=resp2, test=True)
+        self.cellular.get_root_by_id(message,
+                                     response=test_get_root,
+                                     test=True)
 
         # case 3: data
-        def resp3(code=200, data=None):
+        def test_enable_with_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "internet",
@@ -138,6 +148,7 @@ class TestCellular(unittest.TestCase):
                                                  "dialNumber": "9999",
                                                  "password": "",
                                                  "pinCode": "",
+                                                 "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
                                                  "modes": "default",
@@ -145,10 +156,12 @@ class TestCellular(unittest.TestCase):
                                                  })
         test_msg["data"] = {"enable": 1}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp3, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_enable_with_valid_data,
+                                     test=True)
 
         # case 4: data
-        def resp4(code=200, data=None):
+        def test_apn_with_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "hinet",
@@ -161,6 +174,7 @@ class TestCellular(unittest.TestCase):
                                                  "dialNumber": "9999",
                                                  "password": "",
                                                  "pinCode": "",
+                                                 "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
                                                  "modes": "default",
@@ -168,10 +182,12 @@ class TestCellular(unittest.TestCase):
                                                  })
         test_msg["data"] = {"apn": "hinet"}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp4, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_apn_with_valid_data,
+                                     test=True)
 
         # case 5: data
-        def resp5(code=200, data=None):
+        def test_username_with_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "hinet",
@@ -184,6 +200,7 @@ class TestCellular(unittest.TestCase):
                                                  "dialNumber": "9999",
                                                  "password": "",
                                                  "pinCode": "",
+                                                 "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
                                                  "modes": "default",
@@ -191,10 +208,12 @@ class TestCellular(unittest.TestCase):
                                                  })
         test_msg["data"] = {"username": "root"}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp5, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_username_with_valid_data,
+                                     test=True)
 
         # case 6: data
-        def resp6(code=200, data=None):
+        def test_name_with_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "hinet",
@@ -207,6 +226,7 @@ class TestCellular(unittest.TestCase):
                                                  "dialNumber": "9999",
                                                  "password": "",
                                                  "pinCode": "",
+                                                 "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
                                                  "modes": "default",
@@ -214,10 +234,12 @@ class TestCellular(unittest.TestCase):
                                                  })
         test_msg["data"] = {"name": "root"}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp6, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_name_with_valid_data,
+                                     test=True)
 
         # case 7: data
-        def resp7(code=200, data=None):
+        def test_dialNumber_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "hinet",
@@ -230,6 +252,7 @@ class TestCellular(unittest.TestCase):
                                                  "dialNumber": "*88#",
                                                  "password": "",
                                                  "pinCode": "",
+                                                 "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
                                                  "modes": "default",
@@ -237,10 +260,12 @@ class TestCellular(unittest.TestCase):
                                                  })
         test_msg["data"] = {"dialNumber": "*88#"}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp7, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_dialNumber_valid_data,
+                                     test=True)
 
         # case 8: data
-        def resp8(code=200, data=None):
+        def test_password_with_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "hinet",
@@ -253,6 +278,7 @@ class TestCellular(unittest.TestCase):
                                                  "dialNumber": "*88#",
                                                  "password": "passw0rd",
                                                  "pinCode": "",
+                                                 "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
                                                  "modes": "default",
@@ -260,10 +286,12 @@ class TestCellular(unittest.TestCase):
                                                  })
         test_msg["data"] = {"password": "passw0rd"}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp8, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_password_with_valid_data,
+                                     test=True)
 
         # case 9: data
-        def resp9(code=200, data=None):
+        def test_pinCode_with_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "hinet",
@@ -275,18 +303,35 @@ class TestCellular(unittest.TestCase):
                                                  "dns": "",
                                                  "dialNumber": "*88#",
                                                  "password": "passw0rd",
-                                                 "pinCode": "89191230",
+                                                 "pinCode": "0000",
+                                                 "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
-        test_msg["data"] = {"pinCode": "89191230"}
+        test_msg["data"] = {"pinCode": "0000"}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp9, test=True)
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value = True
+            self.cellular.put_root_by_id(message,
+                                         response=test_pinCode_with_valid_data,
+                                         test=True)
+
+        # case 12: data invalid
+        def test_pinCode_invalid_data(code=200, data=None):
+            self.assertEqual(400, code)
+            self.assertDictContainsSubset(data, {"message": "PIN invalid."})
+        test_msg["data"] = {"pinCode": "0000000"}
+        message = Message(test_msg)
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value = True
+            self.cellular.put_root_by_id(message,
+                                         response=test_pinCode_invalid_data,
+                                         test=True)
 
         # case 10: data
-        def resp10(code=200, data=None):
+        def test_enableAuth_with_valid_data(code=200, data=None):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "hinet",
@@ -298,26 +343,60 @@ class TestCellular(unittest.TestCase):
                                                  "dns": "",
                                                  "dialNumber": "*88#",
                                                  "password": "passw0rd",
-                                                 "pinCode": "89191230",
+                                                 "pinCode": "0000",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 1,
+                                                 "authType": "BOTH",
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
-        test_msg["data"] = {"enableAuth": 1}
+        test_msg["data"] = {"enableAuth": 1, "authType": "BOTH"}
         message = Message(test_msg)
-        self.cellular.put_root_by_id(message, response=resp10, test=True)
+        self.cellular.put_root_by_id(message,
+                                     response=test_enableAuth_with_valid_data,
+                                     test=True)
+
+        # case test_enableAuth_with_no_username: data
+        def test_enableAuth_with_no_username(code=200, data=None):
+            self.assertEqual(400, code)
+            self.assertEqual(data, {"message": "require field is empty."})
+        test_msg["data"] = {"enableAuth": 1, "username": ""}
+        message = Message(test_msg)
+        self.cellular.put_root_by_id(message,
+                                     response=test_enableAuth_with_no_username,
+                                     test=True)
+
+        # case 10_2: data
+        def test_authType_with_invalid_data(code=200, data=None):
+            self.assertEqual(400, code)
+            self.assertEqual(data, {"message": "Data invalid."})
+        test_msg["data"] = {"authType": "SSS"}
+        message = Message(test_msg)
+        self.cellular.put_root_by_id(message,
+                                     response=test_authType_with_invalid_data,
+                                     test=True)
+
+        # case 10_2: data
+        def test_authType_with_valid_data(code=200, data=None):
+            self.assertEqual(200, code)
+        test_msg["data"] = {"authType": "PAP"}
+        message = Message(test_msg)
+        self.cellular.put_root_by_id(message,
+                                     response=test_authType_with_valid_data,
+                                     test=True)
 
         # case 11: data
-        def resp11(code=400, data=None):
+        def test_put_with_unknown_id(code=400, data=None):
             self.assertEqual(400, code)
             self.assertEqual(data, {"message": "No such id resources."})
         test_msg["data"] = {"id": "5"}
         message = Message(test_msg)
         self.cellular.model.db = ''
-        self.cellular.get_root_by_id(message, response=resp11, test=True)
+        self.cellular.get_root_by_id(message,
+                                     response=test_put_with_unknown_id,
+                                     test=True)
 
-    def test_get(self):
+    def get_test_cases(self):
         test_msg = {
             "id": 1,
             "method": "get",
@@ -325,10 +404,10 @@ class TestCellular(unittest.TestCase):
         }
 
         # case 1: data
-        def resp1(code=200, data=None):
+        def test_get_root(code=200, data=None):
             self.assertEqual(200, code)
         message = Message(test_msg)
-        self.cellular.get_root(message, response=resp1, test=True)
+        self.cellular.get_root(message, response=test_get_root, test=True)
 
     def test_get_signal_by_id(self):
         self.cellular = Cellular(connection=Mockup())
@@ -347,6 +426,7 @@ class TestCellular(unittest.TestCase):
     def test_get_status_by_id(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output_return_value = True
             subprocess.call.return_value = True
             res = self.cellular.get_status_by_id('1')
             self.assertEqual(res, 'disconnected')
@@ -363,7 +443,7 @@ class TestCellular(unittest.TestCase):
         with patch("cellular.subprocess") as subprocess:
             subprocess.call.return_value = True
             res = self.cellular.set_online_by_id('1')
-            self.assertEqual(res, True)
+            self.assertEqual(res, False)
 
     def test_set_online_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
@@ -384,6 +464,20 @@ class TestCellular(unittest.TestCase):
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
             res = self.cellular.set_offline_by_id('1')
+            self.assertFalse(res)
+
+    def test_set_preference_by_id(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.call.return_value = True
+            res = self.cellular.set_preference_by_id('1')
+            self.assertEqual(res, True)
+
+    def test_set_preference_by_id_exception(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.side_effect = Exception
+            res = self.cellular.set_preference_by_id('1')
             self.assertFalse(res)
 
     def test_search_name(self):
@@ -438,7 +532,8 @@ class TestCellular(unittest.TestCase):
 
     def test_reconnect_if_disconnected(self):
         self.cellular.model.db = [{'enable': 1,
-                                   'modemPort': '/dev/ttyS0', 'id': '0'}]
+                                   'modemPort': '/dev/ttyS0',
+                                   'id': '0', 'apn': 'internet'}]
         self.cellular.get_signal_by_id = Mock(return_value=99)
         self.cellular.is_target_device_appear = Mock(return_value=False)
         self.cellular.get_status_by_id = Mock(return_value='disconnected')
@@ -447,10 +542,21 @@ class TestCellular(unittest.TestCase):
 
     def test_reconnect_if_disconnected_when_disconnect_and_enable_true(self):
         self.cellular.model.db = [{'enable': 1,
+                                   'modemPort': '/dev/ttyS0',
+                                   'id': '0', 'apn': 'internet'}]
+        self.cellular.is_target_device_appear = Mock(return_value=True)
+        self.cellular.get_signal_by_id = Mock(return_value=78)
+        self.cellular.get_status_by_id = Mock(return_value='disconnected')
+        self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
+        self.cellular.reconnect_if_disconnected()
+        self.assertEqual(self.cellular.model.db[0]['signal'], 78)
+
+    def test_reconnect_if_disconnected_when_connect_and_enable_false(self):
+        self.cellular.model.db = [{'enable': 0,
                                    'modemPort': '/dev/ttyS0', 'id': '0'}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
-        self.cellular.get_status_by_id = Mock(return_value="'disconnected'")
+        self.cellular.get_status_by_id = Mock(return_value='connected')
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
@@ -460,7 +566,7 @@ class TestCellular(unittest.TestCase):
                                    'modemPort': '/dev/ttyS0', 'id': '0'}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
-        self.cellular.get_status_by_id = Mock(return_value="'connected'")
+        self.cellular.get_status_by_id = Mock(return_value='connected')
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
@@ -472,6 +578,13 @@ class TestCellular(unittest.TestCase):
             self.assertEqual(res, '')
 
     def test_is_leases_file_appear_false(self):
+        res = self.cellular.is_leases_file_appear()
+        self.assertEqual(res, '')
+
+    def test_is_leases_file_appear_exception(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.side_effect = Exception
         res = self.cellular.is_leases_file_appear()
         self.assertEqual(res, '')
 
