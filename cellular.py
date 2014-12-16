@@ -116,7 +116,7 @@ class Cellular(Sanji):
             logger.debug("Start connect")
             self.set_offline_by_id(dev_id)
             self.set_online_by_id(dev_id)
-            sleep(5)
+            # sleep(5)
             # update info according to dhclient.leases
             filetext = self.is_leases_file_appear()
             if filetext == '':
@@ -157,20 +157,13 @@ class Cellular(Sanji):
 
     def get_status_by_id(self, dev_id):
         try:
-            if len(self.cid) == 0:
-                out =\
-                    subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
-                                            dev_id +
-                                            " --wds-get-packet-service-status",
-                                            shell=True)
-            else:
-                out =\
-                    subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
-                                            dev_id +
-                                            " --wds-get-packet-service-status"
-                                            + " --client-cid=" + self.cid +
-                                            " --client-no-release-cid",
-                                            shell=True)
+            command = "qmicli -p -d /dev/cdc-wdm" + dev_id +\
+                      " --wds-get-packet-service-status"
+            if len(self.cid) != 0:
+                command += " --client-cid=" + self.cid +\
+                           " --client-no-release-cid",
+
+            out = subprocess.check_output(command, shell=True)
             status = re.search(self.search_link_pattern, out)
             self.status = status.group(1)
             return status.group(1)
@@ -187,15 +180,13 @@ class Cellular(Sanji):
                                     shell=True)
 
             command = "qmicli -p -d /dev/cdc-wdm" + dev_id +\
-                      " --wds-start-network=" + self.model.db[did]['apn']
+                      " --wds-start-network=" + self.model.db[did]['apn'] +\
+                      " --client-no-release-cid"
 
-            if self.model.db[did]['enableAuth'] == 0:
-                command += " --client-no-release-cid"
-            else:
+            if self.model.db[did]['enableAuth'] != 0:
                 command += "," + self.model.db[did]['authType'] +\
                            "," + self.model.db[did]['username'] +\
-                           "," + self.model.db[did]['password'] +\
-                           " --client-no-release-cid"
+                           "," + self.model.db[did]['password']
 
             if len(self.cid) != 0:
                 command += " --client-cid=" + self.cid
@@ -212,9 +203,6 @@ class Cellular(Sanji):
                 return False
 
     def set_offline_by_id(self, dev_id):
-        self.pdh = ''
-        self.cid = ''
-        self.status = ''
         try:
             subprocess.check_output(["dhclient", "-r", "wwan" + dev_id])
             if len(self.cid) == 0:
@@ -232,6 +220,9 @@ class Cellular(Sanji):
                                         self.pdh +
                                         " --client-cid=" +
                                         self.cid, shell=True)
+            self.pdh = ''
+            self.cid = ''
+            self.status = ''
             return True
         except Exception:
             return False
@@ -245,6 +236,18 @@ class Cellular(Sanji):
             subprocess.check_output(command, shell=True)
             return True
         except Exception:
+            return False
+
+    def set_pincode_by_id(self, dev_id, pinCode):
+        did = int(dev_id)
+        pin_len = len(pinCode)
+        if ((pin_len == 4) or (pin_len == 0)):
+                command = "qmicli -p -d " + self.model.db[did]['modemPort'] +\
+                          " --dms-uim-verify-pin=PIN," +\
+                          self.model.db[did]['pinCode']
+                subprocess.check_output(command, shell=True)
+                return True
+        else:
             return False
 
     def init(self, *args, **kwargs):
@@ -267,6 +270,7 @@ class Cellular(Sanji):
 
     @Route(methods="get", resource="/network/cellulars/:id")
     def get_root_by_id(self, message, response):
+            print "ID IS %s", message.param['id']
             if int(message.param['id']) > len(self.model.db):
                     return response(code=400, data={
                         "message": "No such id resources."})
@@ -283,6 +287,7 @@ class Cellular(Sanji):
         is_match_param = 0
 
         id = int(message.param['id'])
+        print "ID %d" % id
         if id > len(self.model.db):
                 return response(code=400, data={
                     "message": "No such id resources."})
@@ -312,14 +317,10 @@ class Cellular(Sanji):
             is_match_param = 1
 
         if "pinCode" in message.data:
-            pin_len = len(message.data["pinCode"])
-            if ((pin_len == 4) or (pin_len == 0)):
+            print "PIN CODE %s" % message.data["pinCode"]
+            res = self.set_pincode_by_id(id, message.data["pinCode"])
+            if res is True:
                 self.model.db[id]["pinCode"] = message.data["pinCode"]
-                subprocess.check_output("qmicli -p -d " +
-                                        self.model.db[id]['modemPort'] +
-                                        " --dms-uim-verify-pin=PIN," +
-                                        self.model.db[id]['pinCode'],
-                                        shell=True)
                 is_match_param = 1
             else:
                 return response(code=400, data={"message": "PIN invalid."})
