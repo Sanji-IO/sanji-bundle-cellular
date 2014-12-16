@@ -630,6 +630,7 @@ class TestCellular(unittest.TestCase):
     def test_init(self):
         with patch("cellular.ModelInitiator") as model:
             model.return_value.db.__getitem__.return_value = 1
+            self.cellular.set_pincode_by_id = Mock(return_value=True)
             self.cellular.init()
 
 if __name__ == "__main__":
