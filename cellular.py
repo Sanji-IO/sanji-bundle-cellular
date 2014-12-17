@@ -225,6 +225,9 @@ class Cellular(Sanji):
             self.status = ''
             return True
         except Exception:
+            self.pdh = ''
+            self.cid = ''
+            self.status = ''
             return False
 
     def set_preference_by_id(self, dev_id):
@@ -263,7 +266,6 @@ class Cellular(Sanji):
 
     @Route(methods="get", resource="/network/cellulars/:id")
     def get_root_by_id(self, message, response):
-            print "ID IS %s", message.param['id']
             if int(message.param['id']) > len(self.model.db):
                     return response(code=400, data={
                         "message": "No such id resources."})
@@ -280,7 +282,6 @@ class Cellular(Sanji):
         is_match_param = 0
 
         id = int(message.param['id'])
-        print "ID %d" % id
         print self.model.db
         if id > len(self.model.db):
                 return response(code=400, data={

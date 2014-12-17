@@ -45,7 +45,7 @@ class View(Sanji):
         print "Go Test 4"
         res = self.publish.put(REQ_RESOURCE+'/1',
                                data={"enable": 0,
-                                     "apn": "internet.hinet.net"})
+                                     "apn": "internet"})
         if res.code != 200:
             print "GET should reply code 200"
             self.stop()
