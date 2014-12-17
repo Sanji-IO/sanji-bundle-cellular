@@ -11,6 +11,7 @@
 		"dialNumber": "*99#",
 		"password": "",
 		"pinCode": "",
+    "status": "disconnected",
 		"modemPort": "/dev/cdc-wdm0",
 		"enableAuth": 0
 	},
@@ -26,6 +27,7 @@
 		"dialNumber": "*99#",
 		"password": "",
 		"pinCode": "",
+    "status": "disconnected",
 		"modemPort": "/dev/cdc-wdm1",
 		"enableAuth": 0
 	}

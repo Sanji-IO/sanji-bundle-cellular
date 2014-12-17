@@ -104,13 +104,14 @@ class Cellular(Sanji):
 
             # check network availability
             # if network status down, turn up otherwise disconnect
+            model['status'] = self.get_status_by_id(dev_id)
             if model['enable'] != 1 and \
-               self.get_status_by_id(dev_id) == 'connected':
+               model['status'] == 'connected':
                 self.set_offline_by_id(dev_id)
                 continue
 
             logger.debug("Enable is 1")
-            if self.get_status_by_id(dev_id) == 'connected':
+            if model['status'] == 'connected':
                 continue
 
             logger.debug("Start connect")
@@ -244,7 +245,7 @@ class Cellular(Sanji):
     def set_pincode_by_id(self, dev_id, pinCode):
         did = int(dev_id)
         pin_len = len(pinCode)
-        if pin_len == 4:
+        if (pin_len == 4) or (pin_len == 0):
                 command = "qmicli -p -d " + self.model.db[did]['modemPort'] +\
                           " --dms-uim-verify-pin=PIN," +\
                           self.model.db[did]['pinCode']

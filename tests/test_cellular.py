@@ -124,6 +124,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -155,6 +156,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -180,6 +182,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -205,6 +208,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -230,6 +234,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -255,6 +260,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -280,6 +286,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -304,6 +311,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 1,
+                                                 "status": 'disconnected',
                                                  "authType": "BOTH",
                                                  "modes": "default",
                                                  "delay": 40
@@ -365,6 +373,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -389,6 +398,7 @@ class TestCellular(unittest.TestCase):
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
                                                  "enableAuth": 0,
+                                                 "status": 'disconnected',
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
