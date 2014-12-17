@@ -200,7 +200,7 @@ class Cellular(Sanji):
 
             return True
         except Exception:
-                return False
+            return False
 
     def set_offline_by_id(self, dev_id):
         try:
@@ -281,6 +281,7 @@ class Cellular(Sanji):
 
         id = int(message.param['id'])
         print "ID %d" % id
+        print self.model.db
         if id > len(self.model.db):
                 return response(code=400, data={
                     "message": "No such id resources."})
@@ -358,6 +359,9 @@ class Cellular(Sanji):
         while True:
             self.reconnect_if_disconnected()
             sleep(30)
+
+    def before_stop(self):
+        self.model.stop_backup()
 
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"

@@ -52,3 +52,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Config
+data/cellular.json
+data/cellular.backup.json

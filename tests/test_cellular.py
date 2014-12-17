@@ -49,6 +49,10 @@ class TestCellular(unittest.TestCase):
 
     @patch("cellular.Cellular.set_pincode_by_id")
     def setUp(self, set_pincode_by_id):
+        try:
+            os.unlink(dirpath + "/../data/cellular.json")
+        except Exception:
+            pass
         set_pincode_by_id.return_value = True
         self.cellular = Cellular(connection=Mockup())
 
@@ -448,13 +452,19 @@ class TestCellular(unittest.TestCase):
 
     def test_set_online_by_id(self):
         self.cellular = Cellular(connection=Mockup())
+        self.cellular.model.db = [{'enable': 1,
+                                   'modemPort': '/dev/ttyS0', 'id': '0',
+                                   'enableAuth': 1, 'apn': 'internet',
+                                   'authType': 'PAP',
+                                   'username': 'username',
+                                   'password': 'password'}]
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.\
                 return_value = "\
                                 Packet data handle: '123'\
                                 CID: '23'"
             self.cellular.cid = "1234"
-            res = self.cellular.set_online_by_id('1')
+            res = self.cellular.set_online_by_id('0')
             self.assertEqual(res, True)
 
     def test_set_online_by_id_exception(self):
@@ -482,9 +492,16 @@ class TestCellular(unittest.TestCase):
 
     def test_set_preference_by_id(self):
         self.cellular = Cellular(connection=Mockup())
+        self.cellular.model.db = [{'enable': 1,
+                                   'modemPort': '/dev/ttyS0', 'id': '0',
+                                   'enableAuth': 1, 'apn': 'internet',
+                                   'authType': 'PAP',
+                                   'username': 'username',
+                                   'password': 'password',
+                                   'modes': 'umts'}]
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = True
-            res = self.cellular.set_preference_by_id('1')
+            res = self.cellular.set_preference_by_id('0')
             self.assertEqual(res, True)
 
     def test_set_preference_by_id_exception(self):
@@ -562,6 +579,8 @@ class TestCellular(unittest.TestCase):
         self.cellular.get_signal_by_id = Mock(return_value=78)
         self.cellular.get_status_by_id = Mock(return_value='disconnected')
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
+        self.cellular.set_offline_by_id = Mock()
+        self.cellular.set_online_by_id = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
 
