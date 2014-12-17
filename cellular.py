@@ -357,7 +357,8 @@ class Cellular(Sanji):
 
     def run(self):
         for model in self.model.db:
-            self.set_pincode_by_id(model['id'], model["pinCode"])
+            if len(model["pinCode"]) == 4:
+                self.set_pincode_by_id(model['id'], model["pinCode"])
         while True:
             self.reconnect_if_disconnected()
             sleep(30)
