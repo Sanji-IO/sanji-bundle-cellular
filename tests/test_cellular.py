@@ -123,8 +123,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -155,8 +156,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -181,8 +183,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -207,8 +210,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -233,8 +237,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -259,8 +264,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -285,8 +291,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -310,8 +317,9 @@ class TestCellular(unittest.TestCase):
                                                  "password": "passw0rd",
                                                  "pinCode": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 1,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "authType": "BOTH",
                                                  "modes": "default",
                                                  "delay": 40
@@ -372,8 +380,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -397,8 +406,9 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
-                                                 "status": 'disconnected',
+                                                 "status": 0,
                                                  "modes": "default",
                                                  "delay": 40
                                                  })
@@ -442,7 +452,7 @@ class TestCellular(unittest.TestCase):
                 "Connection status: 'disconnected'"
             subprocess.call.return_value = True
             res = self.cellular.get_status_by_id('1')
-            self.assertEqual(res, 'disconnected')
+            self.assertEqual(res, 0)
 
     def test_get_status_by_id_with_no_cid(self):
         self.cellular = Cellular(connection=Mockup())
@@ -451,19 +461,20 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value = True
             subprocess.call.return_value = True
             res = self.cellular.get_status_by_id('1')
-            self.assertEqual(res, 'disconnected')
+            self.assertEqual(res, 2)
 
     def test_get_status_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
             res = self.cellular.get_status_by_id('1')
-            self.assertEqual(res, 'disconnected')
+            self.assertEqual(res, 2)
 
     def test_set_online_by_id(self):
         self.cellular = Cellular(connection=Mockup())
         self.cellular.model.db = [{'enable': 1,
                                    'modemPort': '/dev/ttyS0', 'id': '0',
+                                   'atPort': '/dev/ttyS0',
                                    'enableAuth': 1, 'apn': 'internet',
                                    'authType': 'PAP',
                                    'username': 'username',
@@ -504,6 +515,7 @@ class TestCellular(unittest.TestCase):
         self.cellular = Cellular(connection=Mockup())
         self.cellular.model.db = [{'enable': 1,
                                    'modemPort': '/dev/ttyS0', 'id': '0',
+                                   'atPort': '/dev/ttyS0',
                                    'enableAuth': 1, 'apn': 'internet',
                                    'authType': 'PAP',
                                    'username': 'username',
@@ -574,20 +586,22 @@ class TestCellular(unittest.TestCase):
     def test_reconnect_if_disconnected(self):
         self.cellular.model.db = [{'enable': 1,
                                    'modemPort': '/dev/ttyS0',
+                                   'atPort': '/dev/ttyS0',
                                    'id': '0', 'apn': 'internet'}]
         self.cellular.get_signal_by_id = Mock(return_value=99)
         self.cellular.is_target_device_appear = Mock(return_value=False)
-        self.cellular.get_status_by_id = Mock(return_value='disconnected')
+        self.cellular.get_status_by_id = Mock(return_value=0)
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 99)
 
     def test_reconnect_if_disconnected_when_disconnect_and_enable_true(self):
         self.cellular.model.db = [{'enable': 1,
                                    'modemPort': '/dev/ttyS0',
+                                   'atPort': '/dev/ttyS0',
                                    'id': '0', 'apn': 'internet'}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
-        self.cellular.get_status_by_id = Mock(return_value='disconnected')
+        self.cellular.get_status_by_id = Mock(return_value=0)
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.set_offline_by_id = Mock()
         self.cellular.set_online_by_id = Mock()
@@ -596,20 +610,22 @@ class TestCellular(unittest.TestCase):
 
     def test_reconnect_if_disconnected_when_connect_and_enable_false(self):
         self.cellular.model.db = [{'enable': 0,
+                                   'atPort': '/dev/ttyS0',
                                    'modemPort': '/dev/ttyS0', 'id': '0'}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
-        self.cellular.get_status_by_id = Mock(return_value='connected')
+        self.cellular.get_status_by_id = Mock(return_value=1)
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
 
     def test_reconnect_if_disconnected_when_disconnect_and_enable_false(self):
         self.cellular.model.db = [{'enable': 1,
+                                   'atPort': '/dev/ttyS0',
                                    'modemPort': '/dev/ttyS0', 'id': '0'}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
-        self.cellular.get_status_by_id = Mock(return_value='connected')
+        self.cellular.get_status_by_id = Mock(return_value=1)
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
@@ -657,6 +673,7 @@ class TestCellularPinCodeById(unittest.TestCase):
     def test_set_pincode_by_id(self):
         self.cellular.model.db = [{'pinCode': '0000',
                                    'id': '0',
+                                   'atPort': '/dev/ttyS0',
                                    'modemPort': '/dev/ttyS0'}]
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = True

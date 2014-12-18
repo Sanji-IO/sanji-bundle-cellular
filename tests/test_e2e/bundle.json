@@ -17,6 +17,10 @@
     {
       "methods": ["get", "put"],
       "resource": "/network/cellulars"
+    },
+    {
+      "methods": ["get", "put"],
+      "resource": "/network/cellulars/:id"
     }
   ]
 }
