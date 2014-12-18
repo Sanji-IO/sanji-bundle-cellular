@@ -361,7 +361,7 @@ class TestCellular(unittest.TestCase):
             self.assertEqual(200, code)
             self.assertDictContainsSubset(data, {"id": 1,
                                                  "apn": "hinet",
-                                                 "username": "root",
+                                                 "username": "",
                                                  "enable": 1,
                                                  "name": "root",
                                                  "ip": "",
@@ -374,8 +374,8 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 1,
                                                  "status": 0,
-                                                 "authType": "BOTH",
-                                                 "modes": "default",
+                                                 "authType": "PAP",
+                                                 "modes": "umts",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"modes": "umts"}
