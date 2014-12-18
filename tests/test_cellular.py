@@ -357,6 +357,33 @@ class TestCellular(unittest.TestCase):
                                      response=test_authType_with_valid_data,
                                      test=True)
 
+        def test_modes_with_valid_data(code=200, data=None):
+            self.assertEqual(200, code)
+            self.assertDictContainsSubset(data, {"id": 1,
+                                                 "apn": "hinet",
+                                                 "username": "root",
+                                                 "enable": 1,
+                                                 "name": "root",
+                                                 "ip": "",
+                                                 "gateway": "",
+                                                 "dns": "",
+                                                 "dialNumber": "*88#",
+                                                 "password": "passw0rd",
+                                                 "pinCode": "",
+                                                 "modemPort": "/dev/cdc-wdm1",
+                                                 "atPort": "/dev/ttyUSB5",
+                                                 "enableAuth": 1,
+                                                 "status": 0,
+                                                 "authType": "BOTH",
+                                                 "modes": "default",
+                                                 "delay": 40
+                                                 })
+        test_msg["data"] = {"modes": "umts"}
+        message = Message(test_msg)
+        self.cellular.put_root_by_id(message,
+                                     response=test_modes_with_valid_data,
+                                     test=True)
+
     def get_complicate_test_cases(self):
         test_msg = {
             "id": 1,
@@ -434,7 +461,14 @@ class TestCellular(unittest.TestCase):
     def test_get_signal_by_id(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
-            subprocess.check_output.return_value = True
+            subprocess.check_output.return_value = "-80"
+            res = self.cellular.get_signal_by_id('1')
+            self.assertEqual(res, "-80")
+
+    def test_get_signal_by_id_fail(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value = ""
             res = self.cellular.get_signal_by_id('1')
             self.assertEqual(res, 99)
 
@@ -445,7 +479,28 @@ class TestCellular(unittest.TestCase):
             res = self.cellular.get_signal_by_id('1')
             self.assertEqual(res, 99)
 
-    def test_get_status_by_id(self):
+    def test_get_cops_by_id(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value = "Chung Hwa"
+            res = self.cellular.get_cops_by_id('0')
+            self.assertEqual(res, "Chung Hwa")
+
+    def test_get_cops_by_id_fail(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value = ""
+            res = self.cellular.get_cops_by_id('0')
+            self.assertEqual(res, "unknown operator")
+
+    def test_get_cops_by_id_exception(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.side_effect = Exception
+            res = self.cellular.get_cops_by_id('0')
+            self.assertEqual(res, "unknown operator")
+
+    def test_get_status_by_id_disconnect(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value =\
@@ -453,6 +508,24 @@ class TestCellular(unittest.TestCase):
             subprocess.call.return_value = True
             res = self.cellular.get_status_by_id('1')
             self.assertEqual(res, 0)
+
+    def test_get_status_by_id_connect(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value =\
+                "Connection status: 'connected'"
+            subprocess.call.return_value = True
+            res = self.cellular.get_status_by_id('1')
+            self.assertEqual(res, 1)
+
+    def test_get_status_by_id_search_fail(self):
+        self.cellular = Cellular(connection=Mockup())
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value =\
+                "xxxx"
+            subprocess.call.return_value = None
+            res = self.cellular.get_status_by_id('1')
+            self.assertEqual(res, 2)
 
     def test_get_status_by_id_with_no_cid(self):
         self.cellular = Cellular(connection=Mockup())
@@ -591,6 +664,32 @@ class TestCellular(unittest.TestCase):
         self.cellular.get_signal_by_id = Mock(return_value=99)
         self.cellular.is_target_device_appear = Mock(return_value=False)
         self.cellular.get_status_by_id = Mock(return_value=0)
+        self.cellular.get_cops_by_id = Mock(return_value="unknown")
+        self.cellular.reconnect_if_disconnected()
+        self.assertEqual(self.cellular.model.db[0]['signal'], 99)
+
+    def test_reconnect_if_disconnected_operator_fail(self):
+        self.cellular.model.db = [{'enable': 1,
+                                   'modemPort': '/dev/ttyS0',
+                                   'atPort': '/dev/ttyS0',
+                                   'id': '0', 'apn': 'internet'}]
+        self.cellular.get_signal_by_id = Mock(return_value=99)
+        self.cellular.is_target_device_appear = Mock(return_value=True)
+        self.cellular.get_status_by_id = Mock(return_value=2)
+        self.cellular.get_cops_by_id = Mock(return_value="unknown")
+        self.cellular.reconnect_if_disconnected()
+        self.assertEqual(self.cellular.model.db[0]['signal'], 99)
+
+    def test_reconnect_if_disconnected_current_offline_setting_offline(self):
+        self.cellular.model.db = [{'enable': 1,
+                                   'modemPort': '/dev/ttyS0',
+                                   'atPort': '/dev/ttyS0',
+                                   'enable': 0,
+                                   'id': '0', 'apn': 'internet'}]
+        self.cellular.get_signal_by_id = Mock(return_value=99)
+        self.cellular.is_target_device_appear = Mock(return_value=True)
+        self.cellular.get_status_by_id = Mock(return_value=0)
+        self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 99)
 
@@ -602,6 +701,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
         self.cellular.get_status_by_id = Mock(return_value=0)
+        self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.set_offline_by_id = Mock()
         self.cellular.set_online_by_id = Mock()
@@ -615,6 +715,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
         self.cellular.get_status_by_id = Mock(return_value=1)
+        self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
@@ -626,6 +727,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
         self.cellular.get_status_by_id = Mock(return_value=1)
+        self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
@@ -678,6 +780,16 @@ class TestCellularPinCodeById(unittest.TestCase):
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = True
             res = self.cellular.set_pincode_by_id('0', '0000')
+            self.assertTrue(res)
+
+    def test_set_pincode_by_id_empty(self):
+        self.cellular.model.db = [{'pinCode': '',
+                                   'id': '0',
+                                   'atPort': '/dev/ttyS0',
+                                   'modemPort': '/dev/ttyS0'}]
+        with patch("cellular.subprocess") as subprocess:
+            subprocess.check_output.return_value = True
+            res = self.cellular.set_pincode_by_id('0', '')
             self.assertTrue(res)
 
     def test_put_cases(self):

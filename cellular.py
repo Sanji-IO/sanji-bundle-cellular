@@ -181,7 +181,7 @@ class Cellular(Sanji):
             else:
                 return 'unknown operator'
         except Exception:
-            return 99
+            return 'unknown operator'
 
     def get_status_by_id(self, dev_id):
         try:
@@ -278,14 +278,15 @@ class Cellular(Sanji):
     def set_pincode_by_id(self, dev_id, pinCode):
         did = int(dev_id)
         pin_len = len(pinCode)
-        if (pin_len == 4) or (pin_len == 0):
-                command = "qmicli -p -d " + self.model.db[did]['modemPort'] +\
-                          " --dms-uim-verify-pin=PIN," +\
-                          self.model.db[did]['pinCode']
-                subprocess.check_output(command, shell=True)
+        if (pin_len == 4):
+            command = "qmicli -p -d " + self.model.db[did]['modemPort'] +\
+                      " --dms-uim-verify-pin=PIN," +\
+                      self.model.db[did]['pinCode']
+            subprocess.check_output(command, shell=True)
+            return True
+        if (pin_len == 0):
                 return True
-        else:
-            return False
+        return False
 
     def init(self, *args, **kwargs):
         path_root = os.path.abspath(os.path.dirname(__file__))
