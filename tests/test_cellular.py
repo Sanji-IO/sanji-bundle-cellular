@@ -114,7 +114,7 @@ class TestCellular(unittest.TestCase):
                                                  "apn": "internet",
                                                  "username": "whoru",
                                                  "enable": 0,
-                                                 "name": "ppp",
+                                                 "name": "wwan1",
                                                  "ip": "",
                                                  "gateway": "",
                                                  "dns": "",
@@ -126,7 +126,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"username": "whoru", "dialNumber": "9999"}
@@ -147,7 +146,7 @@ class TestCellular(unittest.TestCase):
                                                  "apn": "internet",
                                                  "username": "whoru",
                                                  "enable": 1,
-                                                 "name": "ppp",
+                                                 "name": "wwan1",
                                                  "ip": "",
                                                  "gateway": "",
                                                  "dns": "",
@@ -159,7 +158,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"enable": 1}
@@ -174,7 +172,7 @@ class TestCellular(unittest.TestCase):
                                                  "apn": "hinet",
                                                  "username": "whoru",
                                                  "enable": 1,
-                                                 "name": "ppp",
+                                                 "name": "wwan1",
                                                  "ip": "",
                                                  "gateway": "",
                                                  "dns": "",
@@ -186,7 +184,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"apn": "hinet"}
@@ -201,7 +198,7 @@ class TestCellular(unittest.TestCase):
                                                  "apn": "hinet",
                                                  "username": "root",
                                                  "enable": 1,
-                                                 "name": "ppp",
+                                                 "name": "wwan1",
                                                  "ip": "",
                                                  "gateway": "",
                                                  "dns": "",
@@ -213,7 +210,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"username": "root"}
@@ -240,7 +236,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"name": "root"}
@@ -267,7 +262,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"dialNumber": "*88#"}
@@ -294,7 +288,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"password": "passw0rd"}
@@ -321,7 +314,6 @@ class TestCellular(unittest.TestCase):
                                                  "enableAuth": 1,
                                                  "status": 0,
                                                  "authType": "BOTH",
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"enableAuth": 1, "authType": "BOTH",
@@ -357,33 +349,6 @@ class TestCellular(unittest.TestCase):
                                      response=test_authType_with_valid_data,
                                      test=True)
 
-        def test_modes_with_valid_data(code=200, data=None):
-            self.assertEqual(200, code)
-            self.assertDictContainsSubset(data, {"id": 1,
-                                                 "apn": "hinet",
-                                                 "username": "",
-                                                 "enable": 1,
-                                                 "name": "root",
-                                                 "ip": "",
-                                                 "gateway": "",
-                                                 "dns": "",
-                                                 "dialNumber": "*88#",
-                                                 "password": "passw0rd",
-                                                 "pinCode": "",
-                                                 "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
-                                                 "enableAuth": 1,
-                                                 "status": 0,
-                                                 "authType": "PAP",
-                                                 "modes": "umts",
-                                                 "delay": 40
-                                                 })
-        test_msg["data"] = {"modes": "umts"}
-        message = Message(test_msg)
-        self.cellular.put_root_by_id(message,
-                                     response=test_modes_with_valid_data,
-                                     test=True)
-
     def get_complicate_test_cases(self):
         test_msg = {
             "id": 1,
@@ -410,7 +375,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
             message = Message(test_msg)
@@ -436,7 +400,6 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB5",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "modes": "default",
                                                  "delay": 40
                                                  })
             test_msg["data"] = {"id": "0", "pinCode": "0000"}
@@ -584,28 +547,6 @@ class TestCellular(unittest.TestCase):
             res = self.cellular.set_offline_by_id('1')
             self.assertFalse(res)
 
-    def test_set_preference_by_id(self):
-        self.cellular = Cellular(connection=Mockup())
-        self.cellular.model.db = [{'enable': 1,
-                                   'modemPort': '/dev/ttyS0', 'id': '0',
-                                   'atPort': '/dev/ttyS0',
-                                   'enableAuth': 1, 'apn': 'internet',
-                                   'authType': 'PAP',
-                                   'username': 'username',
-                                   'password': 'password',
-                                   'modes': 'umts'}]
-        with patch("cellular.subprocess") as subprocess:
-            subprocess.check_output.return_value = True
-            res = self.cellular.set_preference_by_id('0')
-            self.assertEqual(res, True)
-
-    def test_set_preference_by_id_exception(self):
-        self.cellular = Cellular(connection=Mockup())
-        with patch("cellular.subprocess") as subprocess:
-            subprocess.check_output.side_effect = Exception
-            res = self.cellular.set_preference_by_id('1')
-            self.assertFalse(res)
-
     def test_search_name(self):
         self.cellular = Cellular(connection=Mockup())
         res = self.cellular.search_name(self.filetext)
@@ -665,6 +606,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.is_target_device_appear = Mock(return_value=False)
         self.cellular.get_status_by_id = Mock(return_value=0)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
+        self.cellular.publish.event = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 99)
 
@@ -677,6 +619,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_status_by_id = Mock(return_value=2)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
+        self.cellular.publish.event = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 99)
 
@@ -690,6 +633,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_status_by_id = Mock(return_value=0)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
+        self.cellular.publish.event = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 99)
 
@@ -705,6 +649,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
         self.cellular.set_offline_by_id = Mock()
         self.cellular.set_online_by_id = Mock()
+        self.cellular.publish.event = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
 
@@ -717,6 +662,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.get_status_by_id = Mock(return_value=1)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
+        self.cellular.publish.event = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
 
@@ -729,6 +675,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.get_status_by_id = Mock(return_value=1)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
+        self.cellular.publish.event = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
 

@@ -32,6 +32,10 @@ class Cellular(Sanji):
         re.compile(ur'Packet data handle: \'([0-9]+)\'')
     search_link_pattern =\
         re.compile(ur'Connection status: \'([a-z]+)\'')
+    search_mode_pattern =\
+        re.compile(ur'Mode preference: \'([a-z]+)\'')
+    search_band_pattern =\
+        re.compile(ur'Band preference: \'([a-z]+)\'')
 
     def search_name(self, filetext):
         name = re.search(self.search_name_pattern, filetext)
@@ -131,7 +135,7 @@ class Cellular(Sanji):
             model['operatorName'] = self.get_cops_by_id(dev_id)
             self.set_offline_by_id(dev_id)
             self.set_online_by_id(dev_id)
-            # sleep(5)
+
             # update info according to dhclient.leases
             filetext = self.is_leases_file_appear()
             if filetext == '':
@@ -151,6 +155,9 @@ class Cellular(Sanji):
 
             # parse subnet
             model['subnet'] = self.search_subnet(filetext)
+
+            # event notification
+            self.publish.event("/network/cellulars", data=model)
 
             self.model.save_db()
 
@@ -243,12 +250,14 @@ class Cellular(Sanji):
             if len(self.cid) == 0:
                 logger.debug("Network already stopped")
             elif len(self.pdh) == 0:
+                logger.debug("Network already stopped, need to cleanup CID")
                 subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
                                         dev_id + " --wds-noop" +
                                         " --client-cid=" +
                                         self.cid,
                                         shell=True)
             else:
+                logger.debug("Network stopped success")
                 subprocess.check_output("qmicli -p -d /dev/cdc-wdm" + dev_id +
                                         " --wds-stop-network=" +
                                         self.pdh +
@@ -262,17 +271,6 @@ class Cellular(Sanji):
             self.pdh = ''
             self.cid = ''
             self.status = ''
-            return False
-
-    def set_preference_by_id(self, dev_id):
-        did = int(dev_id)
-        try:
-            command = "qmicli -p -d /dev/cdc-wdm" + dev_id +\
-                      " --nas-set-system-selection-preference=" +\
-                      self.model.db[did]['modes']
-            subprocess.check_output(command, shell=True)
-            return True
-        except Exception:
             return False
 
     def set_pincode_by_id(self, dev_id, pinCode):
@@ -363,11 +361,6 @@ class Cellular(Sanji):
                 is_match_param = 1
             else:
                 return response(code=400, data={"message": "Data invalid."})
-
-        if "modes" in message.data:
-            self.model.db[id]["modes"] = message.data["modes"]
-            self.set_preference_by_id(id)
-            is_match_param = 1
 
         if "enableAuth" in message.data:
             if (message.data["enableAuth"] == 1):
