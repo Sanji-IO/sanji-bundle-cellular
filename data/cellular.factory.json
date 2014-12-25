@@ -4,14 +4,16 @@
 		"apn": "internet",
 		"username": "",
 		"enable": 0,
-		"name": "ppp",
+		"name": "wwan0",
 		"ip": "",
 		"gateway": "",
 		"dns": "",
 		"dialNumber": "*99#",
 		"password": "",
 		"pinCode": "",
+    "status": 0,
 		"modemPort": "/dev/cdc-wdm0",
+    "atPort": "/dev/ttyUSB2",
 		"enableAuth": 0
 	},
 	{
@@ -19,14 +21,16 @@
 		"apn": "internet",
 		"username": "",
 		"enable": 0,
-		"name": "ppp",
+		"name": "wwan1",
 		"ip": "",
 		"gateway": "",
 		"dns": "",
 		"dialNumber": "*99#",
 		"password": "",
 		"pinCode": "",
+    "status": 0,
 		"modemPort": "/dev/cdc-wdm1",
+    "atPort": "/dev/ttyUSB5",
 		"enableAuth": 0
 	}
 ]
