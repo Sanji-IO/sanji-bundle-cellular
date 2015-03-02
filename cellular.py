@@ -32,6 +32,10 @@ class Cellular(Sanji):
         re.compile(ur'Packet data handle: \'([0-9]+)\'')
     search_link_pattern =\
         re.compile(ur'Connection status: \'([a-z]+)\'')
+    search_mode_pattern =\
+        re.compile(ur'Mode preference: \'([a-z]+)\'')
+    search_band_pattern =\
+        re.compile(ur'Band preference: \'([a-z]+)\'')
 
     def search_name(self, filetext):
         name = re.search(self.search_name_pattern, filetext)
@@ -74,7 +78,7 @@ class Cellular(Sanji):
         return 'N/A'
 
     def is_target_device_appear(self, name):
-        if os.path.exists(name):
+        if os.path.exists(str(name)):
             return True
         else:
             return False
@@ -91,8 +95,10 @@ class Cellular(Sanji):
     def reconnect_if_disconnected(self):
         for model in self.model.db:
 
-            if not self.is_target_device_appear(model['modemPort']):
+            if ((self.is_target_device_appear(model['modemPort']) is False) or
+                    (self.is_target_device_appear(model['atPort']) is False)):
                 model['signal'] = 99
+                model['status'] = 0
                 continue
 
             dev_id = str(model['id'])
@@ -104,19 +110,32 @@ class Cellular(Sanji):
 
             # check network availability
             # if network status down, turn up otherwise disconnect
-            if model['enable'] != 1 and \
-               self.get_status_by_id(dev_id) == 'connected':
+
+            model['status'] = self.get_status_by_id(dev_id)
+            if model['status'] == 2:
+                continue
+
+            # setting is offline, but current is online = turn offline
+            if model['enable'] == 0 and \
+               model['status'] == 1:
                 self.set_offline_by_id(dev_id)
                 continue
 
-            logger.debug("Enable is 1")
-            if self.get_status_by_id(dev_id) == 'connected':
+        # setting is online and current is online = do nothing
+            if model['enable'] == 1 and \
+               model['status'] == 1:
+                continue
+
+        # setting is offline and current is offline = do nothing
+            if model['enable'] == 0 and \
+               model['status'] == 0:
                 continue
 
             logger.debug("Start connect")
+            model['operatorName'] = self.get_cops_by_id(dev_id)
             self.set_offline_by_id(dev_id)
             self.set_online_by_id(dev_id)
-            # sleep(5)
+
             # update info according to dhclient.leases
             filetext = self.is_leases_file_appear()
             if filetext == '':
@@ -137,6 +156,9 @@ class Cellular(Sanji):
             # parse subnet
             model['subnet'] = self.search_subnet(filetext)
 
+            # event notification
+            self.publish.event("/network/cellulars", data=model)
+
             self.model.save_db()
 
     def get_signal_by_id(self, dev_id):
@@ -155,6 +177,19 @@ class Cellular(Sanji):
         except Exception:
             return 99
 
+    def get_cops_by_id(self, dev_id):
+        did = int(dev_id)
+        try:
+            command = "modem-cmd " + self.model.db[did]['atPort'] +\
+                      " \"AT+COPS?\"" + " |awk -F ',' '{print $3}'|tr -d '\"'"
+            tmp = subprocess.check_output(command, shell=True)
+            if len(tmp) > 1:
+                return tmp
+            else:
+                return 'unknown operator'
+        except Exception:
+            return 'unknown operator'
+
     def get_status_by_id(self, dev_id):
         try:
             command = ("qmicli -p -d /dev/cdc-wdm" + dev_id +
@@ -165,13 +200,20 @@ class Cellular(Sanji):
 
             out = subprocess.check_output(command, shell=True)
             status = re.search(self.search_link_pattern, out)
-            self.status = status.group(1)
-            return status.group(1)
+            if status is None:
+                return 2
+
+            if status.group(1) == 'connected':
+                self.status = 1
+
+            if status.group(1) == 'disconnected':
+                self.status = 0
+
+            return self.status
         except Exception:
-            if self.status != 'connected':
-                self.cid = ''
-                self.pdh = ''
-            return 'disconnected'
+            self.cid = ''
+            self.pdh = ''
+            return 2
 
     def set_online_by_id(self, dev_id):
         did = int(dev_id)
@@ -208,14 +250,15 @@ class Cellular(Sanji):
             if len(self.cid) == 0:
                 logger.debug("Network already stopped")
             elif len(self.pdh) == 0:
+                logger.debug("Network already stopped, need to cleanup CID")
                 subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
                                         dev_id + " --wds-noop" +
                                         " --client-cid=" +
                                         self.cid,
                                         shell=True)
             else:
-                subprocess.check_output("qmicli -p -d /dev/cdc-wdm" +
-                                        dev_id +
+                logger.debug("Network stopped success")
+                subprocess.check_output("qmicli -p -d /dev/cdc-wdm" + dev_id +
                                         " --wds-stop-network=" +
                                         self.pdh +
                                         " --client-cid=" +
@@ -225,30 +268,23 @@ class Cellular(Sanji):
             self.status = ''
             return True
         except Exception:
-            return False
-
-    def set_preference_by_id(self, dev_id):
-        did = int(dev_id)
-        try:
-            command = "qmicli -p -d /dev/cdc-wdm" + dev_id +\
-                      " --nas-set-system-selection-preference=" +\
-                      self.model.db[did]['modes']
-            subprocess.check_output(command, shell=True)
-            return True
-        except Exception:
+            self.pdh = ''
+            self.cid = ''
+            self.status = ''
             return False
 
     def set_pincode_by_id(self, dev_id, pinCode):
         did = int(dev_id)
         pin_len = len(pinCode)
-        if pin_len == 4:
-                command = "qmicli -p -d " + self.model.db[did]['modemPort'] +\
-                          " --dms-uim-verify-pin=PIN," +\
-                          self.model.db[did]['pinCode']
-                subprocess.check_output(command, shell=True)
+        if (pin_len == 4):
+            command = "qmicli -p -d " + self.model.db[did]['modemPort'] +\
+                      " --dms-uim-verify-pin=PIN," +\
+                      self.model.db[did]['pinCode']
+            subprocess.check_output(command, shell=True)
+            return True
+        if (pin_len == 0):
                 return True
-        else:
-            return False
+        return False
 
     def init(self, *args, **kwargs):
         path_root = os.path.abspath(os.path.dirname(__file__))
@@ -263,7 +299,6 @@ class Cellular(Sanji):
 
     @Route(methods="get", resource="/network/cellulars/:id")
     def get_root_by_id(self, message, response):
-            print "ID IS %s", message.param['id']
             if int(message.param['id']) > len(self.model.db):
                     return response(code=400, data={
                         "message": "No such id resources."})
@@ -280,7 +315,6 @@ class Cellular(Sanji):
         is_match_param = 0
 
         id = int(message.param['id'])
-        print "ID %d" % id
         print self.model.db
         if id > len(self.model.db):
                 return response(code=400, data={
@@ -328,11 +362,6 @@ class Cellular(Sanji):
             else:
                 return response(code=400, data={"message": "Data invalid."})
 
-        if "modes" in message.data:
-            self.model.db[id]["modes"] = message.data["modes"]
-            self.set_preference_by_id(id)
-            is_match_param = 1
-
         if "enableAuth" in message.data:
             if (message.data["enableAuth"] == 1):
                 # authType / username / password MUST ready before enable
@@ -355,10 +384,11 @@ class Cellular(Sanji):
 
     def run(self):
         for model in self.model.db:
-            self.set_pincode_by_id(model['id'], model["pinCode"])
+            if len(model["pinCode"]) == 4:
+                self.set_pincode_by_id(model['id'], model["pinCode"])
         while True:
             self.reconnect_if_disconnected()
-            sleep(30)
+            sleep(5)
 
     def before_stop(self):
         self.model.stop_backup()

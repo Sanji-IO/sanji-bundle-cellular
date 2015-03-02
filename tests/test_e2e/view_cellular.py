@@ -43,15 +43,27 @@ class View(Sanji):
         print "Pass 3 Test"
 
         print "Go Test 4"
-        res = self.publish.put(REQ_RESOURCE+'/1',
+        res = self.publish.put(REQ_RESOURCE+'/0',
+                               data={"enable": 1,
+                                     "apn": "internet"})
+        if res.code != 200:
+            print "GET should reply code 200"
+            print res.to_json()
+            self.stop()
+        else:
+            print res.to_json()
+        print "Pass 4 Test"
+
+        # print "Go Test 5"
+        res = self.publish.put(REQ_RESOURCE+'/0',
                                data={"enable": 0,
-                                     "apn": "internet.hinet.net"})
+                                     "apn": "internet"})
         if res.code != 200:
             print "GET should reply code 200"
             self.stop()
         else:
             print res.to_json()
-        print "Pass 4 Test"
+        print "Pass 5 Test"
 
         # stop the test view
         self.stop()
