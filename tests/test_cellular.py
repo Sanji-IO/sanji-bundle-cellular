@@ -123,9 +123,10 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
+                                                 "authType": "None",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"username": "whoru", "dialNumber": "9999"}
@@ -155,9 +156,10 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
+                                                 "authType": "None",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"enable": 1}
@@ -181,9 +183,10 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
+                                                 "authType": "None",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"apn": "hinet"}
@@ -207,9 +210,10 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
+                                                 "authType": "None",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"username": "root"}
@@ -233,9 +237,10 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
+                                                 "authType": "None",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"name": "root"}
@@ -259,9 +264,10 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
+                                                 "authType": "None",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"dialNumber": "*88#"}
@@ -285,9 +291,10 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
+                                                 "authType": "None",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"password": "passw0rd"}
@@ -310,7 +317,7 @@ class TestCellular(unittest.TestCase):
                                                  "password": "passw0rd",
                                                  "pinCode": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 1,
                                                  "status": 0,
                                                  "authType": "BOTH",
@@ -372,7 +379,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "delay": 40
@@ -397,7 +404,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB5",
+                                                 "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "delay": 40
@@ -425,42 +432,42 @@ class TestCellular(unittest.TestCase):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = "-80"
-            res = self.cellular.get_signal_by_id('1')
+            res = self.cellular.get_signal_by_id(1)
             self.assertEqual(res, "-80")
 
     def test_get_signal_by_id_fail(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = ""
-            res = self.cellular.get_signal_by_id('1')
+            res = self.cellular.get_signal_by_id(1)
             self.assertEqual(res, 99)
 
     def test_get_signal_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.get_signal_by_id('1')
+            res = self.cellular.get_signal_by_id(1)
             self.assertEqual(res, 99)
 
     def test_get_cops_by_id(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = "Chung Hwa"
-            res = self.cellular.get_cops_by_id('0')
+            res = self.cellular.get_cops_by_id(0)
             self.assertEqual(res, "Chung Hwa")
 
     def test_get_cops_by_id_fail(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = ""
-            res = self.cellular.get_cops_by_id('0')
+            res = self.cellular.get_cops_by_id(0)
             self.assertEqual(res, "unknown operator")
 
     def test_get_cops_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.get_cops_by_id('0')
+            res = self.cellular.get_cops_by_id(0)
             self.assertEqual(res, "unknown operator")
 
     def test_get_status_by_id_disconnect(self):
@@ -469,7 +476,7 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value =\
                 "Connection status: 'disconnected'"
             subprocess.call.return_value = True
-            res = self.cellular.get_status_by_id('1')
+            res = self.cellular.get_status_by_id(1)
             self.assertEqual(res, 0)
 
     def test_get_status_by_id_connect(self):
@@ -478,7 +485,7 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value =\
                 "Connection status: 'connected'"
             subprocess.call.return_value = True
-            res = self.cellular.get_status_by_id('1')
+            res = self.cellular.get_status_by_id(1)
             self.assertEqual(res, 1)
 
     def test_get_status_by_id_search_fail(self):
@@ -487,7 +494,7 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value =\
                 "xxxx"
             subprocess.call.return_value = None
-            res = self.cellular.get_status_by_id('1')
+            res = self.cellular.get_status_by_id(1)
             self.assertEqual(res, 2)
 
     def test_get_status_by_id_with_no_cid(self):
@@ -496,39 +503,41 @@ class TestCellular(unittest.TestCase):
             self.cellular.cid = "1234"
             subprocess.check_output.return_value = True
             subprocess.call.return_value = True
-            res = self.cellular.get_status_by_id('1')
+            res = self.cellular.get_status_by_id(1)
             self.assertEqual(res, 2)
 
     def test_get_status_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.get_status_by_id('1')
+            res = self.cellular.get_status_by_id(1)
             self.assertEqual(res, 2)
 
     def test_set_online_by_id(self):
         self.cellular = Cellular(connection=Mockup())
         self.cellular.model.db = [{'enable': 1,
-                                   'modemPort': '/dev/ttyS0', 'id': '0',
+                                   'name': 'wwan1',
+                                   'modemPort': '/dev/ttyS0', 'id': 0,
                                    'atPort': '/dev/ttyS0',
                                    'enableAuth': 1, 'apn': 'internet',
                                    'authType': 'PAP',
                                    'username': 'username',
                                    'password': 'password'}]
+        self.cellular.check_dhclient = Mock()
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.\
                 return_value = "\
                                 Packet data handle: '123'\
                                 CID: '23'"
             self.cellular.cid = "1234"
-            res = self.cellular.set_online_by_id('0')
+            res = self.cellular.set_online_by_id(0)
             self.assertEqual(res, True)
 
     def test_set_online_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.set_online_by_id('1')
+            res = self.cellular.set_online_by_id(1)
             self.assertFalse(res)
 
     def test_set_offline_by_id_with_no_cid(self):
@@ -537,14 +546,14 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value = True
             self.cellular.cid = ""
             self.cellular.pdh = ""
-            res = self.cellular.set_offline_by_id('1')
+            res = self.cellular.set_offline_by_id(1)
             self.assertEqual(res, True)
 
     def test_set_offline_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.set_offline_by_id('1')
+            res = self.cellular.set_offline_by_id(1)
             self.assertFalse(res)
 
     def test_search_name(self):
@@ -601,7 +610,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.model.db = [{'enable': 1,
                                    'modemPort': '/dev/ttyS0',
                                    'atPort': '/dev/ttyS0',
-                                   'id': '0', 'apn': 'internet'}]
+                                   'id': 0, 'apn': 'internet'}]
         self.cellular.get_signal_by_id = Mock(return_value=99)
         self.cellular.is_target_device_appear = Mock(return_value=False)
         self.cellular.get_status_by_id = Mock(return_value=0)
@@ -614,7 +623,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.model.db = [{'enable': 1,
                                    'modemPort': '/dev/ttyS0',
                                    'atPort': '/dev/ttyS0',
-                                   'id': '0', 'apn': 'internet'}]
+                                   'id': 0, 'apn': 'internet'}]
         self.cellular.get_signal_by_id = Mock(return_value=99)
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_status_by_id = Mock(return_value=2)
@@ -628,7 +637,7 @@ class TestCellular(unittest.TestCase):
                                    'modemPort': '/dev/ttyS0',
                                    'atPort': '/dev/ttyS0',
                                    'enable': 0,
-                                   'id': '0', 'apn': 'internet'}]
+                                   'id': 0, 'apn': 'internet'}]
         self.cellular.get_signal_by_id = Mock(return_value=99)
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_status_by_id = Mock(return_value=0)
@@ -641,7 +650,7 @@ class TestCellular(unittest.TestCase):
         self.cellular.model.db = [{'enable': 1,
                                    'modemPort': '/dev/ttyS0',
                                    'atPort': '/dev/ttyS0',
-                                   'id': '0', 'apn': 'internet'}]
+                                   'id': 0, 'apn': 'internet'}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
         self.cellular.get_status_by_id = Mock(return_value=0)
@@ -656,7 +665,7 @@ class TestCellular(unittest.TestCase):
     def test_reconnect_if_disconnected_when_connect_and_enable_false(self):
         self.cellular.model.db = [{'enable': 0,
                                    'atPort': '/dev/ttyS0',
-                                   'modemPort': '/dev/ttyS0', 'id': '0'}]
+                                   'modemPort': '/dev/ttyS0', 'id': 0}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
         self.cellular.get_status_by_id = Mock(return_value=1)
@@ -669,7 +678,7 @@ class TestCellular(unittest.TestCase):
     def test_reconnect_if_disconnected_when_disconnect_and_enable_false(self):
         self.cellular.model.db = [{'enable': 1,
                                    'atPort': '/dev/ttyS0',
-                                   'modemPort': '/dev/ttyS0', 'id': '0'}]
+                                   'modemPort': '/dev/ttyS0', 'id': 0}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
         self.cellular.get_status_by_id = Mock(return_value=1)
@@ -721,29 +730,29 @@ class TestCellularPinCodeById(unittest.TestCase):
 
     def test_set_pincode_by_id(self):
         self.cellular.model.db = [{'pinCode': '0000',
-                                   'id': '0',
+                                   'id': 0,
                                    'atPort': '/dev/ttyS0',
                                    'modemPort': '/dev/ttyS0'}]
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = True
-            res = self.cellular.set_pincode_by_id('0', '0000')
+            res = self.cellular.set_pincode_by_id(0, '0000')
             self.assertTrue(res)
 
     def test_set_pincode_by_id_empty(self):
         self.cellular.model.db = [{'pinCode': '',
-                                   'id': '0',
+                                   'id': 0,
                                    'atPort': '/dev/ttyS0',
                                    'modemPort': '/dev/ttyS0'}]
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = True
-            res = self.cellular.set_pincode_by_id('0', '')
+            res = self.cellular.set_pincode_by_id(0, '')
             self.assertTrue(res)
 
     def test_put_cases(self):
         test_msg = {
             "id": 12345,
             "method": "put",
-            "param": {"id": "1"},
+            "param": {"id": 1},
             "resource": "/network/cellulars"
         }
 
