@@ -5,158 +5,182 @@ import os
 import logging
 import subprocess
 import re
+import sh
 from time import sleep
 from sanji.core import Sanji
 from sanji.core import Route
 from sanji.connection.mqtt import Mqtt
 from sanji.model_initiator import ModelInitiator
+from modemcmd import modemcmd
+from modemcmd import ModemcmdTimeoutException
+from subprocess import CalledProcessError
+
+_logger = logging.getLogger("sanji.cellular")
 
 
-logger = logging.getLogger()
+def save_state(pdh, cid):
+    sh.echo("%s,%s" % (pdh, cid), _out="/run/shm/cellular.tmp")
+
+
+def load_state():
+    try:
+        return sh.cat("/run/shm/cellular.tmp").split(",")
+    except Exception as e:
+        _logger.debug(str(e), exc_info=True)
+        return ('', '')
 
 
 class Cellular(Sanji):
+
     search_router_pattern =\
-        re.compile(ur'option routers ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
+        re.compile(ur"option routers ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
     search_dns_pattern =\
-        re.compile(ur'option domain-name-servers (.*);')
+        re.compile(ur"option domain-name-servers (.*);")
     search_ip_pattern =\
-        re.compile(ur'fixed-address ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
+        re.compile(ur"fixed-address ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
     search_subnet_pattern =\
-        re.compile(ur'option subnet-mask ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)')
+        re.compile(ur"option subnet-mask ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
     search_name_pattern =\
-        re.compile(ur'interface "([a-z]+[0-9])"')
+        re.compile(ur"interface \"([a-z]+[0-9])\"")
     search_cid_pattern =\
-        re.compile(ur'CID: \'([0-9]+)\'')
+        re.compile(ur"CID: '([0-9]+)'")
     search_pdh_pattern =\
-        re.compile(ur'Packet data handle: \'([0-9]+)\'')
+        re.compile(ur"Packet data handle: '([0-9]+)'")
     search_link_pattern =\
-        re.compile(ur'Connection status: \'([a-z]+)\'')
+        re.compile(ur"Connection status: '([a-z]+)'")
     search_mode_pattern =\
-        re.compile(ur'Mode preference: \'([a-z]+)\'')
+        re.compile(ur"Mode preference: '([a-z]+)'")
     search_band_pattern =\
-        re.compile(ur'Band preference: \'([a-z]+)\'')
+        re.compile(ur"Band preference: '([a-z]+)'")
 
     def search_name(self, filetext):
         name = re.search(self.search_name_pattern, filetext)
         if name:
-            logger.debug("name is %s" % name.group(1))
+            _logger.debug("name is %s" % name.group(1))
             return name.group(1)
 
-        return 'N/A'
+        return "N/A"
 
     def search_router(self, filetext):
         router = re.search(self.search_router_pattern, filetext)
         if router:
-            logger.debug("router is %s" % router.group(1))
+            _logger.debug("router is %s" % router.group(1))
             return router.group(1)
 
-        return 'N/A'
+        return "N/A"
 
     def search_dns(self, filetext):
         dns = re.search(self.search_dns_pattern, filetext)
         if dns:
-            logger.debug("dns is %s" % dns.group(1))
+            _logger.debug("dns is %s" % dns.group(1))
             return dns.group(1)
 
-        return 'N/A'
+        return "N/A"
 
     def search_ip(self, filetext):
         ip = re.search(self.search_ip_pattern, filetext)
         if ip:
-            logger.debug("ip is %s" % ip.group(1))
+            _logger.debug("ip is %s" % ip.group(1))
             return ip.group(1)
 
-        return 'N/A'
+        return "N/A"
 
     def search_subnet(self, filetext):
         subnet = re.search(self.search_subnet_pattern, filetext)
         if subnet:
-            logger.debug("subnet is %s" % subnet.group(1))
+            _logger.debug("subnet is %s" % subnet.group(1))
             return subnet.group(1)
 
-        return 'N/A'
+        return "N/A"
 
     def is_target_device_appear(self, name):
         return os.path.exists(str(name))
 
     def is_leases_file_appear(self):
         try:
-            with open('/var/lib/dhcp/dhclient.leases', 'r') as leases:
+            with open("/var/lib/dhcp/dhclient.leases", "r") as leases:
                 filetext = leases.read()
                 return filetext
         except Exception:
-            logger.debug("File open failure")
-            return ''
+            _logger.debug("/var/lib/dhcp/dhclient.leases open failure")
+            return None
 
     def reconnect_if_disconnected(self):
         for model in self.model.db:
 
-            if ((self.is_target_device_appear(model['modemPort']) is False) or
-                    (self.is_target_device_appear(model['atPort']) is False)):
-                model['signal'] = 99
-                model['status'] = 0
+            if ((self.is_target_device_appear(model["modemPort"]) is False) or
+                    (self.is_target_device_appear(model["atPort"]) is False)):
+                model["signal"] = 99
+                model["status"] = 0
                 continue
 
-            dev_id = model['id'] - 1
+            dev_id = model["id"] - 1
             # update signal
-            model['signal'] = self.get_signal_by_id(dev_id)
-            model['operatorName'] = self.get_cops_by_id(dev_id)
-            model['status'] = self.get_status_by_id(dev_id)
+            model["signal"] = self.get_signal_by_id(dev_id)
+            model["operatorName"] = self.get_cops_by_id(dev_id)
+            model["status"] = self.get_status_by_id(dev_id)
 
             # check network availability
             # if network status down, turn up otherwise disconnect
-            logger.debug(
+            _logger.debug(
                 "Signal: %s Operator: \"%s\" Status: %s on device path %s"
-                % (model['signal'],
-                   model['operatorName'],
-                   model['status'],
-                   model['modemPort']))
+                % (model["signal"],
+                   model["operatorName"],
+                   model["status"],
+                   model["modemPort"]))
+
+            # if offline clear previous ip, gateway, etc...
+            if model["enable"] == 0:
+                model["router"] = ""
+                model["dns"] = ""
+                model["ip"] = ""
+                model["subnet"] = ""
 
             if model['status'] == 2:
                 continue
 
             # setting is offline, but current is online = turn offline
-            if model['enable'] == 0 and model['status'] == 1:
+            if model["enable"] == 0 and model["status"] == 1:
                 self.set_offline_by_id(dev_id)
                 continue
 
-            # setting is online and current is online = do nothing
-            if model['enable'] == 1 and model['status'] == 1:
-                continue
-
             # setting is offline and current is offline = do nothing
-            if model['enable'] == 0 and model['status'] == 0:
+            if model["enable"] == 0 and model["status"] == 0:
                 continue
 
             # setting is online and current is offline = start connect
-            logger.debug("Start connect")
-            self.set_offline_by_id(dev_id)
-            self.set_online_by_id(dev_id)
+            if model["enable"] == 1 and model["status"] == 0:
+                _logger.debug("Start connect")
+                self.set_offline_by_id(dev_id)
+                self.set_online_by_id(dev_id)
 
             # update info according to dhclient.leases
             filetext = self.is_leases_file_appear()
-            if filetext == '':
+            if filetext is None:
                 continue
 
-            # parse name
-            model['name'] = self.search_name(filetext)
-
             # parse router
-            model['router'] = self.search_router(filetext)
+            model["router"] = self.search_router(filetext)
 
             # parse dns
-            model['dns'] = self.search_dns(filetext)
+            model["dns"] = self.search_dns(filetext)
 
             # parse ip
-            model['ip'] = self.search_ip(filetext)
+            model["ip"] = self.search_ip(filetext)
 
             # parse subnet
-            model['subnet'] = self.search_subnet(filetext)
+            model["subnet"] = self.search_subnet(filetext)
 
-            # event notification
-            self.publish.event.put(
-                "/notify/cellular/online/%s" % model['id'], data=model)
+            # event notification (in mins)
+            count = self.event_counter.get(model["name"], 0)
+            if count == 0:
+                self.publish.event.put("/network/interfaces", data={
+                    "name": model["name"],
+                    "gateway": model["router"]
+                })
+
+            count = count + 1
+            self.event_counter[model["name"]] = 0 if count > 10 else count
 
             self.model.save_db()
 
@@ -166,32 +190,33 @@ class Cellular(Sanji):
                 "qmicli -p -d %s --nas-get-signal-info | grep RSSI \
                 | cut -d \"'\" -f 2 \
                 | cut -d \" \" -f 1 \
-                | tail -n 1" % (self.model.db[dev_id]['modemPort']),
+                | tail -n 1" % (self.model.db[dev_id]["modemPort"]),
                 shell=True)
             if len(tmp) > 1:
                 return str(tmp).strip()
             else:
                 return 99
         except Exception as e:
-            logger.debug(e)
+            _logger.debug(e)
             return 99
 
     def get_cops_by_id(self, dev_id):
         try:
-            command = "modem-cmd " + self.model.db[dev_id]['atPort'] +\
-                      " \"AT+COPS?\"" + " |awk -F ',' '{print $3}'|tr -d '\"'"
-            tmp = subprocess.check_output(command, shell=True)
-            if len(tmp) > 1:
-                return tmp.strip()
-            else:
-                return 'unknown operator'
+            out = modemcmd(self.model.db[dev_id]["atPort"], "AT+COPS?")
+            out = out.split(",")
+            if len(out) == 4:
+                return out[2].strip("\"")
+            _logger.debug(out)
+        except ModemcmdTimeoutException as e:
+            _logger.debug(e)
         except Exception as e:
-            logger.debug(e)
-            return 'unknown operator'
+            _logger.error(e, exc_info=True)
+
+        return "Unknown Operator"
 
     def get_status_by_id(self, dev_id):
         try:
-            command = ("qmicli -p -d " + self.model.db[dev_id]['modemPort'] +
+            command = ("qmicli -p -d " + self.model.db[dev_id]["modemPort"] +
                        " --wds-get-packet-service-status")
             if len(self.cid) != 0:
                 command += (" --client-cid=" + self.cid +
@@ -202,29 +227,31 @@ class Cellular(Sanji):
             if status is None:
                 return 2
 
-            if status.group(1) == 'connected':
+            if status.group(1) == "connected":
                 self.status = 1
-            elif status.group(1) == 'disconnected':
+            elif status.group(1) == "disconnected":
                 self.status = 0
 
             return self.status
         except Exception:
-            self.cid = ''
-            self.pdh = ''
+            self.cid = ""
+            self.pdh = ""
             return 2
 
     def set_online_by_id(self, dev_id):
         try:
             subprocess.check_output("rm -rf /var/lib/dhcp/dhclient.leases",
                                     shell=True)
-            command = "qmicli -p -d " + self.model.db[dev_id]['modemPort'] +\
-                      " --wds-start-network=" + self.model.db[dev_id]['apn'] +\
-                      " --client-no-release-cid"
+            command = "qmicli -p -d " + self.model.db[dev_id]["modemPort"] +\
+                      " --wds-start-network=" + self.model.db[dev_id]["apn"] +\
+                      " --client-no-release-cid --client-no-release-cid"
+            # not support yet v1.4
+            # "--device-open-net="net-802-3|net-no-qos-header""
 
-            if self.model.db[dev_id]['enableAuth'] != 0:
-                command += "," + self.model.db[dev_id]['authType'] +\
-                           "," + self.model.db[dev_id]['username'] +\
-                           "," + self.model.db[dev_id]['password']
+            if self.model.db[dev_id]["enableAuth"] != 0:
+                command += "," + self.model.db[dev_id]["authType"] +\
+                           "," + self.model.db[dev_id]["username"] +\
+                           "," + self.model.db[dev_id]["password"]
 
             if len(self.cid) != 0:
                 command += " --client-cid=" + self.cid
@@ -232,41 +259,47 @@ class Cellular(Sanji):
             out = subprocess.check_output(command, shell=True)
             cid = re.search(self.search_cid_pattern, out)
             pdh = re.search(self.search_pdh_pattern, out)
-            self.check_dhclient(self.model.db[dev_id]['name'])
+            self.check_dhclient(self.model.db[dev_id]["name"])
             self.cid = cid.group(1)
             self.pdh = pdh.group(1)
+            save_state(self.pdh, self.cid)
 
             return True
         except Exception as e:
-            logger.debug(e)
+            _logger.debug(e)
             return False
 
     def set_offline_by_id(self, dev_id):
         try:
-            subprocess.check_output(
-                ["dhclient", "-r", self.model.db[dev_id]['name']])
+            try:
+                subprocess.check_output(
+                    ["dhclient", "-r", self.model.db[dev_id]["name"]])
+            except CalledProcessError:
+                pass
             if len(self.cid) == 0:
-                logger.debug("Network already stopped")
+                _logger.debug("Network already stopped")
             elif len(self.pdh) == 0:
-                logger.debug("Network already stopped, need to cleanup CID")
+                _logger.debug("Network already stopped, need to cleanup CID")
                 subprocess.check_output(
                     "qmicli -p -d %s --wds-noop --client-cid=%s"
-                    % (self.model.db[dev_id]['modemPort'], self.cid),
+                    % (self.model.db[dev_id]["modemPort"], self.cid),
                     shell=True)
             else:
-                logger.debug("Network stopped success")  #
+                _logger.debug("Network stopped success")  #
                 subprocess.check_output(
                     "qmicli -p -d %s --wds-stop-network=%s --client-cid=%s"
-                    % (self.model.db[dev_id]['modemPort'], self.pdh, self.cid),
+                    % (self.model.db[dev_id]["modemPort"], self.pdh, self.cid),
                     shell=True)
-            self.pdh = ''
-            self.cid = ''
-            self.status = ''
+
+            self.pdh = ""
+            self.cid = ""
+            self.status = ""
             return True
-        except Exception:
-            self.pdh = ''
-            self.cid = ''
-            self.status = ''
+        except Exception as e:
+            _logger.debug(str(e), exc_info=True)
+            self.pdh = ""
+            self.cid = ""
+            self.status = ""
             return False
 
     def set_pincode_by_id(self, dev_id, pinCode):
@@ -279,21 +312,21 @@ class Cellular(Sanji):
         try:
             subprocess.check_output(
                 "qmicli -p -d %s --dms-uim-verify-pin=PIN,%s"
-                % (self.model.db[dev_id]['modemPort'], pinCode), shell=True)
+                % (self.model.db[dev_id]["modemPort"], pinCode), shell=True)
         except Exception, e:
             # if pin code failed, clean up
-            self.model.db[dev_id]['pinCode'] = ""
-            logger.debug(e)
+            self.model.db[dev_id]["pinCode"] = ""
+            _logger.debug(e)
             return False
 
         return True
 
     def init(self, *args, **kwargs):
         path_root = os.path.abspath(os.path.dirname(__file__))
-        self.cid = ''
-        self.pdh = ''
-        self.status = ''
+        self.pdh, self.cid = load_state()
+        self.status = ""
         self.model = ModelInitiator("cellular", path_root)
+        self.event_counter = {}
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
@@ -301,7 +334,7 @@ class Cellular(Sanji):
 
     @Route(methods="get", resource="/network/cellulars/:id")
     def get_root_by_id(self, message, response):
-        id = int(message.param['id']) - 1
+        id = int(message.param["id"]) - 1
         if id > len(self.model.db) or id < 0:
             return response(
                 code=400, data={"message": "No such id resources."})
@@ -315,7 +348,7 @@ class Cellular(Sanji):
 
         is_match_param = 0
 
-        id = int(message.param['id']) - 1
+        id = int(message.param["id"]) - 1
         if id > len(self.model.db) or id < 0:
                 return response(
                     code=400, data={"message": "No such id resources."})
@@ -353,7 +386,7 @@ class Cellular(Sanji):
                 return response(code=400, data={"message": "PIN invalid."})
 
         # None / PAP / CHAP / BOTH
-        if "authType" in message.data:
+        if "authType" in message.data and message.data["authType"] != "None":
             if (message.data["authType"] == "PAP" or
                     message.data["authType"] == "CHAP" or
                     message.data["authType"] == "BOTH"):
@@ -388,14 +421,14 @@ class Cellular(Sanji):
             shell=True)
         if ret == 0:
             return
-        logger.debug("%s not exists. starting..." % (process))
+        _logger.debug("%s not exists. starting..." % (process))
 
         if bg is True:
             process += " &"
         ret = subprocess.call("%s" % (process), shell=True)
 
         if ret != 0:
-            logger.debug("%s start failed." % (process))
+            _logger.debug("%s start failed." % (process))
 
     def check_proxy(self):
         self.check_process("/usr/local/libexec/qmi-proxy", bg=True)
@@ -407,7 +440,7 @@ class Cellular(Sanji):
         self.check_proxy()
         for model in self.model.db:
             if len(model["pinCode"]) == 4:
-                self.set_pincode_by_id(model['id'], model["pinCode"])
+                self.set_pincode_by_id(model["id"], model["pinCode"])
         while True:
             self.check_proxy()
             self.reconnect_if_disconnected()
@@ -419,7 +452,7 @@ class Cellular(Sanji):
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
     logging.basicConfig(level=0, format=FORMAT)
-    logger = logging.getLogger("Sanji Cellular")
+    _logger = logging.getLogger("sanji.cellular")
 
     cellular = Cellular(connection=Mqtt())
     cellular.start()

@@ -1,4 +1,6 @@
 flake8
 paho-mqtt
 coveralls
+modem-cmd
+sh
 git+https://github.com/Sanji-IO/sanji.git#egg=sanji

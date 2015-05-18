@@ -451,24 +451,24 @@ class TestCellular(unittest.TestCase):
 
     def test_get_cops_by_id(self):
         self.cellular = Cellular(connection=Mockup())
-        with patch("cellular.subprocess") as subprocess:
-            subprocess.check_output.return_value = "Chung Hwa"
+        with patch("cellular.modemcmd") as modemcmd:
+            modemcmd.return_value = "+COPS: 0,0,\"Chunghwa Telecom\",2\r\nOK"
             res = self.cellular.get_cops_by_id(0)
-            self.assertEqual(res, "Chung Hwa")
+            self.assertEqual(res, "Chunghwa Telecom")
 
     def test_get_cops_by_id_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        with patch("cellular.subprocess") as subprocess:
-            subprocess.check_output.return_value = ""
+        with patch("cellular.modemcmd") as modemcmd:
+            modemcmd.return_value = ""
             res = self.cellular.get_cops_by_id(0)
-            self.assertEqual(res, "unknown operator")
+            self.assertEqual(res, "Unknown Operator")
 
     def test_get_cops_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
-        with patch("cellular.subprocess") as subprocess:
-            subprocess.check_output.side_effect = Exception
+        with patch("cellular.modemcmd") as modemcmd:
+            modemcmd.side_effect = Exception
             res = self.cellular.get_cops_by_id(0)
-            self.assertEqual(res, "unknown operator")
+            self.assertEqual(res, "Unknown Operator")
 
     def test_get_status_by_id_disconnect(self):
         self.cellular = Cellular(connection=Mockup())
@@ -621,6 +621,7 @@ class TestCellular(unittest.TestCase):
 
     def test_reconnect_if_disconnected_operator_fail(self):
         self.cellular.model.db = [{'enable': 1,
+                                   'name': "wwan1",
                                    'modemPort': '/dev/ttyS0',
                                    'atPort': '/dev/ttyS0',
                                    'id': 0, 'apn': 'internet'}]
@@ -648,6 +649,7 @@ class TestCellular(unittest.TestCase):
 
     def test_reconnect_if_disconnected_when_disconnect_and_enable_true(self):
         self.cellular.model.db = [{'enable': 1,
+                                   'name': "wwan1",
                                    'modemPort': '/dev/ttyS0',
                                    'atPort': '/dev/ttyS0',
                                    'id': 0, 'apn': 'internet'}]
@@ -677,6 +679,7 @@ class TestCellular(unittest.TestCase):
 
     def test_reconnect_if_disconnected_when_disconnect_and_enable_false(self):
         self.cellular.model.db = [{'enable': 1,
+                                   'name': "wwan1",
                                    'atPort': '/dev/ttyS0',
                                    'modemPort': '/dev/ttyS0', 'id': 0}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
