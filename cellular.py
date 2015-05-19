@@ -20,6 +20,7 @@ from voluptuous import Required
 from voluptuous import REMOVE_EXTRA
 from voluptuous import Range
 from voluptuous import All
+from voluptuous import Any
 from voluptuous import Length
 
 _logger = logging.getLogger("sanji.cellular")
@@ -62,14 +63,14 @@ class Cellular(Sanji):
 
     PUT_SCHEMA = Schema({
         Required("id"): int,
-        "apn": All(str, Length(1, 255)),
-        "username": All(str, Length(0, 255)),
+        "apn": Any("", All(str, Length(0, 255))),
+        "username": Any("", All(str, Length(0, 255))),
         "enable": All(int, Range(min=0, max=1)),
         "dialNumber": All(str, Length(1, 255)),
-        "password": All(str, Length(0, 255)),
-        "pinCode": All(str, Length(0, 255)),
+        "password": Any("", All(str, Length(0, 255))),
+        "pinCode": Any("", All(str, Length(0, 255))),
         "enableAuth": All(int, Range(min=0, max=1))
-    }, extra=REMOVE_EXTRA)
+      }, extra=REMOVE_EXTRA)
 
     def search_name(self, filetext):
         name = re.search(self.search_name_pattern, filetext)
@@ -464,7 +465,7 @@ class Cellular(Sanji):
     def run(self):
         self.check_proxy()
         for model in self.model.db:
-            if len(model["pinCode"]) == 4:
+            if len(model["pinCode"]) > 0:
                 self.set_pincode_by_id(model["id"], model["pinCode"])
         while True:
             self.check_proxy()
