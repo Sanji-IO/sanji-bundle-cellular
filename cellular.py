@@ -70,7 +70,7 @@ class Cellular(Sanji):
         "password": Any("", All(str, Length(0, 255))),
         "pinCode": Any("", All(str, Length(0, 255))),
         "enableAuth": All(int, Range(min=0, max=1))
-      }, extra=REMOVE_EXTRA)
+    }, extra=REMOVE_EXTRA)
 
     def search_name(self, filetext):
         name = re.search(self.search_name_pattern, filetext)
