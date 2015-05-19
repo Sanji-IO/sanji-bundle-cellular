@@ -330,7 +330,8 @@ class Cellular(Sanji):
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
-        return response(data=self.model.db)
+        return response(
+            data=[obj for obj in self.model.db if obj.get("signal", 99) != 99])
 
     @Route(methods="get", resource="/network/cellulars/:id")
     def get_root_by_id(self, message, response):
