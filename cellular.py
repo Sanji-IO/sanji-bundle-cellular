@@ -15,6 +15,13 @@ from modemcmd import modemcmd
 from modemcmd import ModemcmdTimeoutException
 from subprocess import CalledProcessError
 
+from voluptuous import Schema
+from voluptuous import Required
+from voluptuous import REMOVE_EXTRA
+from voluptuous import Range
+from voluptuous import All
+from voluptuous import Length
+
 _logger = logging.getLogger("sanji.cellular")
 
 
@@ -52,6 +59,17 @@ class Cellular(Sanji):
         re.compile(ur"Mode preference: '([a-z]+)'")
     search_band_pattern =\
         re.compile(ur"Band preference: '([a-z]+)'")
+
+    PUT_SCHEMA = Schema({
+        Required("id"): int,
+        "apn": All(str, Length(1, 255)),
+        "username": All(str, Length(0, 255)),
+        "enable": All(int, Range(min=0, max=1)),
+        "dialNumber": All(str, Length(1, 255)),
+        "password": All(str, Length(0, 255)),
+        "pinCode": All(str, Length(0, 255)),
+        "enableAuth": All(int, Range(min=0, max=1))
+    }, extra=REMOVE_EXTRA)
 
     def search_name(self, filetext):
         name = re.search(self.search_name_pattern, filetext)
@@ -347,7 +365,7 @@ class Cellular(Sanji):
         else:
             return response(code=200, data=self.model.db[id])
 
-    @Route(methods="put", resource="/network/cellulars/:id")
+    @Route(methods="put", resource="/network/cellulars/:id", schema=PUT_SCHEMA)
     def put_root_by_id(self, message, response):
         if not hasattr(message, "data"):
             return response(code=400, data={"message": "Invalid Input."})
