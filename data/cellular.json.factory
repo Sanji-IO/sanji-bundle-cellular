@@ -12,7 +12,7 @@
     "password": "",
     "pinCode": "",
     "status": 0,
-    "authType": "None",
+    "authType": "PAP",
     "modemPort": "/dev/cdc-wdm1",
     "atPort": "/dev/ttyUSB1",
     "enableAuth": 0
@@ -30,7 +30,7 @@
     "password": "",
     "pinCode": "",
     "status": 0,
-    "authType": "None",
+    "authType": "PAP",
     "modemPort": "/dev/cdc-wdm4",
     "atPort": "/dev/ttyUSB2",
     "enableAuth": 0

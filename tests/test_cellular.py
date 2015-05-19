@@ -126,7 +126,7 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "authType": "None",
+                                                 "authType": "PAP",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"username": "whoru", "dialNumber": "9999"}
@@ -159,7 +159,7 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "authType": "None",
+                                                 "authType": "PAP",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"enable": 1}
@@ -186,7 +186,7 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "authType": "None",
+                                                 "authType": "PAP",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"apn": "hinet"}
@@ -213,7 +213,7 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "authType": "None",
+                                                 "authType": "PAP",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"username": "root"}
@@ -240,7 +240,7 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "authType": "None",
+                                                 "authType": "PAP",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"name": "root"}
@@ -267,7 +267,7 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "authType": "None",
+                                                 "authType": "PAP",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"dialNumber": "*88#"}
@@ -294,7 +294,7 @@ class TestCellular(unittest.TestCase):
                                                  "atPort": "/dev/ttyUSB1",
                                                  "enableAuth": 0,
                                                  "status": 0,
-                                                 "authType": "None",
+                                                 "authType": "PAP",
                                                  "delay": 40
                                                  })
         test_msg["data"] = {"password": "passw0rd"}
@@ -635,6 +635,7 @@ class TestCellular(unittest.TestCase):
 
     def test_reconnect_if_disconnected_current_offline_setting_offline(self):
         self.cellular.model.db = [{'enable': 1,
+                                   'name': 'wwan1',
                                    'modemPort': '/dev/ttyS0',
                                    'atPort': '/dev/ttyS0',
                                    'enable': 0,
@@ -666,6 +667,7 @@ class TestCellular(unittest.TestCase):
 
     def test_reconnect_if_disconnected_when_connect_and_enable_false(self):
         self.cellular.model.db = [{'enable': 0,
+                                   'name': 'wwan1',
                                    'atPort': '/dev/ttyS0',
                                    'modemPort': '/dev/ttyS0', 'id': 0}]
         self.cellular.is_target_device_appear = Mock(return_value=True)

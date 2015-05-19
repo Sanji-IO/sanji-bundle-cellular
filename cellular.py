@@ -129,6 +129,10 @@ class Cellular(Sanji):
                    model["status"],
                    model["modemPort"]))
 
+            if self.modifed.get(model["name"], False) is True:
+                self.set_offline_by_id(dev_id)
+                self.modifed[model["name"]] = False
+
             # if offline clear previous ip, gateway, etc...
             if model["enable"] == 0:
                 model["router"] = ""
@@ -244,7 +248,7 @@ class Cellular(Sanji):
                                     shell=True)
             command = "qmicli -p -d " + self.model.db[dev_id]["modemPort"] +\
                       " --wds-start-network=" + self.model.db[dev_id]["apn"] +\
-                      " --client-no-release-cid --client-no-release-cid"
+                      " --client-no-release-cid"
             # not support yet v1.4
             # "--device-open-net="net-802-3|net-no-qos-header""
 
@@ -327,6 +331,7 @@ class Cellular(Sanji):
         self.status = ""
         self.model = ModelInitiator("cellular", path_root)
         self.event_counter = {}
+        self.modifed = {}
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
@@ -397,13 +402,12 @@ class Cellular(Sanji):
                 return response(code=400, data={"message": "Data invalid."})
 
         if "enableAuth" in message.data:
+            self.model.db[id]["enableAuth"] = message.data["enableAuth"]
             if (message.data["enableAuth"] == 1):
                 # authType / username / password MUST ready before enable
                 if (len(self.model.db[id]["authType"]) > 0 and
                         len(self.model.db[id]["username"]) > 0 and
                         len(self.model.db[id]["password"]) > 0):
-                    self.model.db[id]["enableAuth"] =\
-                        message.data["enableAuth"]
                     is_match_param = 1
                 else:
                     return response(code=400, data={"message":
@@ -411,6 +415,8 @@ class Cellular(Sanji):
 
         if is_match_param == 0:
             return response(code=400, data={"message": "No such resources."})
+        else:
+            self.modifed[self.model.db[id]["name"]] = True
 
         self.model.save_db()
         return response(code=200, data=self.model.db[id])
