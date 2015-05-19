@@ -1,6 +1,6 @@
 {
   "name": "cellular",
-  "version": "1.0",
+  "version": "0.9.0",
   "author": "Jimmy Chen",
   "email": "jimmy.chen@moxa.com",
   "description": "This model provides cellular using QMI.",
