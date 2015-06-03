@@ -242,8 +242,10 @@ class Cellular(Sanji):
             command = ("qmicli -p -d " + self.model.db[dev_id]["modemPort"] +
                        " --wds-get-packet-service-status")
             if len(self.cid) != 0:
-                command += (" --client-cid=" + self.cid +
-                            " --client-no-release-cid")
+                command += (
+                    " --client-cid=" + self.cid +
+                    " --client-no-release-cid" +
+                    " --device-open-net=\"net-802-3|net-no-qos-header\"")
 
             out = subprocess.check_output(command, shell=True)
             status = re.search(self.search_link_pattern, out)
@@ -267,9 +269,8 @@ class Cellular(Sanji):
                                     shell=True)
             command = "qmicli -p -d " + self.model.db[dev_id]["modemPort"] +\
                       " --wds-start-network=" + self.model.db[dev_id]["apn"] +\
-                      " --client-no-release-cid"
-            # not support yet v1.4
-            # "--device-open-net="net-802-3|net-no-qos-header""
+                      " --client-no-release-cid" +\
+                      "--device-open-net=\"net-802-3|net-no-qos-header\""
 
             if self.model.db[dev_id]["enableAuth"] != 0:
                 command += "," + self.model.db[dev_id]["authType"] +\

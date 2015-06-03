@@ -699,16 +699,13 @@ class TestCellular(unittest.TestCase):
             res = self.cellular.is_leases_file_appear()
             self.assertEqual(res, '')
 
-    def test_is_leases_file_appear_false(self):
-        res = self.cellular.is_leases_file_appear()
-        self.assertEqual(res, '')
-
     def test_is_leases_file_appear_exception(self):
         self.cellular = Cellular(connection=Mockup())
-        with patch("cellular.subprocess") as subprocess:
-            subprocess.check_output.side_effect = Exception
-        res = self.cellular.is_leases_file_appear()
-        self.assertEqual(res, '')
+        m = mock_open()
+        with patch("cellular.open", m, create=True):
+            m.side_effect = Exception
+            res = self.cellular.is_leases_file_appear()
+            self.assertEqual(res, None)
 
     def test_is_target_device_appear(self):
         res = self.cellular.is_target_device_appear('data/cellular.json')
