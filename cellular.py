@@ -23,6 +23,7 @@ from voluptuous import All
 from voluptuous import Any
 from voluptuous import Length
 
+# logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger("sanji.cellular")
 
 
