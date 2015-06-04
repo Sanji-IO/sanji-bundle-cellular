@@ -23,6 +23,7 @@ from voluptuous import All
 from voluptuous import Any
 from voluptuous import Length
 
+# logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger("sanji.cellular")
 
 
@@ -72,40 +73,40 @@ class Cellular(Sanji):
         "enableAuth": All(int, Range(min=0, max=1))
     }, extra=REMOVE_EXTRA)
 
-    def search_name(self, filetext):
-        name = re.search(self.search_name_pattern, filetext)
+    def search_name(self):
+        name = re.search(self.search_name_pattern, self.dhclient_info)
         if name:
             _logger.debug("name is %s" % name.group(1))
             return name.group(1)
 
         return "N/A"
 
-    def search_router(self, filetext):
-        router = re.search(self.search_router_pattern, filetext)
+    def search_router(self):
+        router = re.search(self.search_router_pattern, self.dhclient_info)
         if router:
             _logger.debug("router is %s" % router.group(1))
             return router.group(1)
 
         return "N/A"
 
-    def search_dns(self, filetext):
-        dns = re.search(self.search_dns_pattern, filetext)
+    def search_dns(self):
+        dns = re.search(self.search_dns_pattern, self.dhclient_info)
         if dns:
             _logger.debug("dns is %s" % dns.group(1))
             return dns.group(1)
 
         return "N/A"
 
-    def search_ip(self, filetext):
-        ip = re.search(self.search_ip_pattern, filetext)
+    def search_ip(self):
+        ip = re.search(self.search_ip_pattern, self.dhclient_info)
         if ip:
             _logger.debug("ip is %s" % ip.group(1))
             return ip.group(1)
 
         return "N/A"
 
-    def search_subnet(self, filetext):
-        subnet = re.search(self.search_subnet_pattern, filetext)
+    def search_subnet(self):
+        subnet = re.search(self.search_subnet_pattern, self.dhclient_info)
         if subnet:
             _logger.debug("subnet is %s" % subnet.group(1))
             return subnet.group(1)
@@ -114,15 +115,6 @@ class Cellular(Sanji):
 
     def is_target_device_appear(self, name):
         return os.path.exists(str(name))
-
-    def is_leases_file_appear(self):
-        try:
-            with open("/var/lib/dhcp/dhclient.leases", "r") as leases:
-                filetext = leases.read()
-                return filetext
-        except Exception:
-            _logger.debug("/var/lib/dhcp/dhclient.leases open failure")
-            return None
 
     def reconnect_if_disconnected(self):
         for model in self.model.db:
@@ -153,7 +145,7 @@ class Cellular(Sanji):
                 self.modifed[model["name"]] = False
 
             # if offline clear previous ip, gateway, etc...
-            if model["enable"] == 0:
+            if model["enable"] == 0 or model["status"] == 0:
                 model["router"] = ""
                 model["dns"] = ""
                 model["ip"] = ""
@@ -177,28 +169,30 @@ class Cellular(Sanji):
                 self.set_offline_by_id(dev_id)
                 self.set_online_by_id(dev_id)
 
-            # update info according to dhclient.leases
-            filetext = self.is_leases_file_appear()
-            if filetext is None:
+            # update info according to dhclient_info variable
+            if self.dhclient_info == "":
                 continue
 
             # parse router
-            model["router"] = self.search_router(filetext)
+            model["router"] = self.search_router()
 
             # parse dns
-            model["dns"] = self.search_dns(filetext)
+            model["dns"] = self.search_dns()
 
             # parse ip
-            model["ip"] = self.search_ip(filetext)
+            model["ip"] = self.search_ip()
 
             # parse subnet
-            model["subnet"] = self.search_subnet(filetext)
+            model["subnet"] = self.search_subnet()
 
             # event notification (in mins)
             count = self.event_counter.get(model["name"], 0)
             if count == 0:
                 self.publish.event.put("/network/interfaces", data={
                     "name": model["name"],
+                    "ip": model["ip"],
+                    "netmask": model["subnet"],
+                    "dns": model["dns"],
                     "gateway": model["router"]
                 })
 
@@ -265,11 +259,9 @@ class Cellular(Sanji):
 
     def set_online_by_id(self, dev_id):
         try:
-            subprocess.check_output("rm -rf /var/lib/dhcp/dhclient.leases",
-                                    shell=True)
             command = "qmicli -p -d " + self.model.db[dev_id]["modemPort"] +\
                       " --wds-start-network=" + self.model.db[dev_id]["apn"] +\
-                      " --client-no-release-cid" +\
+                      " --client-no-release-cid " +\
                       "--device-open-net=\"net-802-3|net-no-qos-header\""
 
             if self.model.db[dev_id]["enableAuth"] != 0:
@@ -283,7 +275,10 @@ class Cellular(Sanji):
             out = subprocess.check_output(command, shell=True)
             cid = re.search(self.search_cid_pattern, out)
             pdh = re.search(self.search_pdh_pattern, out)
-            self.check_dhclient(self.model.db[dev_id]["name"])
+            command = "dhclient -sf " + os.path.abspath(os.path.dirname(__file__)) +\
+                      "/hooks/cellular-dhclient-hook " +\
+                      self.model.db[dev_id]["name"]
+            self.dhclient_info = subprocess.check_output(command, shell=True)
             self.cid = cid.group(1)
             self.pdh = pdh.group(1)
             save_state(self.pdh, self.cid)
@@ -294,6 +289,7 @@ class Cellular(Sanji):
             return False
 
     def set_offline_by_id(self, dev_id):
+        self.dhclient_info = ""
         try:
             try:
                 subprocess.check_output(
@@ -352,6 +348,7 @@ class Cellular(Sanji):
         self.model = ModelInitiator("cellular", path_root)
         self.event_counter = {}
         self.modifed = {}
+        self.dhclient_info = ""
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
@@ -459,9 +456,6 @@ class Cellular(Sanji):
 
     def check_proxy(self):
         self.check_process("/usr/local/libexec/qmi-proxy", bg=True)
-
-    def check_dhclient(self, interface):
-        self.check_process("dhclient %s" % (interface))
 
     def run(self):
         self.check_proxy()

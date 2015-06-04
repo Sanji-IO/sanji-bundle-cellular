@@ -4,13 +4,13 @@
 
 import os
 import sys
+import sh
 import logging
 import unittest
 
 from sanji.connection.mockup import Mockup
 from sanji.message import Message
 from mock import patch
-from mock import mock_open
 from mock import Mock
 
 try:
@@ -49,6 +49,7 @@ class TestCellular(unittest.TestCase):
 
     @patch("cellular.Cellular.set_pincode_by_id")
     def setUp(self, set_pincode_by_id):
+        sh.echo("1234, 1234", _out="/run/shm/cellular.tmp")
         try:
             os.unlink(dirpath + "/../data/cellular.json")
         except Exception:
@@ -558,52 +559,61 @@ class TestCellular(unittest.TestCase):
 
     def test_search_name(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_name(self.filetext)
+        self.cellular.dhclient_info = self.filetext
+        res = self.cellular.search_name()
         self.assertEqual(res, 'eth0')
 
     def test_search_name_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_name(self.filetext_fail)
+        self.cellular.dhclient_info = self.filetext_fail
+        res = self.cellular.search_name()
         self.assertEqual(res, 'N/A')
 
     def test_search_router(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_router(self.filetext)
+        self.cellular.dhclient_info = self.filetext
+        res = self.cellular.search_router()
         self.assertEqual(res, '192.168.31.115')
 
     def test_search_router_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_router(self.filetext_fail)
+        self.cellular.dhclient_info = self.filetext_fail
+        res = self.cellular.search_router()
         self.assertEqual(res, 'N/A')
 
     def test_search_dns(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_dns(self.filetext)
+        self.cellular.dhclient_info = self.filetext
+        res = self.cellular.search_dns()
         self.assertEqual(res, '8.8.8.58,20.20.20.20,40.40.4.1')
 
     def test_search_dns_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_dns(self.filetext_fail)
+        self.cellular.dhclient_info = self.filetext_fail
+        res = self.cellular.search_dns()
         self.assertEqual(res, 'N/A')
 
     def test_search_ip(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_ip(self.filetext)
+        self.cellular.dhclient_info = self.filetext
+        res = self.cellular.search_ip()
         self.assertEqual(res, '192.168.10.26')
 
     def test_search_ip_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_ip(self.filetext_fail)
+        self.cellular.dhclient_info = self.filetext_fail
+        res = self.cellular.search_ip()
         self.assertEqual(res, 'N/A')
 
     def test_search_subnet(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_subnet(self.filetext)
+        self.cellular.dhclient_info = self.filetext
+        res = self.cellular.search_subnet()
         self.assertEqual(res, '255.255.0.0')
 
     def test_search_subnet_fail(self):
         self.cellular = Cellular(connection=Mockup())
-        res = self.cellular.search_subnet(self.filetext_fail)
+        res = self.cellular.search_subnet()
         self.assertEqual(res, 'N/A')
 
     def test_reconnect_if_disconnected(self):
@@ -692,20 +702,6 @@ class TestCellular(unittest.TestCase):
         self.cellular.publish.event = Mock()
         self.cellular.reconnect_if_disconnected()
         self.assertEqual(self.cellular.model.db[0]['signal'], 78)
-
-    def test_is_leases_file_appear_true(self):
-        m = mock_open()
-        with patch("cellular.open", m, create=True):
-            res = self.cellular.is_leases_file_appear()
-            self.assertEqual(res, '')
-
-    def test_is_leases_file_appear_exception(self):
-        self.cellular = Cellular(connection=Mockup())
-        m = mock_open()
-        with patch("cellular.open", m, create=True):
-            m.side_effect = Exception
-            res = self.cellular.is_leases_file_appear()
-            self.assertEqual(res, None)
 
     def test_is_target_device_appear(self):
         res = self.cellular.is_target_device_appear('data/cellular.json')
