@@ -4,6 +4,7 @@
 
 import os
 import sys
+import sh
 import logging
 import unittest
 
@@ -48,6 +49,7 @@ class TestCellular(unittest.TestCase):
 
     @patch("cellular.Cellular.set_pincode_by_id")
     def setUp(self, set_pincode_by_id):
+        sh.echo("1234, 1234", _out="/run/shm/cellular.tmp")
         try:
             os.unlink(dirpath + "/../data/cellular.json")
         except Exception:
