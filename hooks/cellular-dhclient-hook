@@ -115,8 +115,6 @@ fi
 # The action starts here
 
 # Invoke the local dhcp client enter hooks, if they exist.
-run_hook /etc/dhcp/dhclient-enter-hooks
-run_hookdir /etc/dhcp/dhclient-enter-hooks.d
 
 # Execute the operation
 case "$reason" in
