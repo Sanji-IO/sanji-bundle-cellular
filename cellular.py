@@ -93,7 +93,7 @@ class Cellular(Sanji):
         dns = re.search(self.search_dns_pattern, self.dhclient_info)
         if dns:
             _logger.debug("dns is %s" % dns.group(1))
-            return dns.group(1)
+            return dns.group(1).split(",")
 
         return "N/A"
 
