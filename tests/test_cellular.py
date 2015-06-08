@@ -585,7 +585,7 @@ class TestCellular(unittest.TestCase):
         self.cellular = Cellular(connection=Mockup())
         self.cellular.dhclient_info = self.filetext
         res = self.cellular.search_dns()
-        self.assertEqual(res, '8.8.8.58,20.20.20.20,40.40.4.1')
+        self.assertEqual(res, ["8.8.8.58", "20.20.20.20", "40.40.4.1"])
 
     def test_search_dns_fail(self):
         self.cellular = Cellular(connection=Mockup())
