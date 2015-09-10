@@ -24,7 +24,6 @@ DIST_FILES= \
 	Makefile \
 	tests/requirements.txt \
 	tests/test_cellular.py \
-	tests/data/cellular.json.factory \
 	tests/test_e2e/bundle.json \
 	tests/test_e2e/view_cellular.py
 INSTALL_FILES=$(addprefix $(INSTALL_DIR)/,$(TARGET_FILES))
