@@ -1,6 +1,4 @@
-flake8
 paho-mqtt
-coveralls
 modem-cmd
 sh
 sanji
