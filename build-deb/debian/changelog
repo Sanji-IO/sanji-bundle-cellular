@@ -1,3 +1,13 @@
+sanji-bundle-cellular (0.9.5-1) unstable; urgency=low
+
+  * Bugfix: Apply wrong PIN code
+  * /network/interface instead of /network/interfaces
+  * Update DNS pattern: "option domain-name-servers" to "option
+    domain-name-server"
+  * Driver changed and device node changed (at port: /dev/ttyUSB2)
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 23 Sep 2015 16:04:07 +0800
+
 sanji-bundle-cellular (0.9.4-1) unstable; urgency=low
 
   * build-deb/ added for building Debian package.

@@ -31,18 +31,18 @@ class TestCellular(unittest.TestCase):
 
     filetext = "\
     lease {\n\
-      interface \"eth0\";\n\
-      fixed-address 192.168.10.26;\n\
-      option subnet-mask 255.255.0.0;\n\
-      option routers 192.168.31.115;\n\
-      option dhcp-lease-time 5566;\n\
-      option dhcp-message-type 5;\n\
-      option domain-name-servers 8.8.8.58,20.20.20.20,40.40.4.1;\n\
-      option dhcp-server-identifier 192.168.31.115;\n\
-      option domain-name \"MXcloud115\";\n\
-      renew 3 2014/10/29 12:52:19;\n\
-      rebind 3 2014/10/29 13:37:52;\n\
-      expire 3 2014/10/29 13:49:28;\n\
+      interface \"eth0\"\n\
+      fixed-address 192.168.10.26\n\
+      option subnet-mask 255.255.0.0\n\
+      option routers 192.168.31.115\n\
+      option dhcp-lease-time 5566\n\
+      option dhcp-message-type 5\n\
+      option domain-name-server 8.8.8.58 20.20.20.20 40.40.4.1\n\
+      option dhcp-server-identifier 192.168.31.115\n\
+      option domain-name \"MXcloud115\"\n\
+      renew 3 2014/10/29 12:52:19\n\
+      rebind 3 2014/10/29 13:37:52\n\
+      expire 3 2014/10/29 13:49:28\n\
       }\n\
       "
     filetext_fail = " "
@@ -124,7 +124,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "authType": "PAP",
@@ -157,7 +157,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "authType": "PAP",
@@ -184,7 +184,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "authType": "PAP",
@@ -211,7 +211,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "authType": "PAP",
@@ -238,7 +238,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "authType": "PAP",
@@ -265,7 +265,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "authType": "PAP",
@@ -292,7 +292,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "authType": "PAP",
@@ -318,7 +318,7 @@ class TestCellular(unittest.TestCase):
                                                  "password": "passw0rd",
                                                  "pinCode": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 1,
                                                  "status": 0,
                                                  "authType": "BOTH",
@@ -380,7 +380,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "delay": 40
@@ -405,7 +405,7 @@ class TestCellular(unittest.TestCase):
                                                  "pinCode": "",
                                                  "authType": "",
                                                  "modemPort": "/dev/cdc-wdm1",
-                                                 "atPort": "/dev/ttyUSB1",
+                                                 "atPort": "/dev/ttyUSB2",
                                                  "enableAuth": 0,
                                                  "status": 0,
                                                  "delay": 40
@@ -433,21 +433,21 @@ class TestCellular(unittest.TestCase):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = "-80"
-            res = self.cellular.get_signal_by_id(1)
+            res = self.cellular.get_signal_by_id(0)
             self.assertEqual(res, "-80")
 
     def test_get_signal_by_id_fail(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = ""
-            res = self.cellular.get_signal_by_id(1)
+            res = self.cellular.get_signal_by_id(0)
             self.assertEqual(res, 99)
 
     def test_get_signal_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.get_signal_by_id(1)
+            res = self.cellular.get_signal_by_id(0)
             self.assertEqual(res, 99)
 
     def test_get_cops_by_id(self):
@@ -477,7 +477,7 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value =\
                 "Connection status: 'disconnected'"
             subprocess.call.return_value = True
-            res = self.cellular.get_status_by_id(1)
+            res = self.cellular.get_status_by_id(0)
             self.assertEqual(res, 0)
 
     def test_get_status_by_id_connect(self):
@@ -486,7 +486,7 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value =\
                 "Connection status: 'connected'"
             subprocess.call.return_value = True
-            res = self.cellular.get_status_by_id(1)
+            res = self.cellular.get_status_by_id(0)
             self.assertEqual(res, 1)
 
     def test_get_status_by_id_search_fail(self):
@@ -495,7 +495,7 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value =\
                 "xxxx"
             subprocess.call.return_value = None
-            res = self.cellular.get_status_by_id(1)
+            res = self.cellular.get_status_by_id(0)
             self.assertEqual(res, 2)
 
     def test_get_status_by_id_with_no_cid(self):
@@ -504,14 +504,14 @@ class TestCellular(unittest.TestCase):
             self.cellular.cid = "1234"
             subprocess.check_output.return_value = True
             subprocess.call.return_value = True
-            res = self.cellular.get_status_by_id(1)
+            res = self.cellular.get_status_by_id(0)
             self.assertEqual(res, 2)
 
     def test_get_status_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.get_status_by_id(1)
+            res = self.cellular.get_status_by_id(0)
             self.assertEqual(res, 2)
 
     def test_set_online_by_id(self):
@@ -538,7 +538,7 @@ class TestCellular(unittest.TestCase):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.set_online_by_id(1)
+            res = self.cellular.set_online_by_id(0)
             self.assertFalse(res)
 
     def test_set_offline_by_id_with_no_cid(self):
@@ -547,14 +547,14 @@ class TestCellular(unittest.TestCase):
             subprocess.check_output.return_value = True
             self.cellular.cid = ""
             self.cellular.pdh = ""
-            res = self.cellular.set_offline_by_id(1)
+            res = self.cellular.set_offline_by_id(0)
             self.assertEqual(res, True)
 
     def test_set_offline_by_id_exception(self):
         self.cellular = Cellular(connection=Mockup())
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
-            res = self.cellular.set_offline_by_id(1)
+            res = self.cellular.set_offline_by_id(0)
             self.assertFalse(res)
 
     def test_search_name(self):

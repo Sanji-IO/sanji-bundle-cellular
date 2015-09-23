@@ -44,7 +44,7 @@ class Cellular(Sanji):
     search_router_pattern =\
         re.compile(ur"option routers ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
     search_dns_pattern =\
-        re.compile(ur"option domain-name-servers (.*);")
+        re.compile(ur"option domain-name-server (.*)")
     search_ip_pattern =\
         re.compile(ur"fixed-address ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
     search_subnet_pattern =\
@@ -93,7 +93,7 @@ class Cellular(Sanji):
         dns = re.search(self.search_dns_pattern, self.dhclient_info)
         if dns:
             _logger.debug("dns is %s" % dns.group(1))
-            return dns.group(1).split(",")
+            return dns.group(1).split()
 
         return "N/A"
 
@@ -188,7 +188,7 @@ class Cellular(Sanji):
             # event notification (in mins)
             count = self.event_counter.get(model["name"], 0)
             if count == 0:
-                self.publish.event.put("/network/interfaces", data={
+                self.publish.event.put("/network/interface", data={
                     "name": model["name"],
                     "ip": model["ip"],
                     "netmask": model["subnet"],
@@ -461,7 +461,7 @@ class Cellular(Sanji):
         self.check_proxy()
         for model in self.model.db:
             if len(model["pinCode"]) > 0:
-                self.set_pincode_by_id(model["id"], model["pinCode"])
+                self.set_pincode_by_id(model["id"]-1, model["pinCode"])
         while True:
             self.check_proxy()
             self.reconnect_if_disconnected()
