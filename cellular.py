@@ -44,7 +44,7 @@ class Cellular(Sanji):
     search_router_pattern =\
         re.compile(ur"option routers ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
     search_dns_pattern =\
-        re.compile(ur"option domain-name-servers (.*);")
+        re.compile(ur"option domain-name-server (.*)")
     search_ip_pattern =\
         re.compile(ur"fixed-address ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)")
     search_subnet_pattern =\
@@ -93,7 +93,7 @@ class Cellular(Sanji):
         dns = re.search(self.search_dns_pattern, self.dhclient_info)
         if dns:
             _logger.debug("dns is %s" % dns.group(1))
-            return dns.group(1).split(",")
+            return dns.group(1).split()
 
         return "N/A"
 
