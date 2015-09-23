@@ -461,7 +461,7 @@ class Cellular(Sanji):
         self.check_proxy()
         for model in self.model.db:
             if len(model["pinCode"]) > 0:
-                self.set_pincode_by_id(model["id"], model["pinCode"])
+                self.set_pincode_by_id(model["id"]-1, model["pinCode"])
         while True:
             self.check_proxy()
             self.reconnect_if_disconnected()
