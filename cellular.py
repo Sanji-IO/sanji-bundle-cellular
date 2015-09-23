@@ -188,7 +188,7 @@ class Cellular(Sanji):
             # event notification (in mins)
             count = self.event_counter.get(model["name"], 0)
             if count == 0:
-                self.publish.event.put("/network/interfaces", data={
+                self.publish.event.put("/network/interface", data={
                     "name": model["name"],
                     "ip": model["ip"],
                     "netmask": model["subnet"],
