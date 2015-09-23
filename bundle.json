@@ -1,8 +1,8 @@
 {
   "name": "cellular",
-  "version": "0.9.4",
-  "author": "Jimmy Chen",
-  "email": "jimmy.chen@moxa.com",
+  "version": "0.9.5",
+  "author": "Aeluin Chen",
+  "email": "aeluin.chen@moxa.com",
   "description": "This model provides cellular using QMI.",
   "license": "MOXA",
   "main": "cellular.py",
