@@ -310,6 +310,10 @@ class Cellular(Sanji):
                     "qmicli -p -d %s --wds-stop-network=%s --client-cid=%s"
                     % (self.model.db[dev_id]["modemPort"], self.pdh, self.cid),
                     shell=True)
+            try:
+                sh.ip("link", "set", self.model.db[dev_id]["name"], "down")
+            except:
+                pass
 
             self.pdh = ""
             self.cid = ""
