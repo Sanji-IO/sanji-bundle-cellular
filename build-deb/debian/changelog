@@ -1,3 +1,9 @@
+sanji-bundle-cellular (0.10.0-1) unstable; urgency=low
+
+  * Re-implement to utilize cell_mgmt utility.
+
+ -- TC Huang <tc.huang@moxa.com>  Thu, 29 Oct 2015 14:36:09 +0800
+
 sanji-bundle-cellular (0.9.6-1) unstable; urgency=low
 
   * Set cellular interface link to DONW if disconnected.

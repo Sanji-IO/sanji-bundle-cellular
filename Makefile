@@ -16,8 +16,11 @@ TARGET_FILES = \
 	bundle.json \
 	requirements.txt \
 	cellular.py \
-	data/cellular.json.factory \
-	hooks/cellular-dhclient-hook
+	cellular_utility/__init__.py \
+	cellular_utility/cell_mgmt.py \
+	cellular_utility/management.py \
+	data/cellular.json.factory
+
 DIST_FILES= \
 	$(TARGET_FILES) \
 	README.md \
@@ -26,6 +29,7 @@ DIST_FILES= \
 	tests/test_cellular.py \
 	tests/test_e2e/bundle.json \
 	tests/test_e2e/view_cellular.py
+
 INSTALL_FILES=$(addprefix $(INSTALL_DIR)/,$(TARGET_FILES))
 STAGING_FILES=$(addprefix $(PROJECT_STAGING_DIR)/,$(DIST_FILES))
 
