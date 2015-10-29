@@ -25,10 +25,11 @@ DIST_FILES= \
 	$(TARGET_FILES) \
 	README.md \
 	Makefile \
+	tests/__init__.py \
 	tests/requirements.txt \
 	tests/test_cellular.py \
-	tests/test_e2e/bundle.json \
-	tests/test_e2e/view_cellular.py
+	cellular_utility/tests/__init__.py \
+	cellular_utility/tests/test_cell_mgmt.py
 
 INSTALL_FILES=$(addprefix $(INSTALL_DIR)/,$(TARGET_FILES))
 STAGING_FILES=$(addprefix $(PROJECT_STAGING_DIR)/,$(DIST_FILES))

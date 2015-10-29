@@ -73,7 +73,7 @@ class Cellular(Sanji):
             return response(code=400, data={'message': 'resource not exist'})
 
         # since all items are required in PUT, its schema is identical to cellular.json
-        self.model.db[0] = message.data
+        self.model.db[0] = Cellular.PUT_SCHEMA(message.data)
         self.model.save_db()
 
         self._mgr.set_configuration(

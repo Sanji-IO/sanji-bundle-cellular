@@ -52,7 +52,9 @@ class CellMgmt(object):
 
         cmd = [self._exe_path, 'start', 'ignore-dns-gw', 'APN=' + apn]
         if pin is not None:
-            cmd.append(pin)
+            cmd.append('PIN=' + pin)
+        else:
+            cmd.append('PIN=')
 
         try:
             output = check_output(cmd, shell=self._use_shell)

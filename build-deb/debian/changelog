@@ -1,3 +1,10 @@
+sanji-bundle-cellular (1.0.0-1) unstable; urgency=low
+
+  * Fix PIN stored improperly.
+  * Update major version number.
+
+ -- TC Huang <tc.huang@moxa.com>  Thu, 29 Oct 2015 16:53:03 +0800
+
 sanji-bundle-cellular (0.10.0-1) unstable; urgency=low
 
   * Re-implement to utilize cell_mgmt utility.
