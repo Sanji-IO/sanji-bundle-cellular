@@ -1,6 +1,6 @@
-'''
+"""
 Helper library.
-'''
+"""
 
 import logging
 import sys
@@ -110,9 +110,9 @@ class NetworkInformation(object):
 
 
 class CellularConnector(object):
-    '''
+    """
     Tries Cellular connection continuously.
-    '''
+    """
 
     PING_TIMEOUT_SEC = 10
 
@@ -134,19 +134,19 @@ class CellularConnector(object):
         self._stop = False
 
     def start(self, update_network_information):
-        '''
+        """
         Start Cellular connection.
 
         update_network_information should be a callable like:
             update_network_information(NetworkInformation)
-        '''
+        """
 
         def main_thread():
-            '''
+            """
             Try to connect.
             If connect fails for 3 times, power-cycle Cellular module and
               continue trying.
-            '''
+            """
 
             while not self._stop:
                 try:
@@ -175,10 +175,10 @@ class CellularConnector(object):
                             # publish cellular information here
                             connected = True
                             update_network_information(NetworkInformation(
-                                network_info['ip'],
-                                network_info['netmask'],
-                                network_info['gateway'],
-                                network_info['dns']))
+                                network_info["ip"],
+                                network_info["netmask"],
+                                network_info["gateway"],
+                                network_info["dns"]))
 
                             # sleep awhile to let ip-route take effect
                             sleep(3)
@@ -194,7 +194,7 @@ class CellularConnector(object):
 
                     # retry count exceeded, power-cycle cellular module
                     if not connected:
-                        _logger.warning('power-cycle cellular module')
+                        _logger.warning("power-cycle cellular module")
 
                         self._cell_mgmt.stop()
                         self._cell_mgmt.power_off()
@@ -203,7 +203,7 @@ class CellularConnector(object):
                         # wait until cellular module becomes ready
                         while True:
                             _operator = self._cell_mgmt.operator()
-                            if _operator == '':
+                            if _operator == "":
                                 sleep(1)
                                 continue
 
@@ -243,24 +243,24 @@ class CellularConnector(object):
         self._connect_thread.start()
 
     def stop(self):
-        '''
+        """
         Stop Cellular connection.
-        '''
+        """
         self._stop = True
         self._connect_thread.join()
 
     def _ping(self):
-        '''
+        """
         Return whether ping succeeded.
-        '''
+        """
         if not self._keepalive_host:
             return True
 
         try:
             check_call([
-                'ping',
-                '-c', '3',
-                '-W', str(self.PING_TIMEOUT_SEC),
+                "ping",
+                "-c", "3",
+                "-W", str(self.PING_TIMEOUT_SEC),
                 self._keepalive_host])
             return True
 
@@ -269,9 +269,9 @@ class CellularConnector(object):
 
 
 class Manager(object):
-    '''
+    """
     Helper class.
-    '''
+    """
 
     def __init__(
             self,
@@ -309,55 +309,55 @@ class Manager(object):
             self._connector.stop()
 
     def cellular_status(self):
-        '''
+        """
         Return dict like:
         {
-            'signal': -87,
-            'operator': 'Chunghwa Telecom'
+            "signal": -87,
+            "operator": "Chunghwa Telecom"
         }
-        '''
+        """
 
         status = {
-            'signal': 0,
-            'operator': ''
+            "signal": 0,
+            "operator": ""
         }
 
         cellular_information = self._cellular_information
 
         if cellular_information is not None:
-            status['signal'] = cellular_information.signal
-            status['operator'] = cellular_information.operator
+            status["signal"] = cellular_information.signal
+            status["operator"] = cellular_information.operator
 
         return status
 
     def connection_status(self):
-        '''
+        """
         Return dict like:
         {
-            'connected': True,
-            'ip': '100.124.244.206',
-            'netmask': '255.255.255.252',
-            'gateway': '100.124.244.205',
-            'dns': ['168.95.1.1', '168.95.192.1']
+            "connected": True,
+            "ip": "100.124.244.206",
+            "netmask": "255.255.255.252",
+            "gateway": "100.124.244.205",
+            "dns": ["168.95.1.1", "168.95.192.1"]
         }
-        '''
+        """
 
         status = {
-            'connected': False,
-            'ip': '',
-            'netmask': '',
-            'gateway': '',
-            'dns': []
+            "connected": False,
+            "ip": "",
+            "netmask": "",
+            "gateway": "",
+            "dns": []
         }
 
         if self._network_information is None:
             return status
 
-        status['connected'] = True
-        status['ip'] = self._network_information.ip
-        status['netmask'] = self._network_information.netmask
-        status['gateway'] = self._network_information.gateway
-        status['dns'] = self._network_information.dns_list
+        status["connected"] = True
+        status["ip"] = self._network_information.ip
+        status["netmask"] = self._network_information.netmask
+        status["gateway"] = self._network_information.gateway
+        status["dns"] = self._network_information.dns_list
 
         return status
 
@@ -369,9 +369,9 @@ class Manager(object):
             keepalive_enabled,
             keepalive_host,
             keepalive_period_sec):
-        '''
+        """
         As title.
-        '''
+        """
 
         if (self._enabled == enabled and
                 self._apn == apn and
@@ -384,7 +384,7 @@ class Manager(object):
         self._enabled = enabled
         self._apn = apn
 
-        if pin == '':
+        if pin == "":
             self._pin = None
         else:
             self._pin = pin
@@ -418,9 +418,9 @@ class Manager(object):
         self._cellular_information = cellular_information
 
     def _set_network_information(self, network_information):
-        '''
+        """
         network_status should be an instance of NetworkInformation or None
-        '''
+        """
         self._network_information = network_information
 
         if self._network_information is not None:
@@ -431,24 +431,24 @@ class Manager(object):
                 self._network_information.dns_list)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
     def dump(ip, netmask, gateway, dns):
-        print 'ip =', ip
-        print 'netmask =', netmask
-        print 'gateway =', gateway
-        print 'dns =', dns
+        print "ip =", ip
+        print "netmask =", netmask
+        print "gateway =", gateway
+        print "dns =", dns
 
-        check_call(['ip', 'route', 'add', 'default', 'via', gateway])
+        check_call(["ip", "route", "add", "default", "via", gateway])
 
     mgr = Manager(dump)
     mgr.set_configuration(
         enabled=True,
-        apn='internet',
-        pin='0000',
+        apn="internet",
+        pin="0000",
         keepalive_enabled=True,
-        keepalive_host='8.8.8.8',
+        keepalive_host="8.8.8.8",
         keepalive_period_sec=10)
 
     while True:

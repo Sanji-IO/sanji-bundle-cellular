@@ -21,13 +21,13 @@ class TestCellularStatic(unittest.TestCase):
     def test_put_schema_should_pass(self):
         # arrange
         SUT = {
-            'enable': True,
-            'apn': 'internet',
-            'pinCode': '0000',
-            'keepalive': {
-                'enable': True,
-                'targetHost': '8.8.8.8',
-                'intervalSec': 60
+            "enable": True,
+            "apn": "internet",
+            "pinCode": "0000",
+            "keepalive": {
+                "enable": True,
+                "targetHost": "8.8.8.8",
+                "intervalSec": 60
             }
         }
 
@@ -40,14 +40,14 @@ class TestCellularStatic(unittest.TestCase):
     def test_put_schema_with_id_should_pass(self):
         # arrange
         SUT = {
-            'id': 0,
-            'enable': True,
-            'apn': 'internet',
-            'pinCode': u'0000',
-            'keepalive': {
-                'enable': True,
-                'targetHost': '8.8.8.8',
-                'intervalSec': 60
+            "id": 0,
+            "enable": True,
+            "apn": "internet",
+            "pinCode": u"0000",
+            "keepalive": {
+                "enable": True,
+                "targetHost": "8.8.8.8",
+                "intervalSec": 60
             }
         }
 
@@ -60,14 +60,14 @@ class TestCellularStatic(unittest.TestCase):
     def test_put_schema_with_empty_pin_code_should_pass(self):
         # arrange
         SUT = {
-            'id': 1,
-            'enable': True,
-            'apn': 'internet',
-            'pinCode': u'',
-            'keepalive': {
-                'enable': True,
-                'targetHost': '8.8.8.8',
-                'intervalSec': 60
+            "id": 1,
+            "enable": True,
+            "apn": "internet",
+            "pinCode": u"",
+            "keepalive": {
+                "enable": True,
+                "targetHost": "8.8.8.8",
+                "intervalSec": 60
             }
         }
 

@@ -26,50 +26,50 @@ class Cellular(Sanji):
         self._mgr.start()
 
         self._mgr.set_configuration(
-            enabled=self.model.db[0]['enable'],
-            apn=self.model.db[0]['apn'],
-            pin=self.model.db[0]['pinCode'],
-            keepalive_enabled=self.model.db[0]['keepalive']['enable'],
-            keepalive_host=self.model.db[0]['keepalive']['targetHost'],
-            keepalive_period_sec=self.model.db[0]['keepalive']['intervalSec'])
+            enabled=self.model.db[0]["enable"],
+            apn=self.model.db[0]["apn"],
+            pin=self.model.db[0]["pinCode"],
+            keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
+            keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
+            keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"])
 
         self._cell_mgmt = CellMgmt()
 
         self._name = None
 
-    @Route(methods='get', resource='/network/cellulars')
+    @Route(methods="get", resource="/network/cellulars")
     def get_list(self, message, response):
         return response(code=200, data=[self._get()])
 
-    @Route(methods='get', resource='/network/cellulars/:id')
+    @Route(methods="get", resource="/network/cellulars/:id")
     def get(self, message, response):
         id_ = int(message.param["id"])
         if id_ != 1:
-            return response(code=400, data={'message': 'resource not exist'})
+            return response(code=400, data={"message": "resource not exist"})
 
         return response(code=200, data=self._get())
 
     PUT_SCHEMA = Schema(
         {
-            'id': int,
-            Required('enable'): bool,
-            Required('apn'): All(str, Length(max=100)),
-            Required('pinCode', default=''): Any(Match(r'[0-9]{4,4}'), ''),
-            Required('keepalive'): {
-                Required('enable'): bool,
-                Required('targetHost'): str,
-                Required('intervalSec'): All(
+            "id": int,
+            Required("enable"): bool,
+            Required("apn"): All(str, Length(max=100)),
+            Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
+            Required("keepalive"): {
+                Required("enable"): bool,
+                Required("targetHost"): str,
+                Required("intervalSec"): All(
                     int,
                     Any(Range(min=0, max=0), Range(min=60, max=86400-1)))
             }
         },
         extra=REMOVE_EXTRA)
 
-    @Route(methods='put', resource='/network/cellulars/:id', schema=PUT_SCHEMA)
+    @Route(methods="put", resource="/network/cellulars/:id", schema=PUT_SCHEMA)
     def put(self, message, response):
         id_ = int(message.param["id"])
         if id_ != 1:
-            return response(code=400, data={'message': 'resource not exist'})
+            return response(code=400, data={"message": "resource not exist"})
 
         # since all items are required in PUT,
         # its schema is identical to cellular.json
@@ -77,12 +77,12 @@ class Cellular(Sanji):
         self.model.save_db()
 
         self._mgr.set_configuration(
-            enabled=self.model.db[0]['enable'],
-            apn=self.model.db[0]['apn'],
-            pin=self.model.db[0]['pinCode'],
-            keepalive_enabled=self.model.db[0]['keepalive']['enable'],
-            keepalive_host=self.model.db[0]['keepalive']['targetHost'],
-            keepalive_period_sec=self.model.db[0]['keepalive']['intervalSec'])
+            enabled=self.model.db[0]["enable"],
+            apn=self.model.db[0]["apn"],
+            pin=self.model.db[0]["pinCode"],
+            keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
+            keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
+            keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"])
 
         return response(code=200, data=self._get())
 
@@ -95,24 +95,24 @@ class Cellular(Sanji):
         connection_status = self._mgr.connection_status()
 
         return {
-            'id': config['id'],
-            'name': _name,
-            'signal': cellular_status['signal'],
-            'operatorName': cellular_status['operator'],
+            "id": config["id"],
+            "name": _name,
+            "signal": cellular_status["signal"],
+            "operatorName": cellular_status["operator"],
 
-            'connected': connection_status['connected'],
-            'ip': connection_status['ip'],
-            'netmask': connection_status['netmask'],
-            'gateway': connection_status['gateway'],
-            'dns': connection_status['dns'],
+            "connected": connection_status["connected"],
+            "ip": connection_status["ip"],
+            "netmask": connection_status["netmask"],
+            "gateway": connection_status["gateway"],
+            "dns": connection_status["dns"],
 
-            'enable': config['enable'],
-            'apn': config['apn'],
-            'pinCode': config['pinCode'],
-            'keepalive': {
-                'enable': config['keepalive']['enable'],
-                'targetHost': config['keepalive']['targetHost'],
-                'intervalSec': config['keepalive']['intervalSec']
+            "enable": config["enable"],
+            "apn": config["apn"],
+            "pinCode": config["pinCode"],
+            "keepalive": {
+                "enable": config["keepalive"]["enable"],
+                "targetHost": config["keepalive"]["targetHost"],
+                "intervalSec": config["keepalive"]["intervalSec"]
             }
         }
 
@@ -123,26 +123,26 @@ class Cellular(Sanji):
             gateway,
             dns):
 
-        self.publish.event.put('/network/interface', data={
-            'name': self._get_name(),
-            'ip': ip,
-            'netmask': netmask,
-            'gateway': gateway,
-            'dns': dns})
+        self.publish.event.put("/network/interface", data={
+            "name": self._get_name(),
+            "ip": ip,
+            "netmask": netmask,
+            "gateway": gateway,
+            "dns": dns})
 
     def _get_name(self):
         if self._name is not None:
             return self._name
 
         try:
-            self._name = self._cell_mgmt.m_info()['WWAN_node']
+            self._name = self._cell_mgmt.m_info()["WWAN_node"]
             return self._name
 
         except CellMgmtError:
-            return 'n/a'
+            return "n/a"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
     logging.basicConfig(level=0, format=FORMAT)
     _logger = logging.getLogger("sanji.cellular")
