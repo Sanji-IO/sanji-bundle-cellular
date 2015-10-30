@@ -1,4 +1,4 @@
+monotonic
 paho-mqtt
-modem-cmd
-sh
 sanji
+sh
