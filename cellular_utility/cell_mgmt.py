@@ -21,13 +21,20 @@ class CellMgmt(object):
     cell_mgmt utilty wrapper
     '''
 
-    _start_ip_regex = re.compile(r'IP=([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n')
-    _start_netmask_regex = re.compile(r'SubnetMask=([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n')
-    _start_gateway_regex = re.compile(r'Gateway=([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n')
-    _start_dns_regex = re.compile(r'DNS=([0-9\. ]+)\n')
-    _signal_regex = re.compile(r'^[a-zA-Z0-9]+ (-[0-9]+) dbm\n$')
-    _m_info_regex = re.compile(r'^Module=([\S]+)\nWWAN_node=([\S]+)\n')
-    _operator_regex = re.compile(r'^([\S ]*)\n$')
+    _start_ip_regex = re.compile(
+        r'IP=([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n')
+    _start_netmask_regex = re.compile(
+        r'SubnetMask=([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n')
+    _start_gateway_regex = re.compile(
+        r'Gateway=([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n')
+    _start_dns_regex = re.compile(
+        r'DNS=([0-9\. ]+)\n')
+    _signal_regex = re.compile(
+        r'^[a-zA-Z0-9]+ (-[0-9]+) dbm\n$')
+    _m_info_regex = re.compile(
+        r'^Module=([\S]+)\nWWAN_node=([\S]+)\n')
+    _operator_regex = re.compile(
+        r'^([\S ]*)\n$')
 
     def __init__(self):
         self._exe_path = '/sbin/cell_mgmt'
@@ -124,7 +131,9 @@ class CellMgmt(object):
         _logger.debug('cell_mgmt signal')
 
         try:
-            output = check_output([self._exe_path, "signal"], shell=self._use_shell)
+            output = check_output(
+                [self._exe_path, "signal"],
+                shell=self._use_shell)
             if self._invoke_period_sec != 0:
                 sleep(self._invoke_period_sec)
 
@@ -198,7 +207,9 @@ class CellMgmt(object):
         _logger.debug('cell_mgmt m_info')
 
         try:
-            output = check_output([self._exe_path, 'm_info'], shell=self._use_shell)
+            output = check_output(
+                [self._exe_path, 'm_info'],
+                shell=self._use_shell)
             if self._invoke_period_sec != 0:
                 sleep(self._invoke_period_sec)
 
@@ -221,7 +232,9 @@ class CellMgmt(object):
         _logger.debug('cell_mgmt operator')
 
         try:
-            output = check_output([self._exe_path, 'operator'], shell=self._use_shell)
+            output = check_output(
+                [self._exe_path, 'operator'],
+                shell=self._use_shell)
             if self._invoke_period_sec != 0:
                 sleep(self._invoke_period_sec)
 
@@ -269,4 +282,3 @@ if __name__ == '__main__':
             break
 
         sleep(10)
-

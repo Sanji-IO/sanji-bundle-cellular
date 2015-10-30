@@ -43,7 +43,6 @@ class CellularObserver(object):
         self._cell_mgmt = CellMgmt()
         self._thread = None
 
-
     def start(
             self,
             update_cellular_information):
@@ -145,7 +144,8 @@ class CellularConnector(object):
         def main_thread():
             '''
             Try to connect.
-            If connect fails for 3 times, power-cycle Cellular module and continue trying.
+            If connect fails for 3 times, power-cycle Cellular module and
+              continue trying.
             '''
 
             while not self._stop:
@@ -161,7 +161,9 @@ class CellularConnector(object):
                                 break
 
                             self._cell_mgmt.stop()
-                            network_info = self._cell_mgmt.start(apn=self._apn, pin=self._pin)
+                            network_info = self._cell_mgmt.start(
+                                apn=self._apn,
+                                pin=self._pin)
 
                             if not self._cell_mgmt.status():
                                 sleep(10)
@@ -255,7 +257,11 @@ class CellularConnector(object):
             return True
 
         try:
-            check_call(['ping', '-c', '3', '-W', str(self.PING_TIMEOUT_SEC), self._keepalive_host])
+            check_call([
+                'ping',
+                '-c', '3',
+                '-W', str(self.PING_TIMEOUT_SEC),
+                self._keepalive_host])
             return True
 
         except CalledProcessError:
@@ -359,7 +365,7 @@ class Manager(object):
             self,
             enabled,
             apn,
-            pin, # shoud be None if not needed
+            pin,
             keepalive_enabled,
             keepalive_host,
             keepalive_period_sec):

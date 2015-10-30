@@ -3,8 +3,6 @@
 
 
 import os
-import sys
-import sh
 import logging
 import unittest
 
