@@ -169,9 +169,6 @@ class CellularConnector(object):
                                 sleep(10)
                                 continue
 
-                            if self._keepalive_host is None:
-                                break
-
                             # publish cellular information here
                             connected = True
                             update_network_information(NetworkInformation(
@@ -202,12 +199,14 @@ class CellularConnector(object):
 
                         # wait until cellular module becomes ready
                         while True:
-                            _operator = self._cell_mgmt.operator()
-                            if _operator == "":
+                            try:
+                                # check whether cellular module is ready
+                                self._cell_mgmt.signal()
+                                break
+
+                            except CellMgmtError:
                                 sleep(1)
                                 continue
-
-                            break
 
                         # wait another 10 seconds to ensure module readiness
                         sleep(10)
