@@ -1,3 +1,11 @@
+sanji-bundle-cellular (1.0.1-1) unstable; urgency=low
+
+  * Fix cellular connection fails when keepalive not set.
+  * Fix cellular connection fails when DNS not provided by carrier.
+  * Fix cellular connection fails when operator name is empty.
+
+ -- TC Huang <tc.huang@moxa.com>  Tue, 03 Nov 2015 16:21:04 +0800
+
 sanji-bundle-cellular (1.0.0-1) unstable; urgency=low
 
   * Fix PIN stored improperly.

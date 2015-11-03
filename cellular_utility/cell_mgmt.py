@@ -28,7 +28,7 @@ class CellMgmt(object):
     _start_gateway_regex = re.compile(
         r"Gateway=([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\n")
     _start_dns_regex = re.compile(
-        r"DNS=([0-9\. ]+)\n")
+        r"DNS=([0-9\. ]*)\n")
     _signal_regex = re.compile(
         r"^[a-zA-Z0-9]+ (-[0-9]+) dbm\n$")
     _m_info_regex = re.compile(
