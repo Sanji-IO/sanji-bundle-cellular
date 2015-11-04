@@ -123,7 +123,7 @@ class Cellular(Sanji):
                     (self.is_target_device_appear(model["atPort"]) is False)):
                 model["signal"] = 99
                 model["status"] = 0
-            	self.set_signal_led(model["signal"])
+                self.set_signal_led(model["signal"])
                 continue
 
             dev_id = model["id"] - 1
@@ -212,10 +212,10 @@ class Cellular(Sanji):
                 3: excellent
         """
         signals = {
-                0: ["0", "0", "0"],
-                1: ["0", "0", "1"],
-                2: ["0", "1", "1"],
-                3: ["1", "1", "1"]
+            0: ["0", "0", "0"],
+            1: ["0", "0", "1"],
+            2: ["0", "1", "1"],
+            3: ["1", "1", "1"]
         }
         with open("/sys/class/leds/uc811x:CEL1/brightness", "w") as led1:
             led1.write(signals[level][0])
