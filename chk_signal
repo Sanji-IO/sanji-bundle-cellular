@@ -1,0 +1,2 @@
+#!/bin/sh
+# Fake checking signal daemon, always exit 0

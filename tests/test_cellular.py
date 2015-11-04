@@ -434,7 +434,7 @@ class TestCellular(unittest.TestCase):
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.return_value = "-80"
             res = self.cellular.get_signal_by_id(0)
-            self.assertEqual(res, "-80")
+            self.assertEqual(res, -80)
 
     def test_get_signal_by_id_fail(self):
         self.cellular = Cellular(connection=Mockup())
@@ -622,6 +622,7 @@ class TestCellular(unittest.TestCase):
                                    'atPort': '/dev/ttyS0',
                                    'id': 0, 'apn': 'internet'}]
         self.cellular.get_signal_by_id = Mock(return_value=99)
+        self.cellular.set_signal_led = Mock()
         self.cellular.is_target_device_appear = Mock(return_value=False)
         self.cellular.get_status_by_id = Mock(return_value=0)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
@@ -636,6 +637,7 @@ class TestCellular(unittest.TestCase):
                                    'atPort': '/dev/ttyS0',
                                    'id': 0, 'apn': 'internet'}]
         self.cellular.get_signal_by_id = Mock(return_value=99)
+        self.cellular.set_signal_led = Mock()
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_status_by_id = Mock(return_value=2)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
@@ -651,6 +653,7 @@ class TestCellular(unittest.TestCase):
                                    'enable': 0,
                                    'id': 0, 'apn': 'internet'}]
         self.cellular.get_signal_by_id = Mock(return_value=99)
+        self.cellular.set_signal_led = Mock()
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_status_by_id = Mock(return_value=0)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
@@ -666,6 +669,7 @@ class TestCellular(unittest.TestCase):
                                    'id': 0, 'apn': 'internet'}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
+        self.cellular.set_signal_led = Mock()
         self.cellular.get_status_by_id = Mock(return_value=0)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
@@ -682,6 +686,7 @@ class TestCellular(unittest.TestCase):
                                    'modemPort': '/dev/ttyS0', 'id': 0}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
+        self.cellular.set_signal_led = Mock()
         self.cellular.get_status_by_id = Mock(return_value=1)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)
@@ -696,6 +701,7 @@ class TestCellular(unittest.TestCase):
                                    'modemPort': '/dev/ttyS0', 'id': 0}]
         self.cellular.is_target_device_appear = Mock(return_value=True)
         self.cellular.get_signal_by_id = Mock(return_value=78)
+        self.cellular.set_signal_led = Mock()
         self.cellular.get_status_by_id = Mock(return_value=1)
         self.cellular.get_cops_by_id = Mock(return_value="unknown")
         self.cellular.is_leases_file_appear = Mock(return_value=self.filetext)

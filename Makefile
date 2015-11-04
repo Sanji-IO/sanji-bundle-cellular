@@ -16,6 +16,7 @@ TARGET_FILES = \
 	bundle.json \
 	requirements.txt \
 	cellular.py \
+	chk_signal \
 	data/cellular.json.factory \
 	hooks/cellular-dhclient-hook
 DIST_FILES= \

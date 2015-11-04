@@ -123,6 +123,7 @@ class Cellular(Sanji):
                     (self.is_target_device_appear(model["atPort"]) is False)):
                 model["signal"] = 99
                 model["status"] = 0
+                self.set_signal_led(model["signal"])
                 continue
 
             dev_id = model["id"] - 1
@@ -130,6 +131,7 @@ class Cellular(Sanji):
             model["signal"] = self.get_signal_by_id(dev_id)
             model["operatorName"] = self.get_cops_by_id(dev_id)
             model["status"] = self.get_status_by_id(dev_id)
+            self.set_signal_led(model["signal"])
 
             # check network availability
             # if network status down, turn up otherwise disconnect
@@ -201,6 +203,40 @@ class Cellular(Sanji):
 
             self.model.save_db()
 
+    def _set_signal_led(self, level):
+        """
+        Attributes:
+        level   0: no signal or N/A
+                1: marginal
+                2: good
+                3: excellent
+        """
+        signals = {
+            0: ["0", "0", "0"],
+            1: ["0", "0", "1"],
+            2: ["0", "1", "1"],
+            3: ["1", "1", "1"]
+        }
+        with open("/sys/class/leds/uc811x:CEL1/brightness", "w") as led1:
+            led1.write(signals[level][0])
+        with open("/sys/class/leds/uc811x:CEL2/brightness", "w") as led2:
+            led2.write(signals[level][1])
+        with open("/sys/class/leds/uc811x:CEL3/brightness", "w") as led3:
+            led3.write(signals[level][2])
+
+    def set_signal_led(self, signal):
+        if signal >= -52 or signal <= -110:
+            signal = -120
+
+        if signal >= -73:
+            self._set_signal_led(3)
+        elif signal >= -93:
+            self._set_signal_led(2)
+        elif signal >= -109:
+            self._set_signal_led(1)
+        else:
+            self._set_signal_led(0)
+
     def get_signal_by_id(self, dev_id):
         try:
             tmp = subprocess.check_output(
@@ -210,7 +246,7 @@ class Cellular(Sanji):
                 | tail -n 1" % (self.model.db[dev_id]["modemPort"]),
                 shell=True)
             if len(tmp) > 1:
-                return str(tmp).strip()
+                return int(str(tmp).strip())
             else:
                 return 99
         except Exception as e:
