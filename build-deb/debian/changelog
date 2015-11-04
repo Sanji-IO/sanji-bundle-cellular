@@ -1,3 +1,9 @@
+sanji-bundle-cellular (0.9.7-1) unstable; urgency=low
+
+  * Divert `chk_signal` and light signal led.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 04 Nov 2015 18:15:16 +0800
+
 sanji-bundle-cellular (0.9.6-1) unstable; urgency=low
 
   * Set cellular interface link to DONW if disconnected.
