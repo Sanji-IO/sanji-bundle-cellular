@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.2-1) unstable; urgency=low
+
+  * Fix daemon thread stop-ability.
+
+ -- TC Huang <tc.huang@moxa.com>  Thu, 05 Nov 2015 16:55:50 +0800
+
 sanji-bundle-cellular (1.0.1-1) unstable; urgency=low
 
   * Fix cellular connection fails when keepalive not set.

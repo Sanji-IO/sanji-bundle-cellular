@@ -72,7 +72,7 @@ class CellularObserver(object):
 
         self._stop = False
         self._thread = Thread(target=main_thread)
-        self._thread.daemon = False
+        self._thread.daemon = True
         self._thread.start()
 
     def stop(self):
@@ -238,7 +238,7 @@ class CellularConnector(object):
 
         self._stop = False
         self._connect_thread = Thread(target=main_thread)
-        self._connect_thread.daemon = False
+        self._connect_thread.daemon = True
         self._connect_thread.start()
 
     def stop(self):
