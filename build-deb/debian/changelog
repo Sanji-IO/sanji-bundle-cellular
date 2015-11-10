@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.3-1) unstable; urgency=low
+
+  * Always pass "Username=" and "Password=" when calling "cell_mgmt start".
+
+ -- TC Huang <tc.huang@moxa.com>  Tue, 10 Nov 2015 10:43:31 +0800
+
 sanji-bundle-cellular (1.0.2-1) unstable; urgency=low
 
   * Fix daemon thread stop-ability.
