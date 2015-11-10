@@ -14,7 +14,7 @@ from sanji.model_initiator import ModelInitiator
 from modemcmd import modemcmd
 from modemcmd import ModemcmdTimeoutException
 from subprocess import CalledProcessError
-from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
+from cellular_utility.cell_mgmt import CellMgmt
 
 from voluptuous import Schema
 from voluptuous import Required
@@ -174,10 +174,10 @@ class Cellular(Sanji):
                 if self._get_signal_failed_times >= 20:
                     try:
                         self._cell_mgmt.power_off()
-                        sleep(5)
+                        sleep(10)
                         self._cell_mgmt.power_on()
                         self._get_signal_failed_times = 0
-                    except:
+                    except Exception as e:
                         _logger.debug("power reset: %s" % str(e))
                         continue
 
@@ -255,18 +255,12 @@ class Cellular(Sanji):
         try:
             output = subprocess.check_output(
                 "qmicli -p -d %s --nas-get-signal-info" %
-                (self.model.db[dev_id]["modemPort"]),shell=True)
+                (self.model.db[dev_id]["modemPort"]), shell=True)
             tmp = subprocess.check_output(
                 "echo \"%s\" | grep RSSI \
                 | cut -d \"'\" -f 2 \
                 | cut -d \" \" -f 1 \
                 | tail -n 1" % output,
-                shell=True)
-            tmp = subprocess.check_output(
-                "qmicli -p -d %s --nas-get-signal-info | grep RSSI \
-                | cut -d \"'\" -f 2 \
-                | cut -d \" \" -f 1 \
-                | tail -n 1" % (self.model.db[dev_id]["modemPort"]),
                 shell=True)
             if len(tmp) > 1:
                 signal = int(str(tmp).strip())

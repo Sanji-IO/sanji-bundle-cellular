@@ -448,7 +448,7 @@ class TestCellular(unittest.TestCase):
         with patch("cellular.subprocess") as subprocess:
             subprocess.check_output.side_effect = Exception
             res = self.cellular.get_signal_by_id(0)
-            self.assertEqual(res, 99)
+            self.assertEqual(res, 0)
 
     def test_get_cops_by_id(self):
         self.cellular = Cellular(connection=Mockup())
