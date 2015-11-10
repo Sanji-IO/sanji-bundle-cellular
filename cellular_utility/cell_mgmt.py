@@ -57,7 +57,12 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt start")
 
-        cmd = [self._exe_path, "start", "ignore-dns-gw", "APN=" + apn, "Username=", "Password="]
+        cmd = [
+            self._exe_path, "start", "ignore-dns-gw",
+            "APN=" + apn,
+            "Username=",
+            "Password="
+        ]
         if pin is not None:
             cmd.append("PIN=" + pin)
         else:
