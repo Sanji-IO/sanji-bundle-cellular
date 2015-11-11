@@ -18,11 +18,15 @@ TARGET_FILES = \
 	cellular.py \
 	chk_signal \
 	data/cellular.json.factory \
-	hooks/cellular-dhclient-hook
+	hooks/cellular-dhclient-hook \
+	cellular_utility/cell_mgmt.py \
+	cellular_utility/__init__.py
 DIST_FILES= \
 	$(TARGET_FILES) \
 	README.md \
 	Makefile \
+	cellular_utility/tests/__init__.py \
+	cellular_utility/tests/test_cell_mgmt.py \
 	tests/requirements.txt \
 	tests/test_cellular.py \
 	tests/test_e2e/bundle.json \
