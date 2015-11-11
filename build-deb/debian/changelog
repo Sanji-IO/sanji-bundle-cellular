@@ -1,3 +1,9 @@
+sanji-bundle-cellular (0.9.8-1) unstable; urgency=low
+
+  * Reset module if crashed.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Tue, 10 Nov 2015 14:24:32 +0800
+
 sanji-bundle-cellular (0.9.7-1) unstable; urgency=low
 
   * Divert `chk_signal` and light signal led.

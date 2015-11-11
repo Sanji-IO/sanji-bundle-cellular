@@ -14,6 +14,7 @@ from sanji.model_initiator import ModelInitiator
 from modemcmd import modemcmd
 from modemcmd import ModemcmdTimeoutException
 from subprocess import CalledProcessError
+from cellular_utility.cell_mgmt import CellMgmt
 
 from voluptuous import Schema
 from voluptuous import Required
@@ -168,6 +169,19 @@ class Cellular(Sanji):
             # setting is online and current is offline = start connect
             if model["enable"] == 1 and model["status"] == 0:
                 _logger.debug("Start connect")
+
+                # reset module if failed 20 times
+                if self._get_signal_failed_times >= 20:
+                    try:
+                        self._cell_mgmt.power_off()
+                        sleep(10)
+                        self._cell_mgmt.power_on()
+                        self._get_signal_failed_times = 0
+                    except Exception as e:
+                        _logger.debug("power reset: %s" % str(e))
+                        continue
+
+                # connect
                 self.set_offline_by_id(dev_id)
                 self.set_online_by_id(dev_id)
 
@@ -239,19 +253,28 @@ class Cellular(Sanji):
 
     def get_signal_by_id(self, dev_id):
         try:
+            output = subprocess.check_output(
+                "qmicli -p -d %s --nas-get-signal-info" %
+                (self.model.db[dev_id]["modemPort"]), shell=True)
             tmp = subprocess.check_output(
-                "qmicli -p -d %s --nas-get-signal-info | grep RSSI \
+                "echo \"%s\" | grep RSSI \
                 | cut -d \"'\" -f 2 \
                 | cut -d \" \" -f 1 \
-                | tail -n 1" % (self.model.db[dev_id]["modemPort"]),
+                | tail -n 1" % output,
                 shell=True)
             if len(tmp) > 1:
-                return int(str(tmp).strip())
+                signal = int(str(tmp).strip())
             else:
-                return 99
+                signal = 99
+
+            # reset
+            self._get_signal_failed_times = 0
+            return signal
         except Exception as e:
+            self._get_signal_failed_times += 1
             _logger.debug(e)
-            return 99
+            _logger.debug("failed: %d" % self._get_signal_failed_times)
+            return 0
 
     def get_cops_by_id(self, dev_id):
         try:
@@ -389,6 +412,9 @@ class Cellular(Sanji):
         self.event_counter = {}
         self.modifed = {}
         self.dhclient_info = ""
+
+        self._get_signal_failed_times = 0
+        self._cell_mgmt = CellMgmt()
 
     @Route(methods="get", resource="/network/cellulars")
     def get_root(self, message, response):
