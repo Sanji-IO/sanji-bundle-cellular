@@ -15,7 +15,7 @@ TARGET_FILES = \
 	LICENSE \
 	bundle.json \
 	requirements.txt \
-	cellular.py \
+	index.py \
 	cellular_utility/__init__.py \
 	cellular_utility/cell_mgmt.py \
 	cellular_utility/management.py \
@@ -27,7 +27,7 @@ DIST_FILES= \
 	Makefile \
 	tests/__init__.py \
 	tests/requirements.txt \
-	tests/test_cellular.py \
+	tests/test_index.py \
 	cellular_utility/tests/__init__.py \
 	cellular_utility/tests/test_cell_mgmt.py
 

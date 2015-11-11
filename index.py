@@ -60,7 +60,7 @@ class Cellular(Sanji):
                 Required("targetHost"): str,
                 Required("intervalSec"): All(
                     int,
-                    Any(Range(min=0, max=0), Range(min=60, max=86400-1)))
+                    Any(0, Range(min=60, max=86400-1)))
             }
         },
         extra=REMOVE_EXTRA)
