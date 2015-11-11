@@ -6,7 +6,7 @@ import os
 import logging
 import unittest
 
-from cellular import Cellular
+from index import Cellular
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
