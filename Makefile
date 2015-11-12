@@ -47,7 +47,7 @@ distclean: clean
 pylint:
 	flake8 -v --exclude=.git,__init__.py,.env .
 test:
-	nosetests --with-coverage --cover-erase --cover-package=index -v
+	nosetests --with-coverage --cover-erase --cover-package=index,cellular_utility -v
 
 dist: $(ARCHIVE)
 

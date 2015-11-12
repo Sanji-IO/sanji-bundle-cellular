@@ -32,7 +32,12 @@ class CellMgmt(object):
     _signal_regex = re.compile(
         r"^[a-zA-Z0-9]+ (-[0-9]+) dbm\n$")
     _m_info_regex = re.compile(
-        r"^Module=([\S]+)\nWWAN_node=([\S]+)\n")
+        r"^Module=([\S]+)\n"
+        r"WWAN_node=([\S]+)\n"
+        r"AT_port=[\S]+\n"
+        r"GPS_port=[\S]+\n"
+        r"LAC=([\S]+)\n"
+        r"CellID=([\S]+)\n")
     _operator_regex = re.compile(
         r"^([\S ]*)\n$")
 
@@ -206,7 +211,12 @@ class CellMgmt(object):
     def m_info(self):
         """
         Return dict like:
-            {"Module": "MC7304", "WWAN_node": "wwan0"}
+            {
+                "Module": "MC7304",
+                "WWAN_node": "wwan0",
+                "LAC": "2817",
+                "CellID": "01073AEE"
+            }
         """
 
         _logger.debug("cell_mgmt m_info")
@@ -227,7 +237,12 @@ class CellMgmt(object):
         if not match:
             raise CellMgmtError
 
-        return {"Module": match.group(1), "WWAN_node": match.group(2)}
+        return {
+            "Module": match.group(1),
+            "WWAN_node": match.group(2),
+            "LAC": match.group(3),
+            "CellID": match.group(4)
+        }
 
     def operator(self):
         """
@@ -253,6 +268,26 @@ class CellMgmt(object):
             raise CellMgmtError
 
         return match.group(1)
+
+    def sim_status(self):
+        """
+        Return True when SIM card exist.
+        """
+
+        """
+        'cell_mgmt sim_status' exit with 1 when SIM card not inserted.
+        """
+
+        _logger.debug("cell_mgmt sim_status")
+        try:
+            check_call(
+                [self._exe_path, "sim_status"],
+                shell=self._use_shell)
+
+            return True
+
+        except CalledProcessError:
+            return False
 
 
 if __name__ == "__main__":
