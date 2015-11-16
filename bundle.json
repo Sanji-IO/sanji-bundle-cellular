@@ -1,11 +1,11 @@
 {
   "name": "cellular",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "author": "TC Huang",
   "email": "tc.huang@moxa.com",
   "description": "Provides Cellular configuration interface.",
   "license": "MOXA",
-  "main": "cellular.py",
+  "main": "index.py",
   "argument": "",
   "priority": 20,
   "hook": [],
