@@ -16,7 +16,7 @@ from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 from cellular_utility.management import Manager
 
 
-class Cellular(Sanji):
+class Index(Sanji):
 
     def init(self, *args, **kwargs):
         path_root = os.path.abspath(os.path.dirname(__file__))
@@ -73,7 +73,7 @@ class Cellular(Sanji):
 
         # since all items are required in PUT,
         # its schema is identical to cellular.json
-        self.model.db[0] = Cellular.PUT_SCHEMA(message.data)
+        self.model.db[0] = Index.PUT_SCHEMA(message.data)
         self.model.save_db()
 
         self._mgr.set_configuration(
@@ -147,5 +147,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=0, format=FORMAT)
     _logger = logging.getLogger("sanji.cellular")
 
-    cellular = Cellular(connection=Mqtt())
+    cellular = Index(connection=Mqtt())
     cellular.start()

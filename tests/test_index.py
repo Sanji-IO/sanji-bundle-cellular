@@ -6,7 +6,7 @@ import os
 import logging
 import unittest
 
-from index import Cellular
+from index import Index
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
@@ -32,7 +32,7 @@ class TestCellularStatic(unittest.TestCase):
         }
 
         # act
-        data = Cellular.PUT_SCHEMA(SUT)
+        data = Index.PUT_SCHEMA(SUT)
 
         # assert
         self.assertEqual(SUT, data)
@@ -52,7 +52,7 @@ class TestCellularStatic(unittest.TestCase):
         }
 
         # act
-        data = Cellular.PUT_SCHEMA(SUT)
+        data = Index.PUT_SCHEMA(SUT)
 
         # assert
         self.assertEqual(SUT, data)
@@ -72,7 +72,7 @@ class TestCellularStatic(unittest.TestCase):
         }
 
         # act
-        data = Cellular.PUT_SCHEMA(SUT)
+        data = Index.PUT_SCHEMA(SUT)
 
         # assert
         self.assertEqual(SUT, data)
