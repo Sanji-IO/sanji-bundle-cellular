@@ -16,7 +16,7 @@ from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 from cellular_utility.management import Manager
 
 
-class Cellular(Sanji):
+class Index(Sanji):
 
     def init(self, *args, **kwargs):
         path_root = os.path.abspath(os.path.dirname(__file__))
