@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.6-1) unstable; urgency=low
+
+  * Add event log support.
+
+ -- TC Huang <tc.huang@moxa.com>  Mon, 16 Nov 2015 13:14:09 +0800
+
 sanji-bundle-cellular (1.0.5-1) unstable; urgency=low
 
   * Fix bundle.json .

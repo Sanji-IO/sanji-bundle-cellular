@@ -119,6 +119,26 @@ class TestCellMgmt(unittest.TestCase):
         self.assertEqual("2817", match.group(3))
         self.assertEqual("01073AEE", match.group(4))
 
+    def test_sim_status_ready_regex_should_pass(self):
+        # arrange
+        SUT = "+CPIN: READY\n"
+
+        # act
+        match = CellMgmt._sim_status_ready_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
+    def test_sim_status_sim_pin_regex_should_pass(self):
+        # arrange
+        SUT = "+CPIN: SIM PIN\n"
+
+        # act
+        match = CellMgmt._sim_status_sim_pin_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
     logging.basicConfig(level=20, format=FORMAT)

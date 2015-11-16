@@ -40,6 +40,10 @@ class CellMgmt(object):
         r"CellID=([\S]+)\n")
     _operator_regex = re.compile(
         r"^([\S ]*)\n$")
+    _sim_status_ready_regex = re.compile(
+        r"^\+CPIN:\s*READY$")
+    _sim_status_sim_pin_regex = re.compile(
+        r"^\+CPIN:\s*SIM\s+PIN$")
 
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
@@ -269,25 +273,47 @@ class CellMgmt(object):
 
         return match.group(1)
 
-    def sim_status(self):
+    def set_pin(self, pin):
         """
-        Return True when SIM card exist.
-        """
-
-        """
-        'cell_mgmt sim_status' exit with 1 when SIM card not inserted.
+        Return True if PIN unlocked.
         """
 
-        _logger.debug("cell_mgmt sim_status")
+        _logger.debug("cell_mgmt set_pin")
         try:
             check_call(
-                [self._exe_path, "sim_status"],
+                [self._exe_path, "set_pin", pin],
                 shell=self._use_shell)
 
             return True
 
         except CalledProcessError:
             return False
+
+    def sim_status(self):
+        """
+        Returns one of:
+            "nosim"
+            "pin"
+            "ready"
+        """
+
+        """
+        'cell_mgmt sim_status' exit non-zero when SIM card not inserted.
+        """
+
+        _logger.debug("cell_mgmt sim_status")
+        try:
+            output = check_output(
+                [self._exe_path, "sim_status"],
+                shell=self._use_shell)
+
+            if self._sim_status_ready_regex.match(output):
+                return "ready"
+            elif self._sim_status_sim_pin_regex.match(output):
+                return "pin"
+
+        except CalledProcessError:
+            return "nosim"
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ TARGET_FILES = \
 	index.py \
 	cellular_utility/__init__.py \
 	cellular_utility/cell_mgmt.py \
+	cellular_utility/event.py \
 	cellular_utility/management.py \
 	data/cellular.json.factory
 
