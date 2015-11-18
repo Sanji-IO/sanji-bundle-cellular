@@ -18,6 +18,7 @@ TARGET_FILES = \
 	index.py \
 	cellular_utility/__init__.py \
 	cellular_utility/cell_mgmt.py \
+	cellular_utility/event.py \
 	cellular_utility/management.py \
 	data/cellular.json.factory
 
@@ -47,7 +48,7 @@ distclean: clean
 pylint:
 	flake8 -v --exclude=.git,__init__.py,.env .
 test:
-	nosetests --with-coverage --cover-erase --cover-package=index -v
+	nosetests --with-coverage --cover-erase --cover-package=index,cellular_utility -v
 
 dist: $(ARCHIVE)
 

@@ -12,6 +12,7 @@ from time import sleep
 from traceback import format_exc, print_exc
 
 from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
+from cellular_utility.event import Log
 
 _logger = logging.getLogger("sanji.cellular")
 
@@ -20,9 +21,13 @@ class CellularInformation(object):
     def __init__(
             self,
             signal,
-            operator):
+            operator,
+            lac,
+            cell_id):
         self._signal = signal
         self._operator = operator
+        self._lac = lac
+        self._cell_id = cell_id
 
     @property
     def signal(self):
@@ -31,6 +36,14 @@ class CellularInformation(object):
     @property
     def operator(self):
         return self._operator
+
+    @property
+    def lac(self):
+        return self._lac
+
+    @property
+    def cell_id(self):
+        return self._cell_id
 
 
 class CellularObserver(object):
@@ -62,9 +75,13 @@ class CellularObserver(object):
 
                     operator = self._cell_mgmt.operator()
 
+                    m_info = self._cell_mgmt.m_info()
+
                     update_cellular_information(CellularInformation(
                         signal,
-                        operator))
+                        operator,
+                        m_info["LAC"],
+                        m_info["CellID"]))
 
                 except CellMgmtError:
                     _logger.warning(format_exc())
@@ -121,12 +138,14 @@ class CellularConnector(object):
             apn,
             pin,
             check_period_sec,
+            log,
             keepalive_host=None):
 
         self._apn = apn
         self._pin = pin
         self._check_period_sec = check_period_sec
         self._keepalive_host = keepalive_host
+        self._log = log
 
         self._cell_mgmt = CellMgmt()
 
@@ -156,35 +175,48 @@ class CellularConnector(object):
                     for retry in range(0, 4):
                         update_network_information(None)
 
-                        try:
-                            if self._stop:
-                                break
+                        if self._stop:
+                            break
 
-                            self._cell_mgmt.stop()
+                        self._log.log_event_connect_begin()
+
+                        self._cell_mgmt.stop()
+
+                        try:
                             network_info = self._cell_mgmt.start(
                                 apn=self._apn,
                                 pin=self._pin)
 
-                            if not self._cell_mgmt.status():
-                                sleep(10)
-                                continue
-
-                            # publish cellular information here
-                            connected = True
-                            update_network_information(NetworkInformation(
-                                network_info["ip"],
-                                network_info["netmask"],
-                                network_info["gateway"],
-                                network_info["dns"]))
-
-                            # sleep awhile to let ip-route take effect
-                            sleep(3)
-                            break
-
                         except CellMgmtError:
+                            self._log.log_event_connect_failure()
+
                             print_exc()
 
+                            sleep(10)
+
                             continue
+
+                        if not self._cell_mgmt.status():
+                            self._log.log_event_connect_failure()
+
+                            sleep(10)
+                            continue
+
+                        # publish cellular information here
+                        connected = True
+                        network_information = NetworkInformation(
+                            network_info["ip"],
+                            network_info["netmask"],
+                            network_info["gateway"],
+                            network_info["dns"])
+                        update_network_information(network_information)
+
+                        self._log.log_event_connect_success(
+                            network_information)
+
+                        # sleep awhile to let ip-route take effect
+                        sleep(3)
+                        break
 
                     if self._stop:
                         break
@@ -192,6 +224,8 @@ class CellularConnector(object):
                     # retry count exceeded, power-cycle cellular module
                     if not connected:
                         _logger.warning("power-cycle cellular module")
+
+                        self._log.log_event_power_cycle()
 
                         self._cell_mgmt.stop()
                         self._cell_mgmt.power_off()
@@ -224,9 +258,11 @@ class CellularConnector(object):
                         next_check = now + self._check_period_sec
 
                         if not self._cell_mgmt.status():
+                            self._log.log_event_cellular_disconnect()
                             break
 
                         if not self._ping():
+                            self._log.log_event_checkalive_failure()
                             break
 
                 except CellMgmtError:
@@ -234,6 +270,7 @@ class CellularConnector(object):
                     continue
 
             self._cell_mgmt.stop()
+            self._log.log_event_cellular_disconnect()
             update_network_information(None)
 
         self._stop = False
@@ -267,6 +304,11 @@ class CellularConnector(object):
             return False
 
 
+class PinError(Exception):
+    """ Raised when PIN code verification fails """
+    pass
+
+
 class Manager(object):
     """
     Helper class.
@@ -277,6 +319,8 @@ class Manager(object):
             publish_network_info):
 
         self._publish_network_info = publish_network_info
+
+        self._log = Log()
 
         self._enabled = False
         self._apn = ""
@@ -297,6 +341,11 @@ class Manager(object):
         if self._observer is not None:
             return
 
+        # if SIM card not found, don't do observation
+        if self._cell_mgmt.sim_status() == "nosim":
+            self._log.log_nosim()
+            return
+
         self._observer = CellularObserver()
         self._observer.start(self._set_cellular_information)
 
@@ -313,12 +362,16 @@ class Manager(object):
         {
             "signal": -87,
             "operator": "Chunghwa Telecom"
+            "lac": "2817",
+            "cell_id": "01073AEE"
         }
         """
 
         status = {
             "signal": 0,
-            "operator": ""
+            "operator": "",
+            "lac": "",
+            "cell_id": ""
         }
 
         cellular_information = self._cellular_information
@@ -326,6 +379,8 @@ class Manager(object):
         if cellular_information is not None:
             status["signal"] = cellular_information.signal
             status["operator"] = cellular_information.operator
+            status["lac"] = cellular_information.lac
+            status["cell_id"] = cellular_information.cell_id
 
         return status
 
@@ -360,11 +415,19 @@ class Manager(object):
 
         return status
 
+    def set_pin(self, pin):
+        """Return True when PIN verified, otherwise False."""
+        if pin != "":
+            if not self._cell_mgmt.set_pin(pin):
+                return False
+
+        self._pin = pin
+        return True
+
     def set_configuration(
             self,
             enabled,
             apn,
-            pin,
             keepalive_enabled,
             keepalive_host,
             keepalive_period_sec):
@@ -374,7 +437,6 @@ class Manager(object):
 
         if (self._enabled == enabled and
                 self._apn == apn and
-                self._pin == pin and
                 self._keepalive_enabled == keepalive_enabled and
                 self._keepalive_host == keepalive_host and
                 self._keepalive_period_sec == keepalive_period_sec):
@@ -382,11 +444,6 @@ class Manager(object):
 
         self._enabled = enabled
         self._apn = apn
-
-        if pin == "":
-            self._pin = None
-        else:
-            self._pin = pin
 
         self._keepalive_enabled = keepalive_enabled
         self._keepalive_host = keepalive_host
@@ -409,12 +466,15 @@ class Manager(object):
             apn=self._apn,
             pin=self._pin,
             check_period_sec=_check_period_sec,
+            log=self._log,
             keepalive_host=_keepalive_host)
 
         self._connector.start(self._set_network_information)
 
     def _set_cellular_information(self, cellular_information):
         self._cellular_information = cellular_information
+
+        self._log.log_cellular_information(cellular_information)
 
     def _set_network_information(self, network_information):
         """
@@ -442,10 +502,13 @@ if __name__ == "__main__":
         check_call(["ip", "route", "add", "default", "via", gateway])
 
     mgr = Manager(dump)
+    if not mgr.set_pin("0000"):
+        print "pin error"
+        exit(1)
+
     mgr.set_configuration(
         enabled=True,
         apn="internet",
-        pin="0000",
         keepalive_enabled=True,
         keepalive_host="8.8.8.8",
         keepalive_period_sec=10)

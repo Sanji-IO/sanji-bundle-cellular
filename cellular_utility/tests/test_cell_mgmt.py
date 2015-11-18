@@ -105,7 +105,9 @@ class TestCellMgmt(unittest.TestCase):
             "Module=MC7304\n"
             "WWAN_node=wwan0\n"
             "AT_port=/dev/ttyUSB2\n"
-            "GPS_port=/dev/ttyUSB1\n")
+            "GPS_port=/dev/ttyUSB1\n"
+            "LAC=2817\n"
+            "CellID=01073AEE\n")
 
         # act
         match = CellMgmt._m_info_regex.match(SUT)
@@ -114,6 +116,28 @@ class TestCellMgmt(unittest.TestCase):
         self.assertTrue(match)
         self.assertEqual("MC7304", match.group(1))
         self.assertEqual("wwan0", match.group(2))
+        self.assertEqual("2817", match.group(3))
+        self.assertEqual("01073AEE", match.group(4))
+
+    def test_sim_status_ready_regex_should_pass(self):
+        # arrange
+        SUT = "+CPIN: READY\n"
+
+        # act
+        match = CellMgmt._sim_status_ready_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
+    def test_sim_status_sim_pin_regex_should_pass(self):
+        # arrange
+        SUT = "+CPIN: SIM PIN\n"
+
+        # act
+        match = CellMgmt._sim_status_sim_pin_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
 
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"

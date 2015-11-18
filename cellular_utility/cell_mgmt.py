@@ -32,9 +32,18 @@ class CellMgmt(object):
     _signal_regex = re.compile(
         r"^[a-zA-Z0-9]+ (-[0-9]+) dbm\n$")
     _m_info_regex = re.compile(
-        r"^Module=([\S]+)\nWWAN_node=([\S]+)\n")
+        r"^Module=([\S]+)\n"
+        r"WWAN_node=([\S]+)\n"
+        r"AT_port=[\S]+\n"
+        r"GPS_port=[\S]+\n"
+        r"LAC=([\S]+)\n"
+        r"CellID=([\S]+)\n")
     _operator_regex = re.compile(
         r"^([\S ]*)\n$")
+    _sim_status_ready_regex = re.compile(
+        r"^\+CPIN:\s*READY$")
+    _sim_status_sim_pin_regex = re.compile(
+        r"^\+CPIN:\s*SIM\s+PIN$")
 
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
@@ -206,7 +215,12 @@ class CellMgmt(object):
     def m_info(self):
         """
         Return dict like:
-            {"Module": "MC7304", "WWAN_node": "wwan0"}
+            {
+                "Module": "MC7304",
+                "WWAN_node": "wwan0",
+                "LAC": "2817",
+                "CellID": "01073AEE"
+            }
         """
 
         _logger.debug("cell_mgmt m_info")
@@ -227,7 +241,12 @@ class CellMgmt(object):
         if not match:
             raise CellMgmtError
 
-        return {"Module": match.group(1), "WWAN_node": match.group(2)}
+        return {
+            "Module": match.group(1),
+            "WWAN_node": match.group(2),
+            "LAC": match.group(3),
+            "CellID": match.group(4)
+        }
 
     def operator(self):
         """
@@ -253,6 +272,48 @@ class CellMgmt(object):
             raise CellMgmtError
 
         return match.group(1)
+
+    def set_pin(self, pin):
+        """
+        Return True if PIN unlocked.
+        """
+
+        _logger.debug("cell_mgmt set_pin")
+        try:
+            check_call(
+                [self._exe_path, "set_pin", pin],
+                shell=self._use_shell)
+
+            return True
+
+        except CalledProcessError:
+            return False
+
+    def sim_status(self):
+        """
+        Returns one of:
+            "nosim"
+            "pin"
+            "ready"
+        """
+
+        """
+        'cell_mgmt sim_status' exit non-zero when SIM card not inserted.
+        """
+
+        _logger.debug("cell_mgmt sim_status")
+        try:
+            output = check_output(
+                [self._exe_path, "sim_status"],
+                shell=self._use_shell)
+
+            if self._sim_status_ready_regex.match(output):
+                return "ready"
+            elif self._sim_status_sim_pin_regex.match(output):
+                return "pin"
+
+        except CalledProcessError:
+            return "nosim"
 
 
 if __name__ == "__main__":
