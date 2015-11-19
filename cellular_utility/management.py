@@ -232,6 +232,9 @@ class CellularConnector(object):
 
         self._log.log_event_connect_begin()
 
+        if self._cell_mgmt.sim_status() == "nosim":
+            return None
+
         self._cell_mgmt.stop()
 
         try:
@@ -306,7 +309,11 @@ class CellularConnector(object):
         # wait another 10 seconds to ensure module readiness
         sleep(10)
 
-        if self._cell_mgmt.sim_status() == "pin" and self._pin != "":
+        sim_status = self._cell_mgmt.sim_status()
+        if sim_status == "nosim":
+            self._log.log_event_nosim()
+
+        elif sim_status == "pin" and self._pin != "":
             try:
                 self._cell_mgmt.set_pin(self._pin)
             except CellMgmtError:
