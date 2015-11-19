@@ -71,6 +71,9 @@ class CellularObserver(object):
                 next_check = now + CellularObserver.CHECK_PERIOD_SEC
 
                 try:
+                    if self._cell_mgmt.sim_status() == "nosim":
+                        continue
+
                     signal = self._cell_mgmt.signal()
 
                     operator = self._cell_mgmt.operator()
@@ -169,50 +172,23 @@ class CellularConnector(object):
 
             while not self._stop:
                 try:
-                    connected = False
+                    network_information = None
 
                     # connect Cellular
                     for retry in range(0, 4):
-                        update_network_information(None)
-
                         if self._stop:
                             break
 
-                        self._log.log_event_connect_begin()
-
-                        self._cell_mgmt.stop()
-
-                        try:
-                            network_info = self._cell_mgmt.start(
-                                apn=self._apn,
-                                pin=self._pin)
-
-                        except CellMgmtError:
-                            self._log.log_event_connect_failure()
-
-                            print_exc()
-
-                            sleep(10)
-
-                            continue
-
-                        if not self._cell_mgmt.status():
-                            self._log.log_event_connect_failure()
-
-                            sleep(10)
-                            continue
-
-                        # publish cellular information here
-                        connected = True
-                        network_information = NetworkInformation(
-                            network_info["ip"],
-                            network_info["netmask"],
-                            network_info["gateway"],
-                            network_info["dns"])
+                        network_information = None
                         update_network_information(network_information)
 
-                        self._log.log_event_connect_success(
-                            network_information)
+                        network_information = self._reconnect()
+                        if network_information is None:
+                            # retry in 10 seconds
+                            sleep(10)
+                            continue
+
+                        update_network_information(network_information)
 
                         # sleep awhile to let ip-route take effect
                         sleep(3)
@@ -222,48 +198,12 @@ class CellularConnector(object):
                         break
 
                     # retry count exceeded, power-cycle cellular module
-                    if not connected:
-                        _logger.warning("power-cycle cellular module")
-
-                        self._log.log_event_power_cycle()
-
-                        self._cell_mgmt.stop()
-                        self._cell_mgmt.power_off()
-                        self._cell_mgmt.power_on()
-
-                        # wait until cellular module becomes ready
-                        while True:
-                            try:
-                                # check whether cellular module is ready
-                                self._cell_mgmt.signal()
-                                break
-
-                            except CellMgmtError:
-                                sleep(1)
-                                continue
-
-                        # wait another 10 seconds to ensure module readiness
-                        sleep(10)
-
+                    if network_information is None:
+                        self._power_cycle()
                         continue
 
-                    # cellular connected, start keepalive
-                    next_check = monotonic()
-                    while not self._stop:
-                        now = monotonic()
-                        if now < next_check:
-                            sleep(1)
-                            continue
-
-                        next_check = now + self._check_period_sec
-
-                        if not self._cell_mgmt.status():
-                            self._log.log_event_cellular_disconnect()
-                            break
-
-                        if not self._ping():
-                            self._log.log_event_checkalive_failure()
-                            break
+                    # cellular connected, start check-alive
+                    self._check_alive()
 
                 except CellMgmtError:
                     print_exc()
@@ -285,6 +225,46 @@ class CellularConnector(object):
         self._stop = True
         self._connect_thread.join()
 
+    def _reconnect(self):
+        """
+        Returns NetworkInformation if connected, otherwise None.
+        """
+
+        self._log.log_event_connect_begin()
+
+        if self._cell_mgmt.sim_status() == "nosim":
+            return None
+
+        self._cell_mgmt.stop()
+
+        try:
+            network_info = self._cell_mgmt.start(
+                apn=self._apn)
+
+        except CellMgmtError:
+            self._log.log_event_connect_failure()
+
+            print_exc()
+
+            return None
+
+        if not self._cell_mgmt.status():
+            self._log.log_event_connect_failure()
+
+            return None
+
+        # publish cellular information here
+        network_information = NetworkInformation(
+            network_info["ip"],
+            network_info["netmask"],
+            network_info["gateway"],
+            network_info["dns"])
+
+        self._log.log_event_connect_success(
+            network_information)
+
+        return network_information
+
     def _ping(self):
         """
         Return whether ping succeeded.
@@ -303,10 +283,66 @@ class CellularConnector(object):
         except CalledProcessError:
             return False
 
+    def _power_cycle(self):
+        """
+        As title.
+        """
+        _logger.warning("power-cycle cellular module")
 
-class PinError(Exception):
-    """ Raised when PIN code verification fails """
-    pass
+        self._log.log_event_power_cycle()
+
+        self._cell_mgmt.stop()
+        self._cell_mgmt.power_off()
+        self._cell_mgmt.power_on()
+
+        # wait until cellular module becomes ready
+        while True:
+            try:
+                # check whether cellular module is ready
+                self._cell_mgmt.signal()
+                break
+
+            except CellMgmtError:
+                sleep(1)
+                continue
+
+        # wait another 10 seconds to ensure module readiness
+        sleep(10)
+
+        sim_status = self._cell_mgmt.sim_status()
+        if sim_status == "nosim":
+            self._log.log_event_nosim()
+
+        elif sim_status == "pin" and self._pin != "":
+            try:
+                self._cell_mgmt.set_pin(self._pin)
+            except CellMgmtError:
+                self._log.log_event_pin_error(self._pin)
+
+                # this PIN should not be used anymore
+                self._stop = True
+                raise
+
+    def _check_alive(self):
+        """
+        As title.
+        """
+        next_check = monotonic()
+        while not self._stop:
+            now = monotonic()
+            if now < next_check:
+                sleep(1)
+                continue
+
+            next_check = now + self._check_period_sec
+
+            if not self._cell_mgmt.status():
+                self._log.log_event_cellular_disconnect()
+                break
+
+            if not self._ping():
+                self._log.log_event_checkalive_failure()
+                break
 
 
 class Manager(object):
@@ -339,11 +375,6 @@ class Manager(object):
 
     def start(self):
         if self._observer is not None:
-            return
-
-        # if SIM card not found, don't do observation
-        if self._cell_mgmt.sim_status() == "nosim":
-            self._log.log_nosim()
             return
 
         self._observer = CellularObserver()

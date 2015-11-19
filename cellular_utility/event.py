@@ -69,6 +69,12 @@ class Log(object):
         """
         self._log("checkalive-failure")
 
+    def log_event_pin_error(self):
+        """
+        PIN error.
+        """
+        self._log("pin-error, switched SIM card?")
+
     def log_event_power_cycle(self):
         """
         Power cycle cellular module.

@@ -46,6 +46,10 @@ class Index(Sanji):
 
     @Route(methods="get", resource="/network/cellulars")
     def get_list(self, message, response):
+        if self._get_name() is None:
+            # no cellular module exist
+            return response(code=200, data=[])
+
         return response(code=200, data=[self._get()])
 
     @Route(methods="get", resource="/network/cellulars/:id")
@@ -109,7 +113,9 @@ class Index(Sanji):
         return response(code=200, data=self._get())
 
     def _get(self):
-        _name = self._get_name()
+        name = self._get_name()
+        if name is None:
+            name = "n/a"
 
         config = self.model.db[0]
 
@@ -118,7 +124,7 @@ class Index(Sanji):
 
         return {
             "id": config["id"],
-            "name": _name,
+            "name": name,
             "signal": cellular_status["signal"],
             "operatorName": cellular_status["operator"],
 
@@ -145,8 +151,13 @@ class Index(Sanji):
             gateway,
             dns):
 
+        name = self._get_name()
+        if name is None:
+            _logger.error("device name not available")
+            return
+
         self.publish.event.put("/network/interface", data={
-            "name": self._get_name(),
+            "name": name,
             "ip": ip,
             "netmask": netmask,
             "gateway": gateway,
@@ -161,7 +172,7 @@ class Index(Sanji):
             return self._name
 
         except CellMgmtError:
-            return "n/a"
+            return None
 
 
 if __name__ == "__main__":
