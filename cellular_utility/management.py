@@ -134,7 +134,8 @@ class CellularConnector(object):
     Tries Cellular connection continuously.
     """
 
-    PING_TIMEOUT_SEC = 10
+    PING_REQUEST_COUNT = 3
+    PING_TIMEOUT_SEC = 20
 
     def __init__(
             self,
@@ -175,7 +176,7 @@ class CellularConnector(object):
                     network_information = None
 
                     # connect Cellular
-                    for retry in range(0, 4):
+                    for _ in range(0, 4):
                         if self._stop:
                             break
 
@@ -272,16 +273,19 @@ class CellularConnector(object):
         if not self._keepalive_host:
             return True
 
-        try:
-            check_call([
-                "ping",
-                "-c", "3",
-                "-W", str(self.PING_TIMEOUT_SEC),
-                self._keepalive_host])
-            return True
+        for _ in xrange(1, self.PING_REQUEST_COUNT):
+            try:
+                check_call([
+                    "ping",
+                    "-c", 1,
+                    "-W", str(self.PING_TIMEOUT_SEC),
+                    self._keepalive_host])
+                return True
 
-        except CalledProcessError:
-            return False
+            except CalledProcessError:
+                continue
+
+        return False
 
     def _power_cycle(self):
         """

@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.8-1) unstable; urgency=low
+
+  * Improve checkalive method.
+
+ -- TC Huang <tc.huang@moxa.com>  Fri, 27 Nov 2015 11:27:49 +0800
+
 sanji-bundle-cellular (1.0.7-1) unstable; urgency=low
 
   * Avoid cellular module not being ready when cellular-bundle starts.
