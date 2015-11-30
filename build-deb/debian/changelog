@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.9-1) unstable; urgency=low
+
+  * Add ICC-ID, IMEI, and service type support.
+
+ -- TC Huang <tc.huang@moxa.com>  Mon, 30 Nov 2015 16:07:27 +0800
+
 sanji-bundle-cellular (1.0.8-1) unstable; urgency=low
 
   * Improve checkalive method.

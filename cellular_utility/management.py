@@ -20,14 +20,24 @@ _logger = logging.getLogger("sanji.cellular")
 class CellularInformation(object):
     def __init__(
             self,
+            mode,
             signal,
             operator,
             lac,
-            cell_id):
+            cell_id,
+            icc_id,
+            imei):
+        self._mode = mode
         self._signal = signal
         self._operator = operator
         self._lac = lac
         self._cell_id = cell_id
+        self._icc_id = icc_id
+        self._imei = imei
+
+    @property
+    def mode(self):
+        return self._mode
 
     @property
     def signal(self):
@@ -44,6 +54,14 @@ class CellularInformation(object):
     @property
     def cell_id(self):
         return self._cell_id
+
+    @property
+    def icc_id(self):
+        return self._icc_id
+
+    @property
+    def imei(self):
+        return self._imei
 
 
 class CellularObserver(object):
@@ -81,10 +99,13 @@ class CellularObserver(object):
                     m_info = self._cell_mgmt.m_info()
 
                     update_cellular_information(CellularInformation(
-                        signal,
+                        signal["mode"],
+                        signal["rssi_dbm"],
                         operator,
                         m_info["LAC"],
-                        m_info["CellID"]))
+                        m_info["CellID"],
+                        m_info["ICC-ID"],
+                        m_info["IMEI"]))
 
                 except CellMgmtError:
                     _logger.warning(format_exc())
@@ -395,6 +416,7 @@ class Manager(object):
         """
         Return dict like:
         {
+            "mode": "umts",
             "signal": -87,
             "operator": "Chunghwa Telecom"
             "lac": "2817",
@@ -403,19 +425,25 @@ class Manager(object):
         """
 
         status = {
+            "mode": "n/a",
             "signal": 0,
             "operator": "",
             "lac": "",
-            "cell_id": ""
+            "cell_id": "",
+            "icc_id": "",
+            "imei": ""
         }
 
         cellular_information = self._cellular_information
 
         if cellular_information is not None:
+            status["mode"] = cellular_information.mode
             status["signal"] = cellular_information.signal
             status["operator"] = cellular_information.operator
             status["lac"] = cellular_information.lac
             status["cell_id"] = cellular_information.cell_id
+            status["icc_id"] = cellular_information.icc_id
+            status["imei"] = cellular_information.imei
 
         return status
 

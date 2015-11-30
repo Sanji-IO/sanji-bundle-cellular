@@ -40,13 +40,16 @@ class Index(Sanji):
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"])
 
-        self._cell_mgmt = CellMgmt()
+        try:
+            cell_mgmt = CellMgmt()
+            self._name = cell_mgmt.m_info()['WWAN_node']
 
-        self._name = None
+        except CellMgmtError:
+            self._name = None
 
     @Route(methods="get", resource="/network/cellulars")
     def get_list(self, message, response):
-        if self._get_name() is None:
+        if self._name is None:
             # no cellular module exist
             return response(code=200, data=[])
 
@@ -113,7 +116,7 @@ class Index(Sanji):
         return response(code=200, data=self._get())
 
     def _get(self):
-        name = self._get_name()
+        name = self._name
         if name is None:
             name = "n/a"
 
@@ -125,8 +128,11 @@ class Index(Sanji):
         return {
             "id": config["id"],
             "name": name,
+            "mode": cellular_status["mode"],
             "signal": cellular_status["signal"],
             "operatorName": cellular_status["operator"],
+            "iccId": cellular_status["icc_id"],
+            "imei": cellular_status["imei"],
 
             "connected": connection_status["connected"],
             "ip": connection_status["ip"],
@@ -151,7 +157,7 @@ class Index(Sanji):
             gateway,
             dns):
 
-        name = self._get_name()
+        name = self._name
         if name is None:
             _logger.error("device name not available")
             return
@@ -162,17 +168,6 @@ class Index(Sanji):
             "netmask": netmask,
             "gateway": gateway,
             "dns": dns})
-
-    def _get_name(self):
-        if self._name is not None:
-            return self._name
-
-        try:
-            self._name = self._cell_mgmt.m_info()["WWAN_node"]
-            return self._name
-
-        except CellMgmtError:
-            return None
 
 
 if __name__ == "__main__":

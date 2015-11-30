@@ -30,14 +30,16 @@ class CellMgmt(object):
     _start_dns_regex = re.compile(
         r"DNS=([0-9\. ]*)\n")
     _signal_regex = re.compile(
-        r"^[a-zA-Z0-9]+ (-[0-9]+) dbm\n$")
+        r"^([a-zA-Z0-9]+) (-[0-9]+) dbm\n$")
     _m_info_regex = re.compile(
         r"^Module=([\S]+)\n"
         r"WWAN_node=([\S]+)\n"
         r"AT_port=[\S]+\n"
         r"GPS_port=[\S]+\n"
         r"LAC=([\S]+)\n"
-        r"CellID=([\S]+)\n")
+        r"CellID=([\S]+)\n"
+        r"ICC-ID=([\S]*)\n"
+        r"IMEI=([\S]+)\n")
     _operator_regex = re.compile(
         r"^([\S ]*)\n$")
     _sim_status_ready_regex = re.compile(
@@ -139,7 +141,11 @@ class CellMgmt(object):
 
     def signal(self):
         """
-        Returns int as signal strength in dbm.
+        Returns a dict like:
+            {
+                "mode": "umts",
+                "rssi_dbm": -80
+            }
         """
 
         _logger.debug("cell_mgmt signal")
@@ -160,7 +166,10 @@ class CellMgmt(object):
             _logger.error("unexpected output: " + output)
             raise CellMgmtError
 
-        return int(match.group(1))
+        return {
+            "mode": match.group(1),
+            "rssi_dbm": int(match.group(2))
+        }
 
     def status(self):
         """
@@ -220,6 +229,8 @@ class CellMgmt(object):
                 "WWAN_node": "wwan0",
                 "LAC": "2817",
                 "CellID": "01073AEE"
+                "ICC-ID": "",
+                "IMEI": "356853050370859"
             }
         """
 
@@ -245,7 +256,9 @@ class CellMgmt(object):
             "Module": match.group(1),
             "WWAN_node": match.group(2),
             "LAC": match.group(3),
-            "CellID": match.group(4)
+            "CellID": match.group(4),
+            "ICC-ID": match.group(5),
+            "IMEI": match.group(6)
         }
 
     def operator(self):
