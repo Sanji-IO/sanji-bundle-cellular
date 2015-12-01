@@ -97,7 +97,8 @@ class TestCellMgmt(unittest.TestCase):
 
         # assert
         self.assertTrue(match)
-        self.assertEqual("-41", match.group(1))
+        self.assertEqual("umts", match.group(1))
+        self.assertEqual("-41", match.group(2))
 
     def test_m_info_regex_should_pass(self):
         # arrange
@@ -107,7 +108,9 @@ class TestCellMgmt(unittest.TestCase):
             "AT_port=/dev/ttyUSB2\n"
             "GPS_port=/dev/ttyUSB1\n"
             "LAC=2817\n"
-            "CellID=01073AEE\n")
+            "CellID=01073AEE\n"
+            "ICC-ID=1234567890123456\n"
+            "IMEI=0123456789012345\n")
 
         # act
         match = CellMgmt._m_info_regex.match(SUT)
@@ -118,6 +121,8 @@ class TestCellMgmt(unittest.TestCase):
         self.assertEqual("wwan0", match.group(2))
         self.assertEqual("2817", match.group(3))
         self.assertEqual("01073AEE", match.group(4))
+        self.assertEqual("1234567890123456", match.group(5))
+        self.assertEqual("0123456789012345", match.group(6))
 
     def test_sim_status_ready_regex_should_pass(self):
         # arrange
