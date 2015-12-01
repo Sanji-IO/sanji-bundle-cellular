@@ -20,6 +20,7 @@ TARGET_FILES = \
 	cellular_utility/cell_mgmt.py \
 	cellular_utility/event.py \
 	cellular_utility/management.py \
+	cellular_utility/vnstat.py \
 	data/cellular.json.factory
 
 DIST_FILES= \

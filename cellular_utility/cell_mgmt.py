@@ -120,7 +120,7 @@ class CellMgmt(object):
             }
 
         except CalledProcessError as exc:
-            _logger.warning(exc)
+            _logger.warning(str(exc))
 
             raise CellMgmtError
 

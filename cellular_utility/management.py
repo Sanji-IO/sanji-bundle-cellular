@@ -295,12 +295,16 @@ class CellularConnector(object):
             return True
 
         for _ in xrange(1, self.PING_REQUEST_COUNT):
+            cmd = [
+                "ping",
+                "-c", "1",
+                "-W", str(self.PING_TIMEOUT_SEC),
+                self._keepalive_host]
+
+            _logger.debug("cmd = " + repr(cmd))
+
             try:
-                check_call([
-                    "ping",
-                    "-c", 1,
-                    "-W", str(self.PING_TIMEOUT_SEC),
-                    self._keepalive_host])
+                check_call(cmd)
                 return True
 
             except CalledProcessError:

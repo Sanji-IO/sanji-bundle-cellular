@@ -14,6 +14,7 @@ from voluptuous import REMOVE_EXTRA
 
 from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 from cellular_utility.management import Manager
+from cellular_utility.vnstat import VnStat
 
 _logger = logging.getLogger("sanji.cellular")
 
@@ -46,6 +47,9 @@ class Index(Sanji):
 
         except CellMgmtError:
             self._name = None
+
+        if self._name is not None:
+            self._vnstat = VnStat(self._name)
 
     @Route(methods="get", resource="/network/cellulars")
     def get_list(self, message, response):
@@ -125,6 +129,9 @@ class Index(Sanji):
         cellular_status = self._mgr.cellular_status()
         connection_status = self._mgr.connection_status()
 
+        self._vnstat.update()
+        usage = self._vnstat.get_usage()
+
         return {
             "id": config["id"],
             "name": name,
@@ -139,6 +146,10 @@ class Index(Sanji):
             "netmask": connection_status["netmask"],
             "gateway": connection_status["gateway"],
             "dns": connection_status["dns"],
+            "usage": {
+                "txkbyte": usage["txkbyte"],
+                "rxkbyte": usage["rxkbyte"]
+            },
 
             "enable": config["enable"],
             "apn": config["apn"],
