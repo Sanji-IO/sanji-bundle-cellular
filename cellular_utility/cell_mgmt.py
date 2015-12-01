@@ -206,14 +206,22 @@ class CellMgmt(object):
             _logger.warning(str(exc))
             raise CellMgmtError
 
-    def power_on(self):
+    def power_on(self, timeout_sec=60):
         """
         Power on Cellular module.
         """
         _logger.debug("cell_mgmt power_on")
 
         try:
-            check_call([self._exe_path, "power_on"], shell=self._use_shell)
+            check_call(
+                [
+                    "timeout",
+                    str(timeout_sec),
+                    self._exe_path,
+                    "power_on"
+                ],
+                shell=self._use_shell)
+
             if self._invoke_period_sec != 0:
                 sleep(self._invoke_period_sec)
 
