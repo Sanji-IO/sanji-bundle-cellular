@@ -26,7 +26,8 @@ class Log(object):
           cellular_utility.management.CellularInformation
         """
         self._log(
-            "signal " + str(cellular_information.signal) + " dBm"
+            "mode " + cellular_information.mode
+            + ", signal " + str(cellular_information.signal) + " dBm"
             + ", lac " + cellular_information.lac
             + ", cell_id " + cellular_information.cell_id)
 

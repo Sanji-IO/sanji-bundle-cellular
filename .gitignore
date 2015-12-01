@@ -56,3 +56,6 @@ target/
 # Config
 data/*.json
 data/*.backup
+
+# Editor Temporary/Backup
+*.swp

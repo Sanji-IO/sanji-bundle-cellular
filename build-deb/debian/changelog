@@ -1,3 +1,22 @@
+sanji-bundle-cellular (1.0.10-1) unstable; urgency=low
+
+  * Add usage support.
+  * Fix keepalive crash.
+
+ -- TC Huang <tc.huang@moxa.com>  Tue, 01 Dec 2015 16:35:31 +0800
+
+sanji-bundle-cellular (1.0.9-1) unstable; urgency=low
+
+  * Add ICC-ID, IMEI, and service type support.
+
+ -- TC Huang <tc.huang@moxa.com>  Mon, 30 Nov 2015 16:07:27 +0800
+
+sanji-bundle-cellular (1.0.8-1) unstable; urgency=low
+
+  * Improve checkalive method.
+
+ -- TC Huang <tc.huang@moxa.com>  Fri, 27 Nov 2015 11:27:49 +0800
+
 sanji-bundle-cellular (1.0.7-1) unstable; urgency=low
 
   * Avoid cellular module not being ready when cellular-bundle starts.
