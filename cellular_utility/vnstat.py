@@ -8,6 +8,7 @@ _logger = logging.getLogger("sanji.cellular")
 class VnStatError(Exception):
     pass
 
+
 class VnStat(object):
     _totalrx_regex = re.compile(r"totalrx;([0-9]+)\n")
     _totalrxk_regex = re.compile(r"totalrxk;([0-9]+)\n")
