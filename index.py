@@ -43,6 +43,10 @@ class Index(Sanji):
 
         try:
             cell_mgmt = CellMgmt()
+
+            # cell_mgmt.power_on() blocks until module becomes ready
+            cell_mgmt.power_on(timeout_sec=60)
+
             self._name = cell_mgmt.m_info()['WWAN_node']
 
         except CellMgmtError:
