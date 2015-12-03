@@ -213,7 +213,7 @@ class CellularConnector(object):
                         update_network_information(network_information)
 
                         # sleep awhile to let ip-route take effect
-                        sleep(3)
+                        sleep(10)
                         break
 
                     if self._stop:
