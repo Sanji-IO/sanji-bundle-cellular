@@ -2,15 +2,14 @@
 Export cellular event to log file.
 """
 
-from time import gmtime, strftime
+import logging
+
+_logger = logging.getLogger("sanji.cellular_utility.event")
 
 
 class Log(object):
-    LOGFILE_PATH = "/var/log/cellular.log"
-    TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-
     def __init__(self):
-        self._log_file = open(self.LOGFILE_PATH, "a")
+        pass
 
     def log_nosim(self):
         """
@@ -86,8 +85,4 @@ class Log(object):
         """
         Do actual logging.
         """
-        self._log_file.write(
-            strftime(self.TIME_FORMAT, gmtime())
-            + ": " + msg + '\n')
-
-        self._log_file.flush()
+        _logger.info("cellular-event: " + msg)
