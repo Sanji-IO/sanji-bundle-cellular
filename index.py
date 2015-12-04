@@ -34,6 +34,7 @@ class Index(Sanji):
         self._init_thread = Thread(
             name="sanji.cellular.init_thread",
             target=self.__initial_procedure)
+        self._init_thread.daemon = True
         self._init_thread.start()
 
     def __initial_procedure(self):
