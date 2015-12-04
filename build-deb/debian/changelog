@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.13-1) unstable; urgency=low
+
+  * Continuouly try to detect cellular-module if not exist.
+
+ -- TC Huang <tc.huang@moxa.com>  Fri, 04 Dec 2015 11:45:55 +0800
+
 sanji-bundle-cellular (1.0.12-1) unstable; urgency=low
 
   * Write cellular-log to logger instead of a self maintained file.

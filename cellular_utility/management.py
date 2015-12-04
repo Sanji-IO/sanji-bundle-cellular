@@ -160,12 +160,14 @@ class CellularConnector(object):
 
     def __init__(
             self,
+            dev_name,
             apn,
             pin,
             check_period_sec,
             log,
             keepalive_host=None):
 
+        self._dev_name = dev_name
         self._apn = apn
         self._pin = pin
         self._check_period_sec = check_period_sec
@@ -298,6 +300,7 @@ class CellularConnector(object):
             cmd = [
                 "ping",
                 "-c", "1",
+                "-I", self._dev_name,
                 "-W", str(self.PING_TIMEOUT_SEC),
                 self._keepalive_host]
 
@@ -381,8 +384,10 @@ class Manager(object):
 
     def __init__(
             self,
+            dev_name,
             publish_network_info):
 
+        self._dev_name = dev_name
         self._publish_network_info = publish_network_info
 
         self._log = Log()
@@ -530,6 +535,7 @@ class Manager(object):
             _check_period_sec = self._keepalive_period_sec
 
         self._connector = CellularConnector(
+            dev_name=self._dev_name,
             apn=self._apn,
             pin=self._pin,
             check_period_sec=_check_period_sec,
@@ -568,7 +574,7 @@ if __name__ == "__main__":
 
         check_call(["ip", "route", "add", "default", "via", gateway])
 
-    mgr = Manager(dump)
+    mgr = Manager("wwan0", dump)
     if not mgr.set_pin("0000"):
         print "pin error"
         exit(1)
