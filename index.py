@@ -3,6 +3,8 @@
 
 import logging
 import os
+from threading import Thread
+from traceback import format_exc
 
 from sanji.connection.mqtt import Mqtt
 from sanji.core import Sanji
@@ -25,9 +27,42 @@ class Index(Sanji):
         path_root = os.path.abspath(os.path.dirname(__file__))
         self.model = ModelInitiator("cellular", path_root)
 
-        self._mgr = Manager(self._publish_network_info)
+        self._dev_name = None
+        self._mgr = None
+        self._vnstat = None
+
+        self._init_thread = Thread(
+            name="sanji.cellular.init_thread",
+            target=self.__initial_procedure)
+        self._init_thread.daemon = True
+        self._init_thread.start()
+
+    def __initial_procedure(self):
+        """
+        Continuously check Cellular modem existence.
+        Set self._dev_name, self._mgr, self._vnstat properly.
+        """
+        cell_mgmt = CellMgmt()
+        wwan_node = None
+        while wwan_node is None:
+            try:
+                cell_mgmt.power_on(timeout_sec=60)
+
+                wwan_node = cell_mgmt.m_info()['WWAN_node']
+
+                break
+
+            except CellMgmtError:
+                _logger.warning("get wwan_node failure: " + format_exc())
+                cell_mgmt.power_off()
+
+        self._dev_name = wwan_node
+        self._mgr = Manager(
+            wwan_node,
+            self._publish_network_info)
         self._mgr.start()
 
+        # try PIN if exist
         pin = self.model.db[0]["pinCode"]
         if (pin != "" and
                 not self._mgr.set_pin(pin)):
@@ -41,30 +76,31 @@ class Index(Sanji):
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"])
 
-        try:
-            cell_mgmt = CellMgmt()
+        self._vnstat = VnStat(self._dev_name)
 
-            # cell_mgmt.power_on() blocks until module becomes ready
-            cell_mgmt.power_on(timeout_sec=60)
+    def __init_completed(self):
+        if self._init_thread is None:
+            return True
 
-            self._name = cell_mgmt.m_info()['WWAN_node']
+        self._init_thread.join(0)
+        if self._init_thread.is_alive():
+            return False
 
-        except CellMgmtError:
-            self._name = None
-
-        if self._name is not None:
-            self._vnstat = VnStat(self._name)
+        self._init_thread = None
+        return True
 
     @Route(methods="get", resource="/network/cellulars")
     def get_list(self, message, response):
-        if self._name is None:
-            # no cellular module exist
+        if not self.__init_completed():
             return response(code=200, data=[])
 
         return response(code=200, data=[self._get()])
 
     @Route(methods="get", resource="/network/cellulars/:id")
     def get(self, message, response):
+        if not self.__init_completed():
+            return response(code=400, data={"message": "resource not exist"})
+
         id_ = int(message.param["id"])
         if id_ != 1:
             return response(code=400, data={"message": "resource not exist"})
@@ -89,6 +125,9 @@ class Index(Sanji):
 
     @Route(methods="put", resource="/network/cellulars/:id", schema=PUT_SCHEMA)
     def put(self, message, response):
+        if not self.__init_completed():
+            return response(code=400, data={"message": "resource not exist"})
+
         id_ = int(message.param["id"])
         if id_ != 1:
             return response(code=400, data={"message": "resource not exist"})
@@ -124,7 +163,7 @@ class Index(Sanji):
         return response(code=200, data=self._get())
 
     def _get(self):
-        name = self._name
+        name = self._dev_name
         if name is None:
             name = "n/a"
 
@@ -172,7 +211,7 @@ class Index(Sanji):
             gateway,
             dns):
 
-        name = self._name
+        name = self._dev_name
         if name is None:
             _logger.error("device name not available")
             return
