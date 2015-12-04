@@ -3,7 +3,7 @@
 
 import logging
 import os
-from threading import Lock, Thread
+from threading import Thread
 from traceback import format_exc
 
 from sanji.connection.mqtt import Mqtt
@@ -83,7 +83,7 @@ class Index(Sanji):
 
         self._init_thread.join(0)
         if self._init_thread.is_alive():
-            return False;
+            return False
 
         self._init_thread = None
         return True
