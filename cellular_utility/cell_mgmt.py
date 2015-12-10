@@ -2,11 +2,14 @@
 cell_mgmt utility wrapper
 """
 
+from decorator import decorator
 import logging
 import re
 from subprocess import check_call, check_output
 from subprocess import CalledProcessError
+from threading import Lock
 from time import sleep
+from traceback import format_exc
 
 _logger = logging.getLogger("sanji.cellular")
 
@@ -14,6 +17,45 @@ _logger = logging.getLogger("sanji.cellular")
 class CellMgmtError(Exception):
     """CellMgmtError"""
     pass
+
+
+@decorator
+def handle_called_process_error(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+
+    except CalledProcessError:
+        _logger.warning(format_exc())
+
+        raise CellMgmtError
+
+
+BUSY_RETRY_COUNT = 10
+
+
+@decorator
+def retry_on_busy(func, *args, **kwargs):
+    for retry in xrange(0, BUSY_RETRY_COUNT):
+        try:
+            return func(*args, **kwargs)
+
+        except CalledProcessError as exc:
+            if (exc.returncode == 60 and
+                    retry < BUSY_RETRY_COUNT):
+
+                _logger.debug("cell_mgmt busy retry: " + str(retry))
+
+                sleep(10)
+                continue
+
+            else:
+                raise
+
+
+@decorator
+def critical_section(func, *args, **kwargs):
+    with CellMgmt._lock:
+        return func(*args, **kwargs)
 
 
 class CellMgmt(object):
@@ -32,12 +74,12 @@ class CellMgmt(object):
     _signal_regex = re.compile(
         r"^([a-zA-Z0-9]+) (-[0-9]+) dbm\n$")
     _m_info_regex = re.compile(
-        r"^Module=([\S]+)\n"
+        r"^Module=([\S ]+)\n"
         r"WWAN_node=([\S]+)\n"
-        r"AT_port=[\S]+\n"
-        r"GPS_port=[\S]+\n"
-        r"LAC=([\S]+)\n"
-        r"CellID=([\S]+)\n"
+        r"AT_port=[\S]*\n"
+        r"GPS_port=[\S]*\n"
+        r"LAC=([\S]*)\n"
+        r"CellID=([\S]*)\n"
         r"ICC-ID=([\S]*)\n"
         r"IMEI=([\S]+)\n")
     _operator_regex = re.compile(
@@ -47,6 +89,8 @@ class CellMgmt(object):
     _sim_status_sim_pin_regex = re.compile(
         r"^\+CPIN:\s*SIM\s+PIN$")
 
+    _lock = Lock()
+
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
 
@@ -54,6 +98,9 @@ class CellMgmt(object):
 
         self._use_shell = False
 
+    @critical_section
+    @handle_called_process_error
+    @retry_on_busy
     def start(self, apn, pin=None):
         """
         Start cellular connection.
@@ -79,51 +126,47 @@ class CellMgmt(object):
         else:
             cmd.append("PIN=")
 
-        try:
-            output = check_output(cmd, shell=self._use_shell)
-            if self._invoke_period_sec != 0:
-                sleep(self._invoke_period_sec)
+        output = check_output(cmd, shell=self._use_shell)
+        if self._invoke_period_sec != 0:
+            sleep(self._invoke_period_sec)
 
-            match = self._start_ip_regex.search(output)
-            if not match:
-                _logger.warning("unexpected output: " + output)
-                raise CellMgmtError
-
-            ip_ = match.group(1)
-
-            match = self._start_netmask_regex.search(output)
-            if not match:
-                _logger.warning("unexpected output: " + output)
-                raise CellMgmtError
-
-            netmask = match.group(1)
-
-            match = self._start_gateway_regex.search(output)
-            if not match:
-                _logger.warning("unexpected output: " + output)
-                raise CellMgmtError
-
-            gateway = match.group(1)
-
-            match = self._start_dns_regex.search(output)
-            if not match:
-                _logger.warning("unexpected output: " + output)
-                raise CellMgmtError
-
-            dns = match.group(1).split(" ")
-
-            return {
-                "ip": ip_,
-                "netmask": netmask,
-                "gateway": gateway,
-                "dns": dns
-            }
-
-        except CalledProcessError as exc:
-            _logger.warning(str(exc))
-
+        match = self._start_ip_regex.search(output)
+        if not match:
+            _logger.warning("unexpected output: " + output)
             raise CellMgmtError
 
+        ip_ = match.group(1)
+
+        match = self._start_netmask_regex.search(output)
+        if not match:
+            _logger.warning("unexpected output: " + output)
+            raise CellMgmtError
+
+        netmask = match.group(1)
+
+        match = self._start_gateway_regex.search(output)
+        if not match:
+            _logger.warning("unexpected output: " + output)
+            raise CellMgmtError
+
+        gateway = match.group(1)
+
+        match = self._start_dns_regex.search(output)
+        if not match:
+            _logger.warning("unexpected output: " + output)
+            raise CellMgmtError
+
+        dns = match.group(1).split(" ")
+
+        return {
+            "ip": ip_,
+            "netmask": netmask,
+            "gateway": gateway,
+            "dns": dns
+        }
+
+    @critical_section
+    @retry_on_busy
     def stop(self):
         """
         Stops cellular connection.
@@ -137,8 +180,14 @@ class CellMgmt(object):
                 sleep(self._invoke_period_sec)
 
         except CalledProcessError as exc:
-            _logger.warning(str(exc) + ", ignored")
+            if exc.returncode == 60:
+                raise
 
+            _logger.warning(format_exc() + ", ignored")
+
+    @critical_section
+    @handle_called_process_error
+    @retry_on_busy
     def signal(self):
         """
         Returns a dict like:
@@ -150,16 +199,11 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt signal")
 
-        try:
-            output = check_output(
-                [self._exe_path, "signal"],
-                shell=self._use_shell)
-            if self._invoke_period_sec != 0:
-                sleep(self._invoke_period_sec)
-
-        except CalledProcessError as exc:
-            _logger.warning(str(exc))
-            raise CellMgmtError
+        output = check_output(
+            [self._exe_path, "signal"],
+            shell=self._use_shell)
+        if self._invoke_period_sec != 0:
+            sleep(self._invoke_period_sec)
 
         match = CellMgmt._signal_regex.match(output)
         if not match:
@@ -171,6 +215,8 @@ class CellMgmt(object):
             "rssi_dbm": int(match.group(2))
         }
 
+    @critical_section
+    @retry_on_busy
     def status(self):
         """
         Return boolean as connected or not.
@@ -191,44 +237,43 @@ class CellMgmt(object):
             # cell_mgmt returns 2 on disconnected
             return False
 
+    @critical_section
+    @handle_called_process_error
+    @retry_on_busy
     def power_off(self):
         """
         Power off Cellular module.
         """
         _logger.debug("cell_mgmt power_off")
 
-        try:
-            check_call([self._exe_path, "power_off"], shell=self._use_shell)
-            if self._invoke_period_sec != 0:
-                sleep(self._invoke_period_sec)
+        check_call([self._exe_path, "power_off"], shell=self._use_shell)
+        if self._invoke_period_sec != 0:
+            sleep(self._invoke_period_sec)
 
-        except CalledProcessError as exc:
-            _logger.warning(str(exc))
-            raise CellMgmtError
-
+    @critical_section
+    @handle_called_process_error
+    @retry_on_busy
     def power_on(self, timeout_sec=60):
         """
         Power on Cellular module.
         """
         _logger.debug("cell_mgmt power_on")
 
-        try:
-            check_call(
-                [
-                    "timeout",
-                    str(timeout_sec),
-                    self._exe_path,
-                    "power_on"
-                ],
-                shell=self._use_shell)
+        check_call(
+            [
+                "timeout",
+                str(timeout_sec),
+                self._exe_path,
+                "power_on"
+            ],
+            shell=self._use_shell)
 
-            if self._invoke_period_sec != 0:
-                sleep(self._invoke_period_sec)
+        if self._invoke_period_sec != 0:
+            sleep(self._invoke_period_sec)
 
-        except CalledProcessError as exc:
-            _logger.warning(str(exc))
-            raise CellMgmtError
-
+    @critical_section
+    @handle_called_process_error
+    @retry_on_busy
     def m_info(self):
         """
         Return dict like:
@@ -244,17 +289,11 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt m_info")
 
-        try:
-            output = check_output(
-                [self._exe_path, "m_info"],
-                shell=self._use_shell)
-            if self._invoke_period_sec != 0:
-                sleep(self._invoke_period_sec)
-
-        except CalledProcessError as exc:
-            _logger.warning(str(exc))
-
-            raise CellMgmtError
+        output = check_output(
+            [self._exe_path, "m_info"],
+            shell=self._use_shell)
+        if self._invoke_period_sec != 0:
+            sleep(self._invoke_period_sec)
 
         match = self._m_info_regex.match(output)
         if not match:
@@ -269,6 +308,9 @@ class CellMgmt(object):
             "IMEI": match.group(6)
         }
 
+    @critical_section
+    @handle_called_process_error
+    @retry_on_busy
     def operator(self):
         """
         Return cellular operator name, like "Chunghwa Telecom"
@@ -276,17 +318,11 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt operator")
 
-        try:
-            output = check_output(
-                [self._exe_path, "operator"],
-                shell=self._use_shell)
-            if self._invoke_period_sec != 0:
-                sleep(self._invoke_period_sec)
-
-        except CalledProcessError as exc:
-            _logger.warning(str(exc))
-
-            raise CellMgmtError
+        output = check_output(
+            [self._exe_path, "operator"],
+            shell=self._use_shell)
+        if self._invoke_period_sec != 0:
+            sleep(self._invoke_period_sec)
 
         match = self._operator_regex.match(output)
         if not match:
@@ -294,6 +330,8 @@ class CellMgmt(object):
 
         return match.group(1)
 
+    @critical_section
+    @retry_on_busy
     def set_pin(self, pin):
         """
         Return True if PIN unlocked.
@@ -310,6 +348,8 @@ class CellMgmt(object):
         except CalledProcessError:
             return False
 
+    @critical_section
+    @retry_on_busy
     def sim_status(self):
         """
         Returns one of:
@@ -333,7 +373,10 @@ class CellMgmt(object):
             elif self._sim_status_sim_pin_regex.match(output):
                 return "pin"
 
-        except CalledProcessError:
+        except CalledProcessError as exc:
+            if exc.returncode == 60:
+                raise
+
             return "nosim"
 
 
@@ -344,7 +387,7 @@ if __name__ == "__main__":
 
     cm = CellMgmt()
     while True:
-        for retry in range(0, 10):
+        for _retry in range(0, 10):
             try:
                 cm.stop()
                 cm.start(apn="internet", pin="0000")

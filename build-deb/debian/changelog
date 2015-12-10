@@ -1,3 +1,11 @@
+sanji-bundle-cellular (1.0.14-1) unstable; urgency=low
+
+  * Add cell_mgmt busy-retry mechanism.
+  * cell_mgmt resource lock to make sure only one command is being called by
+    the same process.
+
+ -- TC Huang <tc.huang@moxa.com>  Thu, 10 Dec 2015 09:51:01 +0800
+
 sanji-bundle-cellular (1.0.13-1) unstable; urgency=low
 
   * Continuouly try to detect cellular-module if not exist.
