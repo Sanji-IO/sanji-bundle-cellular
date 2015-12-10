@@ -29,7 +29,9 @@ def handle_called_process_error(func, *args, **kwargs):
 
         raise CellMgmtError
 
+
 BUSY_RETRY_COUNT = 10
+
 
 @decorator
 def retry_on_busy(func, *args, **kwargs):
@@ -48,6 +50,7 @@ def retry_on_busy(func, *args, **kwargs):
 
             else:
                 raise
+
 
 @decorator
 def critical_section(func, *args, **kwargs):
@@ -94,7 +97,6 @@ class CellMgmt(object):
         self._invoke_period_sec = 0
 
         self._use_shell = False
-
 
     @critical_section
     @handle_called_process_error
