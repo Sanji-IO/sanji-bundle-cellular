@@ -16,7 +16,7 @@ from voluptuous import REMOVE_EXTRA
 
 from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 from cellular_utility.management import Manager
-from cellular_utility.vnstat import VnStat
+from cellular_utility.vnstat import VnStat, VnStatError
 
 _logger = logging.getLogger("sanji.cellular")
 
@@ -172,8 +172,15 @@ class Index(Sanji):
         cellular_status = self._mgr.cellular_status()
         connection_status = self._mgr.connection_status()
 
-        self._vnstat.update()
-        usage = self._vnstat.get_usage()
+        try:
+            self._vnstat.update()
+            usage = self._vnstat.get_usage()
+
+        except VnStatError:
+            usage = {
+                "txbyte": "n/a",
+                "rxbyte": "n/a"
+            }
 
         return {
             "id": config["id"],
