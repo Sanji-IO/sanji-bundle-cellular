@@ -17,6 +17,12 @@ class Log(object):
         """
         self._log("no sim card")
 
+    def _rssi_from_dbm(self, signal):
+        """
+        Convert RSSI value from signal dBm value
+        """
+        return int(0.5 * (signal + 109) + 2)
+
     def log_cellular_information(
             self,
             cellular_information):
@@ -27,6 +33,7 @@ class Log(object):
         self._log(
             "mode " + cellular_information.mode
             + ", signal " + str(cellular_information.signal) + " dBm"
+            + ", rssi " + str(self._rssi_from_dbm(cellular_information.signal))
             + ", lac " + cellular_information.lac
             + ", cell_id " + cellular_information.cell_id)
 
