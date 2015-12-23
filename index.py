@@ -44,7 +44,11 @@ class Index(Sanji):
         """
         cell_mgmt = CellMgmt()
         wwan_node = None
-        while wwan_node is None:
+
+        for retry in xrange(0, 4):
+            if retry == 3:
+                return
+
             try:
                 cell_mgmt.power_on(timeout_sec=60)
 
