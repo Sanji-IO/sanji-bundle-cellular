@@ -98,6 +98,11 @@ class Index(Sanji):
         if not self.__init_completed():
             return response(code=200, data=[])
 
+        if (self._dev_name is None or
+                self._mgr is None or
+                self._vnstat is None):
+            return response(code=200, data=[])
+
         return response(code=200, data=[self._get()])
 
     @Route(methods="get", resource="/network/cellulars/:id")
