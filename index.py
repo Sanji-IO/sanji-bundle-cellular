@@ -44,7 +44,11 @@ class Index(Sanji):
         """
         cell_mgmt = CellMgmt()
         wwan_node = None
-        while wwan_node is None:
+
+        for retry in xrange(0, 4):
+            if retry == 3:
+                return
+
             try:
                 cell_mgmt.power_on(timeout_sec=60)
 
@@ -92,6 +96,11 @@ class Index(Sanji):
     @Route(methods="get", resource="/network/cellulars")
     def get_list(self, message, response):
         if not self.__init_completed():
+            return response(code=200, data=[])
+
+        if (self._dev_name is None or
+                self._mgr is None or
+                self._vnstat is None):
             return response(code=200, data=[])
 
         return response(code=200, data=[self._get()])
