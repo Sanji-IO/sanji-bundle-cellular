@@ -232,10 +232,12 @@ class CellMgmt(object):
             return True
 
         except CalledProcessError as exc:
-            _logger.warning(str(exc))
-
             # cell_mgmt returns 2 on disconnected
-            return False
+            if exc.returncode == 2:
+                return False
+
+            _logger.warning(str(exc))
+            raise
 
     @critical_section
     @handle_called_process_error
