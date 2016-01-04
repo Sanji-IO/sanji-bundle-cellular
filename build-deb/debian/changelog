@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.16-1) unstable; urgency=low
+
+  * Fix faulty connection status detection method.
+
+ -- TC Huang <tc.huang@moxa.com>  Mon, 04 Jan 2016 09:54:42 +0800
+
 sanji-bundle-cellular (1.0.15-1) unstable; urgency=low
 
   * Limit cellular module detection retry.
