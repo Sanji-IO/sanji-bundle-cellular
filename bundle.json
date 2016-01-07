@@ -1,6 +1,6 @@
 {
   "name": "cellular",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "author": "TC Huang",
   "email": "tc.huang@moxa.com",
   "description": "Provides Cellular configuration interface.",
