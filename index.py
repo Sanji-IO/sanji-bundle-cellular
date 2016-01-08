@@ -188,8 +188,8 @@ class Index(Sanji):
 
         except VnStatError:
             usage = {
-                "txbyte": "n/a",
-                "rxbyte": "n/a"
+                "txkbyte": "n/a",
+                "rxkbyte": "n/a"
             }
 
         return {
