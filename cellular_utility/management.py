@@ -491,7 +491,8 @@ class Manager(object):
     def state(self):
         """
         Returns one of:
-            "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed"
+            "nosim", "pin", "noservice", "ready",
+            "connected", "connecting", "connect-failed"
         """
         if self._cellular_information is None:
             return "nosim"
