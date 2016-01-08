@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.18-1) unstable; urgency=low
+
+  * Support cellular status.
+
+ -- TC Huang <tc.huang@moxa.com>  Fri, 08 Jan 2016 11:26:39 +0800
+
 sanji-bundle-cellular (1.0.17-1) unstable; urgency=low
 
   * Fix cell_mgmt busy-retry bug.

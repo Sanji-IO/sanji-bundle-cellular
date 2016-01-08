@@ -20,20 +20,60 @@ _logger = logging.getLogger("sanji.cellular")
 class CellularInformation(object):
     def __init__(
             self,
-            mode,
-            signal,
-            operator,
-            lac,
-            cell_id,
-            icc_id,
-            imei):
-        self._mode = mode
-        self._signal = signal
-        self._operator = operator
-        self._lac = lac
-        self._cell_id = cell_id
-        self._icc_id = icc_id
-        self._imei = imei
+            sim_status,
+            mode=None,
+            signal=None,
+            operator=None,
+            lac=None,
+            cell_id=None,
+            icc_id=None,
+            imei=None,
+            pin_retry_remain=None):
+        self._sim_status = sim_status
+
+        if mode is None:
+            self._mode = ""
+        else:
+            self._mode = mode
+
+        if signal is None:
+            self._signal = 0
+        else:
+            self._signal = signal
+
+        if operator is None:
+            self._operator = ""
+        else:
+            self._operator = operator
+
+        if lac is None:
+            self._lac = ""
+        else:
+            self._lac = lac
+
+        if cell_id is None:
+            self._cell_id = ""
+        else:
+            self._cell_id = cell_id
+
+        if icc_id is None:
+            self._icc_id = ""
+        else:
+            self._icc_id = icc_id
+
+        if imei is None:
+            self._imei = ""
+        else:
+            self._imei = imei
+
+        if pin_retry_remain is None:
+            self._pin_retry_remain = -1
+        else:
+            self._pin_retry_remain = pin_retry_remain
+
+    @property
+    def sim_status(self):
+        return self._sim_status
 
     @property
     def mode(self):
@@ -63,6 +103,10 @@ class CellularInformation(object):
     def imei(self):
         return self._imei
 
+    @property
+    def pin_retry_remain(self):
+        return self._pin_retry_remain
+
 
 class CellularObserver(object):
 
@@ -88,28 +132,8 @@ class CellularObserver(object):
 
                 next_check = now + CellularObserver.CHECK_PERIOD_SEC
 
-                try:
-                    if self._cell_mgmt.sim_status() == "nosim":
-                        continue
-
-                    signal = self._cell_mgmt.signal()
-
-                    operator = self._cell_mgmt.operator()
-
-                    m_info = self._cell_mgmt.m_info()
-
-                    update_cellular_information(CellularInformation(
-                        signal["mode"],
-                        signal["rssi_dbm"],
-                        operator,
-                        m_info["LAC"],
-                        m_info["CellID"],
-                        m_info["ICC-ID"],
-                        m_info["IMEI"]))
-
-                except CellMgmtError:
-                    _logger.warning(format_exc())
-                    continue
+                cellular_information = self._get_cellular_information()
+                update_cellular_information(cellular_information)
 
         self._stop = False
         self._thread = Thread(target=main_thread)
@@ -119,6 +143,37 @@ class CellularObserver(object):
     def stop(self):
         self._stop = True
         self._thread.join()
+
+    def _get_cellular_information(self):
+        try:
+            if self._cell_mgmt.sim_status() == "nosim":
+                return CellularInformation(sim_status="nosim")
+
+            sim_status = self._cell_mgmt.sim_status()
+
+            try:
+                signal = self._cell_mgmt.signal()
+            except CellMgmtError:
+                _logger.warning(format_exc())
+                signal = {"mode": "none", "rssi_dbm": 0}
+
+            operator = self._cell_mgmt.operator()
+
+            m_info = self._cell_mgmt.m_info()
+
+            return CellularInformation(
+                sim_status,
+                signal["mode"],
+                signal["rssi_dbm"],
+                operator,
+                m_info["LAC"],
+                m_info["CellID"],
+                m_info["ICC-ID"],
+                m_info["IMEI"])
+
+        except CellMgmtError:
+            _logger.warning(format_exc())
+            return None
 
 
 class NetworkInformation(object):
@@ -179,6 +234,14 @@ class CellularConnector(object):
         self._connect_thread = None
         self._stop = False
 
+        self._state = "idle"
+
+    def state(self):
+        """Returns one of:
+            "connecting", "connected", "connect-failed", "idle"
+        """
+        return self._state
+
     def start(self, update_network_information):
         """
         Start Cellular connection.
@@ -205,14 +268,17 @@ class CellularConnector(object):
 
                         network_information = None
                         update_network_information(network_information)
+                        self._state = "connecting"
 
                         network_information = self._reconnect()
                         if network_information is None:
+                            self._state = "connect-failed"
                             # retry in 10 seconds
                             sleep(10)
                             continue
 
                         update_network_information(network_information)
+                        self._state = "connected"
 
                         # sleep awhile to let ip-route take effect
                         sleep(10)
@@ -236,6 +302,7 @@ class CellularConnector(object):
             self._cell_mgmt.stop()
             self._log.log_event_cellular_disconnect()
             update_network_information(None)
+            self._state = "idle"
 
         self._stop = False
         self._connect_thread = Thread(target=main_thread)
@@ -256,7 +323,7 @@ class CellularConnector(object):
 
         self._log.log_event_connect_begin()
 
-        if self._cell_mgmt.sim_status() == "nosim":
+        if self._cell_mgmt.sim_status() in ["nosim", "pin"]:
             return None
 
         self._cell_mgmt.stop()
@@ -331,7 +398,7 @@ class CellularConnector(object):
         while True:
             try:
                 # check whether cellular module is ready
-                self._cell_mgmt.signal()
+                self._cell_mgmt.sim_status()
                 break
 
             except CellMgmtError:
@@ -421,6 +488,35 @@ class Manager(object):
         if self._connector is not None:
             self._connector.stop()
 
+    def state(self):
+        """
+        Returns one of:
+            "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed"
+        """
+        if self._cellular_information is None:
+            return "nosim"
+
+        sim_status = self._cellular_information.sim_status
+        if sim_status == "nosim":
+            return "nosim"
+
+        if sim_status == "pin":
+            return "pin"
+
+        if self._cellular_information.signal == 0:
+            return "noservice"
+
+        if self._connector is None:
+            return "ready"
+
+        if self._network_information is None:
+            if self._connector.state == "connect-failed":
+                return "connect-failed"
+            else:
+                return "connecting"
+
+        return "connected"
+
     def cellular_status(self):
         """
         Return dict like:
@@ -429,7 +525,8 @@ class Manager(object):
             "signal": -87,
             "operator": "Chunghwa Telecom"
             "lac": "2817",
-            "cell_id": "01073AEE"
+            "cell_id": "01073AEE",
+            "pin_retry_remain": 3
         }
         """
 
@@ -440,7 +537,8 @@ class Manager(object):
             "lac": "",
             "cell_id": "",
             "icc_id": "",
-            "imei": ""
+            "imei": "",
+            "pin_retry_remain": -1
         }
 
         cellular_information = self._cellular_information
@@ -453,6 +551,7 @@ class Manager(object):
             status["cell_id"] = cellular_information.cell_id
             status["icc_id"] = cellular_information.icc_id
             status["imei"] = cellular_information.imei
+            status["pin_retry_remain"] = cellular_information.pin_retry_remain
 
         return status
 
@@ -489,9 +588,11 @@ class Manager(object):
 
     def set_pin(self, pin):
         """Return True when PIN verified, otherwise False."""
-        if pin != "":
+        if pin != "" and self.state() == "pin":
             if not self._cell_mgmt.set_pin(pin):
                 return False
+
+            self._reconnect()
 
         self._pin = pin
         return True
@@ -521,6 +622,9 @@ class Manager(object):
         self._keepalive_host = keepalive_host
         self._keepalive_period_sec = keepalive_period_sec
 
+        self._reconnect()
+
+    def _reconnect(self):
         if self._connector:
             self._connector.stop()
             self._connector = None

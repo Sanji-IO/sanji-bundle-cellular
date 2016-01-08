@@ -178,6 +178,7 @@ class Index(Sanji):
 
         config = self.model.db[0]
 
+        status = self._mgr.state()
         cellular_status = self._mgr.cellular_status()
         connection_status = self._mgr.connection_status()
 
@@ -199,7 +200,9 @@ class Index(Sanji):
             "operatorName": cellular_status["operator"],
             "iccId": cellular_status["icc_id"],
             "imei": cellular_status["imei"],
+            "pinRetryRemain": cellular_status["pin_retry_remain"],
 
+            "status": status,
             "connected": connection_status["connected"],
             "ip": connection_status["ip"],
             "netmask": connection_status["netmask"],
