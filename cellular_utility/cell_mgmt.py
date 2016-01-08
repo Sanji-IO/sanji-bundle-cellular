@@ -35,7 +35,7 @@ BUSY_RETRY_COUNT = 10
 
 @decorator
 def retry_on_busy(func, *args, **kwargs):
-    for retry in xrange(0, BUSY_RETRY_COUNT):
+    for retry in xrange(0, BUSY_RETRY_COUNT + 1):
         try:
             return func(*args, **kwargs)
 
@@ -54,6 +54,7 @@ def retry_on_busy(func, *args, **kwargs):
 
 @decorator
 def critical_section(func, *args, **kwargs):
+    # lock by process
     with CellMgmt._lock:
         return func(*args, **kwargs)
 
@@ -216,7 +217,6 @@ class CellMgmt(object):
         }
 
     @critical_section
-    @retry_on_busy
     def status(self):
         """
         Return boolean as connected or not.
@@ -224,20 +224,24 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt status")
 
-        try:
-            check_call([self._exe_path, "status"], shell=self._use_shell)
-            if self._invoke_period_sec != 0:
-                sleep(self._invoke_period_sec)
+        for retry in xrange(0, BUSY_RETRY_COUNT + 1):
+            try:
+                check_call([self._exe_path, "status"], shell=self._use_shell)
+                if self._invoke_period_sec != 0:
+                    sleep(self._invoke_period_sec)
 
-            return True
+                return True
 
-        except CalledProcessError as exc:
-            # cell_mgmt returns 2 on disconnected
-            if exc.returncode == 2:
-                return False
+            except CalledProcessError as exc:
+                if (exc.returncode == 60 and
+                        retry < BUSY_RETRY_COUNT):
+                    sleep(10)
+                    continue
 
-            _logger.warning(str(exc))
-            raise
+                _logger.debug(str(exc))
+                break
+
+        return False
 
     @critical_section
     @handle_called_process_error
