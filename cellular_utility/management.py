@@ -31,45 +31,14 @@ class CellularInformation(object):
             pin_retry_remain=None):
         self._sim_status = sim_status
 
-        if mode is None:
-            self._mode = ""
-        else:
-            self._mode = mode
-
-        if signal is None:
-            self._signal = 0
-        else:
-            self._signal = signal
-
-        if operator is None:
-            self._operator = ""
-        else:
-            self._operator = operator
-
-        if lac is None:
-            self._lac = ""
-        else:
-            self._lac = lac
-
-        if cell_id is None:
-            self._cell_id = ""
-        else:
-            self._cell_id = cell_id
-
-        if icc_id is None:
-            self._icc_id = ""
-        else:
-            self._icc_id = icc_id
-
-        if imei is None:
-            self._imei = ""
-        else:
-            self._imei = imei
-
-        if pin_retry_remain is None:
-            self._pin_retry_remain = -1
-        else:
-            self._pin_retry_remain = pin_retry_remain
+        self._mode = "" if mode is None else mode
+        self._signal = 0 if signal is None else signal
+        self._operator = "" if operator is None else operator
+        self._lac = "" if lac is None else lac
+        self._cell_id = "" if cell_id is None else cell_id
+        self._icc_id = "" if icc_id is None else icc_id
+        self._imei = "" if imei is None else imei
+        self._pin_retry_remain = -1 if pin_retry_remain is None else pin_retry_remain
 
     @property
     def sim_status(self):
@@ -409,6 +378,8 @@ class CellularConnector(object):
         sleep(10)
 
         sim_status = self._cell_mgmt.sim_status()
+        _logger.warning("sim_status = " + sim_status)
+
         if sim_status == "nosim":
             self._log.log_event_nosim()
 
@@ -416,6 +387,7 @@ class CellularConnector(object):
             try:
                 self._cell_mgmt.set_pin(self._pin)
             except CellMgmtError:
+                _logger.warning(format_exc())
                 self._log.log_event_pin_error(self._pin)
 
                 # this PIN should not be used anymore
@@ -652,7 +624,8 @@ class Manager(object):
     def _set_cellular_information(self, cellular_information):
         self._cellular_information = cellular_information
 
-        self._log.log_cellular_information(cellular_information)
+        if cellular_information is not None:
+            self._log.log_cellular_information(cellular_information)
 
     def _set_network_information(self, network_information):
         """
