@@ -110,7 +110,8 @@ class TestCellMgmt(unittest.TestCase):
             "LAC=2817\n"
             "CellID=01073AEE\n"
             "ICC-ID=1234567890123456\n"
-            "IMEI=0123456789012345\n")
+            "IMEI=0123456789012345\n"
+            "QMI_port=/dev/cdc-wdm0\n")
 
         # act
         match = CellMgmt._m_info_regex.match(SUT)
@@ -123,6 +124,7 @@ class TestCellMgmt(unittest.TestCase):
         self.assertEqual("01073AEE", match.group(4))
         self.assertEqual("1234567890123456", match.group(5))
         self.assertEqual("0123456789012345", match.group(6))
+        self.assertEqual("/dev/cdc-wdm0", match.group(7))
 
     def test_sim_status_ready_regex_should_pass(self):
         # arrange
@@ -143,6 +145,27 @@ class TestCellMgmt(unittest.TestCase):
 
         # assert
         self.assertTrue(match)
+
+    def test_pin_retry_remain_regex_should_pass(self):
+        # arrange
+        SUT = (
+            "[/dev/cdc-wdm0] PIN status retrieved successfully\n"
+            "[/dev/cdc-wdm0] PIN1:\n"
+            "\tStatus: enabled-not-verified\n"
+            "\tVerify: 3\n"
+            "\tUnblock: 10\n"
+            "[/dev/cdc-wdm0] PIN2:\n"
+            "\tStatus: blocked\n"
+            "\tVerify: 0\n"
+            "\tUnblock: 10\n"
+        )
+
+        # act
+        match = CellMgmt._pin_retry_remain_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+        self.assertEqual("3", match.group(1))
 
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"

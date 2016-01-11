@@ -3,11 +3,12 @@ cell_mgmt utility wrapper
 """
 
 from decorator import decorator
+from enum import Enum
 import logging
 import re
 from subprocess import check_call, check_output
 from subprocess import CalledProcessError
-from threading import Lock
+from threading import RLock
 from time import sleep
 from traceback import format_exc
 
@@ -49,6 +50,7 @@ def retry_on_busy(func, *args, **kwargs):
                 continue
 
             else:
+                _logger.warning(format_exc())
                 raise
 
 
@@ -57,6 +59,77 @@ def critical_section(func, *args, **kwargs):
     # lock by process
     with CellMgmt._lock:
         return func(*args, **kwargs)
+
+
+class MInfo(object):
+    def __init__(
+            self,
+            module,
+            wwan_node,
+            lac=None,
+            cell_id=None,
+            icc_id=None,
+            imei=None,
+            qmi_port=None):
+        self._module = module
+        self._wwan_node = wwan_node
+        self._lac = "" if lac is None else lac
+        self._cell_id = "" if cell_id is None else cell_id
+        self._icc_id = "" if icc_id is None else icc_id
+        self._imei = "" if imei is None else imei
+
+        self._qmi_port = qmi_port
+
+    @property
+    def module(self):
+        return self._module
+
+    @property
+    def wwan_node(self):
+        return self._wwan_node
+
+    @property
+    def lac(self):
+        return self._lac
+
+    @property
+    def cell_id(self):
+        return self._cell_id
+
+    @property
+    def icc_id(self):
+        return self._icc_id
+
+    @property
+    def imei(self):
+        return self._imei
+
+    @property
+    def qmi_port(self):
+        return self._qmi_port
+
+
+class SimStatus(Enum):
+    nosim = 0
+    pin = 1
+    ready = 2
+
+
+class Signal(object):
+    def __init__(
+            self,
+            mode=None,
+            rssi_dbm=None):
+        self._mode = "none" if mode is None else mode
+        self._rssi_dbm = 0 if rssi_dbm is None else rssi_dbm
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @property
+    def rssi_dbm(self):
+        return self._rssi_dbm
 
 
 class CellMgmt(object):
@@ -82,7 +155,8 @@ class CellMgmt(object):
         r"LAC=([\S]*)\n"
         r"CellID=([\S]*)\n"
         r"ICC-ID=([\S]*)\n"
-        r"IMEI=([\S]+)\n")
+        r"IMEI=([\S]*)\n"
+        r"QMI_port=([\S]*)\n")
     _operator_regex = re.compile(
         r"^([\S ]*)\n$")
     _sim_status_ready_regex = re.compile(
@@ -90,7 +164,14 @@ class CellMgmt(object):
     _sim_status_sim_pin_regex = re.compile(
         r"^\+CPIN:\s*SIM\s+PIN$")
 
-    _lock = Lock()
+    _pin_retry_remain_regex = re.compile(
+        r"\[[\S]+\][\S ]+\n"
+        r"\[[\S]+\] PIN1:\n"
+        r"[\s]*Status:[\s]*[\S]*\n"
+        r"[\s]*Verify:[\s]*([0-9]+)\n"
+    )
+
+    _lock = RLock()
 
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
@@ -190,13 +271,7 @@ class CellMgmt(object):
     @handle_called_process_error
     @retry_on_busy
     def signal(self):
-        """
-        Returns a dict like:
-            {
-                "mode": "umts",
-                "rssi_dbm": -80
-            }
-        """
+        """Returns an instance of Signal."""
 
         _logger.debug("cell_mgmt signal")
 
@@ -207,14 +282,14 @@ class CellMgmt(object):
             sleep(self._invoke_period_sec)
 
         match = CellMgmt._signal_regex.match(output)
-        if not match:
-            _logger.error("unexpected output: " + output)
-            raise CellMgmtError
+        if match:
+            return Signal(
+                mode=match.group(1),
+                rssi_dbm=int(match.group(2)))
 
-        return {
-            "mode": match.group(1),
-            "rssi_dbm": int(match.group(2))
-        }
+        _logger.warning("unexpected output: " + output)
+        # signal out of range
+        return Signal()
 
     @critical_section
     def status(self):
@@ -253,6 +328,10 @@ class CellMgmt(object):
         _logger.debug("cell_mgmt power_off")
 
         check_call([self._exe_path, "power_off"], shell=self._use_shell)
+
+        # sleep to make sure GPIO is pulled down for enough time
+        sleep(1)
+
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
 
@@ -281,17 +360,7 @@ class CellMgmt(object):
     @handle_called_process_error
     @retry_on_busy
     def m_info(self):
-        """
-        Return dict like:
-            {
-                "Module": "MC7304",
-                "WWAN_node": "wwan0",
-                "LAC": "2817",
-                "CellID": "01073AEE"
-                "ICC-ID": "",
-                "IMEI": "356853050370859"
-            }
-        """
+        """Return instance of MInfo."""
 
         _logger.debug("cell_mgmt m_info")
 
@@ -303,16 +372,21 @@ class CellMgmt(object):
 
         match = self._m_info_regex.match(output)
         if not match:
+            _logger.warning("unexpected output: " + output)
             raise CellMgmtError
 
-        return {
-            "Module": match.group(1),
-            "WWAN_node": match.group(2),
-            "LAC": match.group(3),
-            "CellID": match.group(4),
-            "ICC-ID": match.group(5),
-            "IMEI": match.group(6)
-        }
+        qmi_port = match.group(7)
+        if qmi_port == "":
+            qmi_port = None
+
+        return MInfo(
+            module=match.group(1),
+            wwan_node=match.group(2),
+            lac=match.group(3),
+            cell_id=match.group(4),
+            icc_id=match.group(5),
+            imei=match.group(6),
+            qmi_port=qmi_port)
 
     @critical_section
     @handle_called_process_error
@@ -332,6 +406,7 @@ class CellMgmt(object):
 
         match = self._operator_regex.match(output)
         if not match:
+            _logger.warning("unexpected output: {}".format(output))
             raise CellMgmtError
 
         return match.group(1)
@@ -358,10 +433,7 @@ class CellMgmt(object):
     @retry_on_busy
     def sim_status(self):
         """
-        Returns one of:
-            "nosim"
-            "pin"
-            "ready"
+        Returns instance of SimStatus.
         """
 
         """
@@ -375,15 +447,41 @@ class CellMgmt(object):
                 shell=self._use_shell)
 
             if self._sim_status_ready_regex.match(output):
-                return "ready"
+                return SimStatus.ready
             elif self._sim_status_sim_pin_regex.match(output):
-                return "pin"
+                return SimStatus.pin
 
         except CalledProcessError as exc:
             if exc.returncode == 60:
                 raise
 
-            return "nosim"
+            return SimStatus.nosim
+
+    @critical_section
+    @handle_called_process_error
+    def get_pin_retry_remain(self):
+        """
+        Return the number of retries left for PIN.
+        """
+
+        _logger.debug("get_pin_retry_remain")
+
+        qmi_port = self.m_info().qmi_port
+        if qmi_port is None:
+            _logger.warning("no qmi-port exist, return -1")
+            return -1
+
+        _logger.debug("qmicli -d " + qmi_port + " --dms-uim-get-pin-status")
+        output = check_output(
+            ["qmicli", "-d", qmi_port, "--dms-uim-get-pin-status"],
+            shell=self._use_shell)
+
+        match = CellMgmt._pin_retry_remain_regex.match(output)
+        if not match:
+            _logger.warning("unexpected output: {}".format(output))
+            raise CellMgmtError
+
+        return int(match.group(1))
 
 
 if __name__ == "__main__":

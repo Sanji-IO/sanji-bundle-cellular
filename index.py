@@ -52,7 +52,7 @@ class Index(Sanji):
             try:
                 cell_mgmt.power_on(timeout_sec=60)
 
-                wwan_node = cell_mgmt.m_info()['WWAN_node']
+                wwan_node = cell_mgmt.m_info().wwan_node
 
                 break
 
@@ -178,6 +178,7 @@ class Index(Sanji):
 
         config = self.model.db[0]
 
+        status = self._mgr.state()
         cellular_status = self._mgr.cellular_status()
         connection_status = self._mgr.connection_status()
 
@@ -187,8 +188,8 @@ class Index(Sanji):
 
         except VnStatError:
             usage = {
-                "txbyte": "n/a",
-                "rxbyte": "n/a"
+                "txkbyte": "n/a",
+                "rxkbyte": "n/a"
             }
 
         return {
@@ -199,7 +200,9 @@ class Index(Sanji):
             "operatorName": cellular_status["operator"],
             "iccId": cellular_status["icc_id"],
             "imei": cellular_status["imei"],
+            "pinRetryRemain": cellular_status["pin_retry_remain"],
 
+            "status": status,
             "connected": connection_status["connected"],
             "ip": connection_status["ip"],
             "netmask": connection_status["netmask"],
