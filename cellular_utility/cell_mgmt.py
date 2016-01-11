@@ -8,7 +8,7 @@ import logging
 import re
 from subprocess import check_call, check_output
 from subprocess import CalledProcessError
-from threading import Lock
+from threading import RLock
 from time import sleep
 from traceback import format_exc
 
@@ -69,13 +69,16 @@ class MInfo(object):
             lac=None,
             cell_id=None,
             icc_id=None,
-            imei=None):
+            imei=None,
+            qmi_port=None):
         self._module = module
         self._wwan_node = wwan_node
         self._lac = "" if lac is None else lac
         self._cell_id = "" if cell_id is None else cell_id
         self._icc_id = "" if icc_id is None else icc_id
         self._imei = "" if imei is None else imei
+
+        self._qmi_port = qmi_port
 
     @property
     def module(self):
@@ -100,6 +103,10 @@ class MInfo(object):
     @property
     def imei(self):
         return self._imei
+
+    @property
+    def qmi_port(self):
+        return self._qmi_port
 
 
 class SimStatus(Enum):
@@ -148,7 +155,8 @@ class CellMgmt(object):
         r"LAC=([\S]*)\n"
         r"CellID=([\S]*)\n"
         r"ICC-ID=([\S]*)\n"
-        r"IMEI=([\S]*)\n")
+        r"IMEI=([\S]*)\n"
+        r"QMI_port=([\S]*)\n")
     _operator_regex = re.compile(
         r"^([\S ]*)\n$")
     _sim_status_ready_regex = re.compile(
@@ -156,7 +164,14 @@ class CellMgmt(object):
     _sim_status_sim_pin_regex = re.compile(
         r"^\+CPIN:\s*SIM\s+PIN$")
 
-    _lock = Lock()
+    _pin_retry_remain_regex = re.compile(
+        r"\[[\S]+\][\S ]+\n"
+        r"\[[\S]+\] PIN1:\n"
+        r"[\s]*Status:[\s]*[\S]*\n"
+        r"[\s]*Verify:[\s]*([0-9]+)\n"
+    )
+
+    _lock = RLock()
 
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
@@ -360,13 +375,18 @@ class CellMgmt(object):
             _logger.warning("unexpected output: " + output)
             raise CellMgmtError
 
+        qmi_port = match.group(7)
+        if qmi_port == "":
+            qmi_port = None
+
         return MInfo(
             module=match.group(1),
             wwan_node=match.group(2),
             lac=match.group(3),
             cell_id=match.group(4),
             icc_id=match.group(5),
-            imei=match.group(6))
+            imei=match.group(6),
+            qmi_port=qmi_port)
 
     @critical_section
     @handle_called_process_error
@@ -436,6 +456,32 @@ class CellMgmt(object):
                 raise
 
             return SimStatus.nosim
+
+    @critical_section
+    @handle_called_process_error
+    def get_pin_retry_remain(self):
+        """
+        Return the number of retries left for PIN.
+        """
+
+        _logger.debug("get_pin_retry_remain")
+
+        qmi_port = self.m_info().qmi_port
+        if qmi_port is None:
+            _logger.warning("no qmi-port exist, return -1")
+            return -1
+
+        _logger.debug("qmicli -d " + qmi_port + " --dms-uim-get-pin-status")
+        output = check_output(
+            ["qmicli", "-d", qmi_port, "--dms-uim-get-pin-status"],
+            shell=self._use_shell)
+
+        match = CellMgmt._pin_retry_remain_regex.match(output)
+        if not match:
+            _logger.warning("unexpected output: " + output)
+            raise CellMgmtError
+
+        return int(match.group(1))
 
 
 if __name__ == "__main__":

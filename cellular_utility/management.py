@@ -134,6 +134,12 @@ class CellularObserver(object):
 
             m_info = self._cell_mgmt.m_info()
 
+            try:
+                pin_retry_remain = self._cell_mgmt.get_pin_retry_remain()
+            except CellMgmtError:
+                _logger.warning(format_exc())
+                pin_retry_remain = -1
+
             return CellularInformation(
                 sim_status.name,
                 signal.mode,
@@ -142,7 +148,8 @@ class CellularObserver(object):
                 m_info.lac,
                 m_info.cell_id,
                 m_info.icc_id,
-                m_info.imei)
+                m_info.imei,
+                pin_retry_remain)
 
         except CellMgmtError:
             _logger.warning(format_exc())
