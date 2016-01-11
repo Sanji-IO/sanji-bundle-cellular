@@ -406,7 +406,7 @@ class CellMgmt(object):
 
         match = self._operator_regex.match(output)
         if not match:
-            _logger.warning("unexpected output: " + output)
+            _logger.warning("unexpected output: {}".format(output))
             raise CellMgmtError
 
         return match.group(1)
@@ -478,7 +478,7 @@ class CellMgmt(object):
 
         match = CellMgmt._pin_retry_remain_regex.match(output)
         if not match:
-            _logger.warning("unexpected output: " + output)
+            _logger.warning("unexpected output: {}".format(output))
             raise CellMgmtError
 
         return int(match.group(1))

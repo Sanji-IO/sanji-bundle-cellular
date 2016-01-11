@@ -397,7 +397,11 @@ class CellularConnector(object):
 
         sim_status = self._cell_mgmt.sim_status()
         _logger.debug(
-            "sim_status = " + sim_status.name + ", self._pin = " + self._pin)
+            "sim_status = {}, self._pin = {}".format(
+                sim_status.name,
+                self._pin
+            )
+        )
 
         if sim_status == SimStatus.nosim:
             self._log.log_event_nosim()
