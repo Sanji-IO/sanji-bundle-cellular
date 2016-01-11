@@ -38,7 +38,9 @@ class CellularInformation(object):
         self._cell_id = "" if cell_id is None else cell_id
         self._icc_id = "" if icc_id is None else icc_id
         self._imei = "" if imei is None else imei
-        self._pin_retry_remain = -1 if pin_retry_remain is None else pin_retry_remain
+        self._pin_retry_remain = (
+            -1 if pin_retry_remain is None else pin_retry_remain
+        )
 
     @property
     def sim_status(self):
