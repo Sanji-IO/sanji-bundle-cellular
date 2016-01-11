@@ -83,7 +83,7 @@ class CellMgmt(object):
         r"LAC=([\S]*)\n"
         r"CellID=([\S]*)\n"
         r"ICC-ID=([\S]*)\n"
-        r"IMEI=([\S]+)\n")
+        r"IMEI=([\S]*)\n")
     _operator_regex = re.compile(
         r"^([\S ]*)\n$")
     _sim_status_ready_regex = re.compile(
