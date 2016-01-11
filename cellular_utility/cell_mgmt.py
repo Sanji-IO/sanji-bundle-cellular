@@ -49,6 +49,7 @@ def retry_on_busy(func, *args, **kwargs):
                 continue
 
             else:
+                _logger.warning(format_exc())
                 raise
 
 
@@ -253,6 +254,10 @@ class CellMgmt(object):
         _logger.debug("cell_mgmt power_off")
 
         check_call([self._exe_path, "power_off"], shell=self._use_shell)
+
+        # sleep to make sure GPIO is pulled down for enough time
+        sleep(1)
+
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
 
@@ -303,6 +308,7 @@ class CellMgmt(object):
 
         match = self._m_info_regex.match(output)
         if not match:
+            _logger.warning("unexpected output: " + output)
             raise CellMgmtError
 
         return {
@@ -332,6 +338,7 @@ class CellMgmt(object):
 
         match = self._operator_regex.match(output)
         if not match:
+            _logger.warning("unexpected output: " + output)
             raise CellMgmtError
 
         return match.group(1)
