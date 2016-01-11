@@ -11,7 +11,7 @@ class Log(object):
     def __init__(self):
         pass
 
-    def log_nosim(self):
+    def log_event_nosim(self):
         """
         As title.
         """
@@ -21,6 +21,12 @@ class Log(object):
         """
         Convert RSSI value from signal dBm value
         """
+        if signal == 0:
+            return 0
+
+        if signal < -110:
+            return 0
+
         return int(0.5 * (signal + 109) + 2)
 
     def log_cellular_information(

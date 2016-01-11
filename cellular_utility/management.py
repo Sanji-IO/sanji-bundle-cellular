@@ -5,13 +5,15 @@ Helper library.
 import logging
 import sys
 
+from enum import Enum
 from monotonic import monotonic
 from subprocess import check_call, CalledProcessError
 from threading import Thread
 from time import sleep
 from traceback import format_exc, print_exc
 
-from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
+from cellular_utility.cell_mgmt import (
+    CellMgmt, CellMgmtError, SimStatus, Signal)
 from cellular_utility.event import Log
 
 _logger = logging.getLogger("sanji.cellular")
@@ -117,7 +119,7 @@ class CellularObserver(object):
 
     def _get_cellular_information(self):
         try:
-            if self._cell_mgmt.sim_status() == "nosim":
+            if self._cell_mgmt.sim_status() == SimStatus.nosim:
                 return CellularInformation(sim_status="nosim")
 
             sim_status = self._cell_mgmt.sim_status()
@@ -126,21 +128,21 @@ class CellularObserver(object):
                 signal = self._cell_mgmt.signal()
             except CellMgmtError:
                 _logger.warning(format_exc())
-                signal = {"mode": "none", "rssi_dbm": 0}
+                signal = Signal()
 
             operator = self._cell_mgmt.operator()
 
             m_info = self._cell_mgmt.m_info()
 
             return CellularInformation(
-                sim_status,
-                signal["mode"],
-                signal["rssi_dbm"],
+                sim_status.name,
+                signal.mode,
+                signal.rssi_dbm,
                 operator,
-                m_info["LAC"],
-                m_info["CellID"],
-                m_info["ICC-ID"],
-                m_info["IMEI"])
+                m_info.lac,
+                m_info.cell_id,
+                m_info.icc_id,
+                m_info.imei)
 
         except CellMgmtError:
             _logger.warning(format_exc())
@@ -184,6 +186,12 @@ class CellularConnector(object):
     PING_REQUEST_COUNT = 3
     PING_TIMEOUT_SEC = 20
 
+    class State(Enum):
+        connecting = 0
+        connected = 1
+        connect_failed = 2
+        idle = 3
+
     def __init__(
             self,
             dev_name,
@@ -205,12 +213,10 @@ class CellularConnector(object):
         self._connect_thread = None
         self._stop = False
 
-        self._state = "idle"
+        self._state = CellularConnector.State.idle
 
     def state(self):
-        """Returns one of:
-            "connecting", "connected", "connect-failed", "idle"
-        """
+        """Return an instance of CellularConnector.State."""
         return self._state
 
     def start(self, update_network_information):
@@ -239,17 +245,17 @@ class CellularConnector(object):
 
                         network_information = None
                         update_network_information(network_information)
-                        self._state = "connecting"
 
                         network_information = self._reconnect()
                         if network_information is None:
-                            self._state = "connect-failed"
+                            self._state = \
+                                CellularConnector.State.connect_failed
                             # retry in 10 seconds
                             sleep(10)
                             continue
 
                         update_network_information(network_information)
-                        self._state = "connected"
+                        self._state = CellularConnector.State.connected
 
                         # sleep awhile to let ip-route take effect
                         sleep(10)
@@ -273,7 +279,7 @@ class CellularConnector(object):
             self._cell_mgmt.stop()
             self._log.log_event_cellular_disconnect()
             update_network_information(None)
-            self._state = "idle"
+            self._state = CellularConnector.State.idle
 
         self._stop = False
         self._connect_thread = Thread(target=main_thread)
@@ -292,10 +298,13 @@ class CellularConnector(object):
         Returns NetworkInformation if connected, otherwise None.
         """
 
-        self._log.log_event_connect_begin()
-
-        if self._cell_mgmt.sim_status() in ["nosim", "pin"]:
+        sim_status = self._cell_mgmt.sim_status()
+        if sim_status in [SimStatus.nosim, SimStatus.pin]:
+            _logger.debug("reconnect: abort: sim-status: " + sim_status.name)
             return None
+
+        self._log.log_event_connect_begin()
+        self._state = CellularConnector.State.connecting
 
         self._cell_mgmt.stop()
 
@@ -334,7 +343,7 @@ class CellularConnector(object):
         if not self._keepalive_host:
             return True
 
-        for _ in xrange(1, self.PING_REQUEST_COUNT):
+        for _ in xrange(0, self.PING_REQUEST_COUNT):
             cmd = [
                 "ping",
                 "-c", "1",
@@ -376,18 +385,20 @@ class CellularConnector(object):
                 sleep(1)
                 continue
 
-        # wait another 10 seconds to ensure module readiness
-        sleep(10)
+        # wait another few seconds to ensure module readiness
+        sleep(30)
 
         sim_status = self._cell_mgmt.sim_status()
-        _logger.warning("sim_status = " + sim_status)
+        _logger.debug(
+            "sim_status = " + sim_status.name + ", self._pin = " + self._pin)
 
-        if sim_status == "nosim":
+        if sim_status == SimStatus.nosim:
             self._log.log_event_nosim()
 
-        elif sim_status == "pin" and self._pin != "":
+        elif sim_status == SimStatus.pin and self._pin != "":
             try:
                 self._cell_mgmt.set_pin(self._pin)
+
             except CellMgmtError:
                 _logger.warning(format_exc())
                 self._log.log_event_pin_error(self._pin)
@@ -472,10 +483,10 @@ class Manager(object):
             return "nosim"
 
         sim_status = self._cellular_information.sim_status
-        if sim_status == "nosim":
+        if sim_status == SimStatus.nosim:
             return "nosim"
 
-        if sim_status == "pin":
+        if sim_status == SimStatus.pin:
             return "pin"
 
         if self._cellular_information.signal == 0:
@@ -485,7 +496,7 @@ class Manager(object):
             return "ready"
 
         if self._network_information is None:
-            if self._connector.state == "connect-failed":
+            if self._connector.state == CellularConnector.State.connect_failed:
                 return "connect-failed"
             else:
                 return "connecting"

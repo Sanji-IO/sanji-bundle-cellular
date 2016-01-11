@@ -52,7 +52,7 @@ class Index(Sanji):
             try:
                 cell_mgmt.power_on(timeout_sec=60)
 
-                wwan_node = cell_mgmt.m_info()['WWAN_node']
+                wwan_node = cell_mgmt.m_info().wwan_node
 
                 break
 
