@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.19-1) unstable; urgency=low
+
+  * Fix faulty Connection Status shown while in PIN.
+
+ -- TC Huang <tc.huang@moxa.com>  Tue, 12 Jan 2016 14:32:14 +0800
+
 sanji-bundle-cellular (1.0.18-1) unstable; urgency=low
 
   * Support cellular status.
