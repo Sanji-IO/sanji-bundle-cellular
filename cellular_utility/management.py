@@ -494,10 +494,10 @@ class Manager(object):
             return "nosim"
 
         sim_status = self._cellular_information.sim_status
-        if sim_status == SimStatus.nosim:
+        if sim_status == "nosim":
             return "nosim"
 
-        if sim_status == SimStatus.pin:
+        if sim_status == "pin":
             return "pin"
 
         if self._cellular_information.signal == 0:
