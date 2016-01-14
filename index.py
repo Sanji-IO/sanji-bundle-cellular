@@ -66,16 +66,10 @@ class Index(Sanji):
             self._publish_network_info)
         self._mgr.start()
 
-        # try PIN if exist
-        pin = self.model.db[0]["pinCode"]
-        if (pin != "" and
-                not self._mgr.set_pin(pin)):
-            self.model.db[0]["pinCode"] = ""
-            self.model.save_db()
-
         self._mgr.set_configuration(
             enabled=self.model.db[0]["enable"],
             apn=self.model.db[0]["apn"],
+            pin=self.model.db[0]["pinCode"],
             keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"])
@@ -165,6 +159,7 @@ class Index(Sanji):
         self._mgr.set_configuration(
             enabled=self.model.db[0]["enable"],
             apn=self.model.db[0]["apn"],
+            pin=self.model.db[0]["pinCode"],
             keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"])
