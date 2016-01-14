@@ -253,6 +253,7 @@ class CellularConnector(object):
                         network_information = None
                         update_network_information(network_information)
 
+                        self._state = CellularConnector.State.connecting
                         network_information = self._reconnect()
                         if network_information is None:
                             self._state = \
@@ -305,13 +306,38 @@ class CellularConnector(object):
         Returns NetworkInformation if connected, otherwise None.
         """
 
+        self._log.log_event_connect_begin()
+
         sim_status = self._cell_mgmt.sim_status()
-        if sim_status in [SimStatus.nosim, SimStatus.pin]:
+        _logger.debug(
+            "sim_status = {}, self._pin = {}".format(
+                sim_status.name,
+                self._pin
+            )
+        )
+
+        if sim_status == SimStatus.nosim:
+            self._log.log_event_nosim()
             _logger.debug("reconnect: abort: sim-status: " + sim_status.name)
             return None
 
-        self._log.log_event_connect_begin()
-        self._state = CellularConnector.State.connecting
+        elif sim_status == SimStatus.pin:
+            if self._pin == "":
+                _logger.warning("no pin provided")
+                self._log.log_event_pin_error("")
+                return None
+
+            try:
+                _logger.debug("trying pin: {}".format(self._pin))
+                self._cell_mgmt.set_pin(self._pin)
+
+            except CellMgmtError:
+                _logger.warning(format_exc())
+                self._log.log_event_pin_error(self._pin)
+
+                # this PIN should not be used anymore
+                self._stop = True
+                return None
 
         self._cell_mgmt.stop()
 
@@ -394,29 +420,6 @@ class CellularConnector(object):
 
         # wait another few seconds to ensure module readiness
         sleep(30)
-
-        sim_status = self._cell_mgmt.sim_status()
-        _logger.debug(
-            "sim_status = {}, self._pin = {}".format(
-                sim_status.name,
-                self._pin
-            )
-        )
-
-        if sim_status == SimStatus.nosim:
-            self._log.log_event_nosim()
-
-        elif sim_status == SimStatus.pin and self._pin != "":
-            try:
-                self._cell_mgmt.set_pin(self._pin)
-
-            except CellMgmtError:
-                _logger.warning(format_exc())
-                self._log.log_event_pin_error(self._pin)
-
-                # this PIN should not be used anymore
-                self._stop = True
-                raise
 
     def _check_alive(self):
         """
@@ -595,6 +598,7 @@ class Manager(object):
             self,
             enabled,
             apn,
+            pin,
             keepalive_enabled,
             keepalive_host,
             keepalive_period_sec):
@@ -604,6 +608,7 @@ class Manager(object):
 
         if (self._enabled == enabled and
                 self._apn == apn and
+                self._pin == pin and
                 self._keepalive_enabled == keepalive_enabled and
                 self._keepalive_host == keepalive_host and
                 self._keepalive_period_sec == keepalive_period_sec):
@@ -611,6 +616,7 @@ class Manager(object):
 
         self._enabled = enabled
         self._apn = apn
+        self._pin = pin
 
         self._keepalive_enabled = keepalive_enabled
         self._keepalive_host = keepalive_host
