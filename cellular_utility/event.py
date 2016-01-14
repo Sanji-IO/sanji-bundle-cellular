@@ -37,11 +37,13 @@ class Log(object):
           cellular_utility.management.CellularInformation
         """
         self._log(
-            "mode " + cellular_information.mode
-            + ", signal " + str(cellular_information.signal) + " dBm"
-            + ", rssi " + str(self._rssi_from_dbm(cellular_information.signal))
-            + ", lac " + cellular_information.lac
-            + ", cell_id " + cellular_information.cell_id)
+            "mode {}, signal {} dBm, rssi {}, lac {}, cell_id {}".format(
+                cellular_information.mode,
+                str(cellular_information.signal),
+                str(self._rssi_from_dbm(cellular_information.signal)),
+                cellular_information.lac,
+                cellular_information.cell_id)
+        )
 
     def log_event_connect_begin(self):
         """
@@ -58,11 +60,13 @@ class Log(object):
           cellular_utility.management.NetworkInformation
         """
         self._log(
-            "connect-success"
-            + ", ip = " + network_information.ip
-            + ", netmask = " + network_information.netmask
-            + ", gateway = " + network_information.gateway
-            + ", dns = " + str(network_information.dns_list))
+            "connect-success, "
+            "ip = {}, network = {}, gateway = {}, dns = {}".format(
+                network_information.ip,
+                network_information.netmask,
+                network_information.gateway,
+                str(network_information.dns_list))
+        )
 
     def log_event_connect_failure(self):
         """
