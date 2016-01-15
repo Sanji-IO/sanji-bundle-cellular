@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.20-1) unstable; urgency=low
+
+  * Fix power-cycle cellular module after system power on if PIN required.
+
+ -- TC Huang <tc.huang@moxa.com>  Fri, 15 Jan 2016 10:53:47 +0800
+
 sanji-bundle-cellular (1.0.19-1) unstable; urgency=low
 
   * Fix faulty Connection Status shown while in PIN.
