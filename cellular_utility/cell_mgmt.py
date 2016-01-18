@@ -8,7 +8,6 @@ import logging
 import re
 import sh
 from sh import ErrorReturnCode, ErrorReturnCode_60
-from subprocess import check_call, check_output
 from subprocess import CalledProcessError
 from threading import RLock
 from time import sleep
