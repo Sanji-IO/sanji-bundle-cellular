@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.21-1) unstable; urgency=low
+
+  * Re-implement cell_mgmt control interface with sh library.
+
+ -- TC Huang <tc.huang@moxa.com>  Mon, 18 Jan 2016 15:02:12 +0800
+
 sanji-bundle-cellular (1.0.20-1) unstable; urgency=low
 
   * Fix power-cycle cellular module after system power on if PIN required.
