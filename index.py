@@ -18,6 +18,10 @@ from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 from cellular_utility.management import Manager
 from cellular_utility.vnstat import VnStat, VnStatError
 
+if __name__ == "__main__":
+    FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
+    logging.basicConfig(level=logging.INFO, format=FORMAT)
+
 _logger = logging.getLogger("sanji.cellular")
 
 
@@ -239,9 +243,5 @@ class Index(Sanji):
 
 
 if __name__ == "__main__":
-    FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
-    logging.basicConfig(level=0, format=FORMAT)
-    _logger = logging.getLogger("sanji.cellular")
-
     cellular = Index(connection=Mqtt())
     cellular.start()
