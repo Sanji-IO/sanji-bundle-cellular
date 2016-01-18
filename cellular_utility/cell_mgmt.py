@@ -6,7 +6,8 @@ from decorator import decorator
 from enum import Enum
 import logging
 import re
-from subprocess import check_call, check_output
+import sh
+from sh import ErrorReturnCode, ErrorReturnCode_60
 from subprocess import CalledProcessError
 from threading import RLock
 from time import sleep
@@ -52,6 +53,21 @@ def retry_on_busy(func, *args, **kwargs):
             else:
                 _logger.warning(format_exc())
                 raise
+
+        except ErrorReturnCode_60 as exc:
+            if retry < BUSY_RETRY_COUNT:
+                _logger.debug("cell_mgmt busy retry: {}".format(str(retry)))
+
+                sleep(10)
+                continue
+
+            else:
+                _logger.warning(format_exc())
+                raise
+
+        except ErrorReturnCode:
+            _logger.warning(format_exc())
+            raise
 
 
 @decorator
@@ -175,6 +191,8 @@ class CellMgmt(object):
 
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
+        self._cell_mgmt = sh.cell_mgmt
+        self._qmicli = sh.qmicli
 
         self._invoke_period_sec = 0
 
@@ -197,18 +215,19 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt start")
 
-        cmd = [
-            self._exe_path, "start", "ignore-dns-gw",
+        args = [
+            "start", "ignore-dns-gw",
             "APN=" + apn,
             "Username=",
             "Password="
         ]
         if pin is not None:
-            cmd.append("PIN=" + pin)
+            args.append("PIN=" + pin)
         else:
-            cmd.append("PIN=")
+            args.append("PIN=")
 
-        output = check_output(cmd, shell=self._use_shell)
+        output = self._cell_mgmt(*args)
+        output = str(output)
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
 
@@ -257,14 +276,8 @@ class CellMgmt(object):
         _logger.debug("cell_mgmt stop")
 
         try:
-            check_output([self._exe_path, "stop"], shell=self._use_shell)
-            if self._invoke_period_sec != 0:
-                sleep(self._invoke_period_sec)
-
-        except CalledProcessError as exc:
-            if exc.returncode == 60:
-                raise
-
+            self._cell_mgmt("stop")
+        except ErrorReturnCode:
             _logger.warning(format_exc() + ", ignored")
 
     @critical_section
@@ -275,9 +288,9 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt signal")
 
-        output = check_output(
-            [self._exe_path, "signal"],
-            shell=self._use_shell)
+        output = self._cell_mgmt("signal")
+        output = str(output)
+
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
 
@@ -301,19 +314,16 @@ class CellMgmt(object):
 
         for retry in xrange(0, BUSY_RETRY_COUNT + 1):
             try:
-                check_call([self._exe_path, "status"], shell=self._use_shell)
-                if self._invoke_period_sec != 0:
-                    sleep(self._invoke_period_sec)
+                self._cell_mgmt("status")
 
                 return True
 
-            except CalledProcessError as exc:
-                if (exc.returncode == 60 and
-                        retry < BUSY_RETRY_COUNT):
+            except ErrorReturnCode_60:
+                if retry < BUSY_RETRY_COUNT:
                     sleep(10)
                     continue
 
-                _logger.debug(str(exc))
+            except ErrorReturnCode:
                 break
 
         return False
@@ -327,7 +337,7 @@ class CellMgmt(object):
         """
         _logger.debug("cell_mgmt power_off")
 
-        check_call([self._exe_path, "power_off"], shell=self._use_shell)
+        self._cell_mgmt("power_off")
 
         # sleep to make sure GPIO is pulled down for enough time
         sleep(1)
@@ -344,14 +354,7 @@ class CellMgmt(object):
         """
         _logger.debug("cell_mgmt power_on")
 
-        check_call(
-            [
-                "timeout",
-                str(timeout_sec),
-                self._exe_path,
-                "power_on"
-            ],
-            shell=self._use_shell)
+        sh.timeout(str(timeout_sec), "cell_mgmt", "power_on")
 
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
@@ -364,9 +367,9 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt m_info")
 
-        output = check_output(
-            [self._exe_path, "m_info"],
-            shell=self._use_shell)
+        output = self._cell_mgmt("m_info")
+        output = str(output)
+
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
 
@@ -398,9 +401,9 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt operator")
 
-        output = check_output(
-            [self._exe_path, "operator"],
-            shell=self._use_shell)
+        output = self._cell_mgmt("operator")
+        output = str(output)
+
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
 
@@ -420,13 +423,14 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt set_pin")
         try:
-            check_call(
-                [self._exe_path, "set_pin", pin],
-                shell=self._use_shell)
+            self._cell_mgmt("set_pin", pin)
 
             return True
 
-        except CalledProcessError:
+        except ErrorReturnCode_60:
+            raise
+
+        except ErrorReturnCode:
             return False
 
     @critical_section
@@ -442,19 +446,18 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt sim_status")
         try:
-            output = check_output(
-                [self._exe_path, "sim_status"],
-                shell=self._use_shell)
+            output = self._cell_mgmt("sim_status")
+            output = str(output)
 
             if self._sim_status_ready_regex.match(output):
                 return SimStatus.ready
             elif self._sim_status_sim_pin_regex.match(output):
                 return SimStatus.pin
 
-        except CalledProcessError as exc:
-            if exc.returncode == 60:
-                raise
+        except ErrorReturnCode_60:
+            raise
 
+        except ErrorReturnCode:
             return SimStatus.nosim
 
     @critical_section
@@ -472,9 +475,8 @@ class CellMgmt(object):
             return -1
 
         _logger.debug("qmicli -d " + qmi_port + " --dms-uim-get-pin-status")
-        output = check_output(
-            ["qmicli", "-d", qmi_port, "--dms-uim-get-pin-status"],
-            shell=self._use_shell)
+        output = self._qmicli("-d", qmi_port, "--dms-uim-get-pin-status")
+        output = str(output)
 
         match = CellMgmt._pin_retry_remain_regex.match(output)
         if not match:
