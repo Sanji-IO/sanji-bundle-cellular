@@ -202,7 +202,6 @@ class Index(Sanji):
             "pinRetryRemain": cellular_status["pin_retry_remain"],
 
             "status": status,
-            "connected": connection_status["connected"],
             "ip": connection_status["ip"],
             "netmask": connection_status["netmask"],
             "gateway": connection_status["gateway"],

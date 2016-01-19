@@ -84,6 +84,7 @@ class CellularInformation(object):
 class CellularObserver(object):
 
     CHECK_PERIOD_SEC = 30
+    RETRY_PERIOD_SEC = 10
 
     def __init__(
             self):
@@ -107,6 +108,10 @@ class CellularObserver(object):
 
                 cellular_information = self._get_cellular_information()
                 update_cellular_information(cellular_information)
+
+                if (cellular_information is None or
+                        cellular_information.sim_status == "nosim"):
+                    next_check = now + CellularObserver.RETRY_PERIOD_SEC
 
         self._stop = False
         self._thread = Thread(target=main_thread)
@@ -490,11 +495,11 @@ class Manager(object):
     def state(self):
         """
         Returns one of:
-            "nosim", "pin", "noservice", "ready",
+            "initializing", "nosim", "pin", "noservice", "ready",
             "connected", "connecting", "connect-failed"
         """
         if self._cellular_information is None:
-            return "nosim"
+            return "initializing"
 
         sim_status = self._cellular_information.sim_status
         if sim_status in ["nosim", "pin"]:
