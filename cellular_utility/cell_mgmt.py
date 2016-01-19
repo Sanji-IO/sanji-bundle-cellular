@@ -22,11 +22,11 @@ class CellMgmtError(Exception):
 
 
 @decorator
-def handle_called_process_error(func, *args, **kwargs):
+def handle_error_return_code(func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
 
-    except CalledProcessError:
+    except ErrorReturnCode:
         _logger.warning(format_exc())
 
         raise CellMgmtError
@@ -199,7 +199,7 @@ class CellMgmt(object):
         self._use_shell = False
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def start(self, apn, pin=None):
         """
@@ -281,7 +281,7 @@ class CellMgmt(object):
             _logger.warning(format_exc() + ", ignored")
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def signal(self):
         """Returns an instance of Signal."""
@@ -329,7 +329,7 @@ class CellMgmt(object):
         return False
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def power_off(self):
         """
@@ -346,7 +346,7 @@ class CellMgmt(object):
             sleep(self._invoke_period_sec)
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def power_on(self, timeout_sec=60):
         """
@@ -360,7 +360,7 @@ class CellMgmt(object):
             sleep(self._invoke_period_sec)
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def m_info(self):
         """Return instance of MInfo."""
@@ -392,7 +392,7 @@ class CellMgmt(object):
             qmi_port=qmi_port)
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def operator(self):
         """
@@ -461,7 +461,7 @@ class CellMgmt(object):
             return SimStatus.nosim
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     def get_pin_retry_remain(self):
         """
         Return the number of retries left for PIN.
