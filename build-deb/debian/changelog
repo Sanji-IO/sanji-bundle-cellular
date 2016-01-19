@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.23-1) unstable; urgency=low
+
+  * Fix background thread crash issue.
+
+ -- TC Huang <tc.huang@moxa.com>  Tue, 19 Jan 2016 18:12:25 +0800
+
 sanji-bundle-cellular (1.0.22-1) unstable; urgency=low
 
   * Retry in 10 seconds with Cellular Observer fail to get cellular log.

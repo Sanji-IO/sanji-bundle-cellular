@@ -110,7 +110,8 @@ class CellularObserver(object):
                 update_cellular_information(cellular_information)
 
                 if (cellular_information is None or
-                        cellular_information.sim_status == "nosim"):
+                        cellular_information.sim_status == "nosim" or
+                        cellular_information.sim_status == "pin"):
                     next_check = now + CellularObserver.RETRY_PERIOD_SEC
 
         self._stop = False
