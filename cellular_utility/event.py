@@ -39,8 +39,8 @@ class Log(object):
         self._log(
             "mode {}, signal {} dBm, rssi {}, lac {}, cell_id {}".format(
                 cellular_information.mode,
-                str(cellular_information.signal),
-                str(self._rssi_from_dbm(cellular_information.signal)),
+                str(cellular_information.signal_dbm),
+                str(self._rssi_from_dbm(cellular_information.signal_dbm)),
                 cellular_information.lac,
                 cellular_information.cell_id)
         )

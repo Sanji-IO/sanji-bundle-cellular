@@ -65,20 +65,26 @@ class Index(Sanji):
                 cell_mgmt.power_off()
 
         self._dev_name = wwan_node
-        self._mgr = Manager(
-            wwan_node,
-            self._publish_network_info)
-        self._mgr.start()
-
-        self._mgr.set_configuration(
-            enabled=self.model.db[0]["enable"],
-            apn=self.model.db[0]["apn"],
-            pin=self.model.db[0]["pinCode"],
-            keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
-            keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
-            keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"])
+        self.__create_manager()
 
         self._vnstat = VnStat(self._dev_name)
+
+    def __create_manager(self):
+        self._mgr = Manager(
+            dev_name=self._dev_name,
+            enabled=self.model.db[0]["enable"],
+            pin=self.model.db[0]["pinCode"],
+            apn=self.model.db[0]["apn"],
+            keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
+            keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
+            keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"],
+            log_period_sec=60)
+
+        self._mgr.set_update_network_information_callback(
+            self._publish_network_info)
+
+        self._mgr.start()
+
 
     def __init_completed(self):
         if self._init_thread is None:
@@ -145,28 +151,16 @@ class Index(Sanji):
 
         _logger.info(str(data))
 
-        # try to verify PIN first
-        # NOTE:
-        #   If PIN already verified,
-        #   following verification would always pass.
-        if (data["pinCode"] != "" and
-                not self._mgr.set_pin(data["pinCode"])):
-            return response(
-                code=400,
-                data={"message": "PIN verification failure"})
-
         # since all items are required in PUT,
         # its schema is identical to cellular.json
         self.model.db[0] = data
         self.model.save_db()
 
-        self._mgr.set_configuration(
-            enabled=self.model.db[0]["enable"],
-            apn=self.model.db[0]["apn"],
-            pin=self.model.db[0]["pinCode"],
-            keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
-            keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
-            keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"])
+        if self._mgr is not None:
+            self._mgr.stop()
+            self._mgr = None
+
+        self.__create_manager()
 
         return response(code=200, data=self._get())
 
@@ -177,9 +171,10 @@ class Index(Sanji):
 
         config = self.model.db[0]
 
-        status = self._mgr.state()
-        cellular_status = self._mgr.cellular_status()
-        connection_status = self._mgr.connection_status()
+        status = self._mgr.status()
+        sinfo = self._mgr.static_information()
+        cinfo = self._mgr.cellular_information()
+        ninfo = self._mgr.network_information()
 
         try:
             self._vnstat.update()
@@ -194,18 +189,18 @@ class Index(Sanji):
         return {
             "id": config["id"],
             "name": name,
-            "mode": cellular_status["mode"],
-            "signal": cellular_status["signal"],
-            "operatorName": cellular_status["operator"],
-            "iccId": cellular_status["icc_id"],
-            "imei": cellular_status["imei"],
-            "pinRetryRemain": cellular_status["pin_retry_remain"],
+            "mode": "n/a" if cinfo is None else cinfo.mode,
+            "signal": 0 if cinfo is None else cinfo.signal_dbm,
+            "operatorName": "n/a" if cinfo is None else cinfo.operator,
+            "iccId": "n/a" if sinfo is None else sinfo.icc_id,
+            "imei": "n/a" if sinfo is None else sinfo.imei,
+            "pinRetryRemain": -1 if sinfo is None else sinfo.pin_retry_remain,
 
-            "status": status,
-            "ip": connection_status["ip"],
-            "netmask": connection_status["netmask"],
-            "gateway": connection_status["gateway"],
-            "dns": connection_status["dns"],
+            "status": status.name,
+            "ip": "n/a" if ninfo is None else ninfo.ip,
+            "netmask": "n/a" if ninfo is None else ninfo.netmask,
+            "gateway": "n/a" if ninfo is None else ninfo.gateway,
+            "dns": [] if ninfo is None else ninfo.dns_list,
             "usage": {
                 "txkbyte": usage["txkbyte"],
                 "rxkbyte": usage["rxkbyte"]
@@ -221,24 +216,25 @@ class Index(Sanji):
             }
         }
 
+
     def _publish_network_info(
             self,
-            ip,
-            netmask,
-            gateway,
-            dns):
+            nwk_info):
 
         name = self._dev_name
         if name is None:
             _logger.error("device name not available")
             return
 
-        self.publish.event.put("/network/interface", data={
+        data= {
             "name": name,
-            "ip": ip,
-            "netmask": netmask,
-            "gateway": gateway,
-            "dns": dns})
+            "ip": nwk_info.ip,
+            "netmask": nwk_info.netmask,
+            "gateway": nwk_info.gateway,
+            "dns": nwk_info.dns_list
+        }
+        _logger.info("publish network info: " + str(data))
+        self.publish.event.put("/network/interface", data=data)
 
 
 if __name__ == "__main__":

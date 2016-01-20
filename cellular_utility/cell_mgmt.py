@@ -77,6 +77,47 @@ def critical_section(func, *args, **kwargs):
         return func(*args, **kwargs)
 
 
+class NetworkInformation(object):
+    def __init__(
+            self,
+            ip,
+            netmask,
+            gateway,
+            dns_list):
+        if (not isinstance(ip, str) or
+                not isinstance(netmask, str) or
+                not isinstance(gateway, str)):
+            raise ValueError
+
+        if not isinstance(dns_list, list):
+            raise ValueError
+
+        for dns in dns_list:
+            if not isinstance(dns, str):
+                raise ValueError
+
+        self._ip = ip
+        self._netmask = netmask
+        self._gateway = gateway
+        self._dns_list = dns_list
+
+    @property
+    def ip(self):
+        return self._ip
+
+    @property
+    def netmask(self):
+        return self._netmask
+
+    @property
+    def gateway(self):
+        return self._gateway
+
+    @property
+    def dns_list(self):
+        return self._dns_list
+
+
 class MInfo(object):
     def __init__(
             self,
@@ -201,7 +242,7 @@ class CellMgmt(object):
     @critical_section
     @handle_error_return_code
     @retry_on_busy
-    def start(self, apn, pin=None):
+    def start(self, apn):
         """
         Start cellular connection.
         Return dict like:
@@ -219,12 +260,9 @@ class CellMgmt(object):
             "start", "ignore-dns-gw",
             "APN=" + apn,
             "Username=",
-            "Password="
+            "Password=",
+            "PIN="
         ]
-        if pin is not None:
-            args.append("PIN=" + pin)
-        else:
-            args.append("PIN=")
 
         output = self._cell_mgmt(*args)
         output = str(output)
@@ -259,12 +297,11 @@ class CellMgmt(object):
 
         dns = match.group(1).split(" ")
 
-        return {
-            "ip": ip_,
-            "netmask": netmask,
-            "gateway": gateway,
-            "dns": dns
-        }
+        return NetworkInformation(
+            ip=ip_,
+            netmask=netmask,
+            gateway=gateway,
+            dns_list=dns)
 
     @critical_section
     @retry_on_busy

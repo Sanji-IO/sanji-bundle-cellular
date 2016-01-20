@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.24-1) unstable; urgency=low
+
+  * Reimplement background thread.
+
+ -- TC Huang <tc.huang@moxa.com>  Wed, 20 Jan 2016 21:37:24 +0800
+
 sanji-bundle-cellular (1.0.23-1) unstable; urgency=low
 
   * Fix background thread crash issue.
