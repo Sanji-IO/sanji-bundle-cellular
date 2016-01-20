@@ -1,6 +1,7 @@
 import logging
 import re
-from subprocess import check_call, check_output, CalledProcessError
+from sh import vnstat, ErrorReturnCode
+from traceback import format_exc
 
 _logger = logging.getLogger("sanji.cellular")
 
@@ -16,17 +17,14 @@ class VnStat(object):
     _totaltxk_regex = re.compile(r"totaltxk;([0-9]+)\n")
 
     def __init__(self, interface):
-        self._exe = "vnstat"
         self._interface = interface
 
     def update(self):
-        cmd = [self._exe, "-i", self._interface, "-u"]
-
         try:
-            check_call(cmd)
+            vnstat("-i", self._interface, "-u")
 
-        except CalledProcessError as exc:
-            _logger.warning(str(exc))
+        except ErrorReturnCode:
+            _logger.warning(format_exc())
 
             raise VnStatError
 
@@ -38,13 +36,12 @@ class VnStat(object):
                 "rxkbyte": 3002
             }
         """
-        cmd = [self._exe, "-i", self._interface, "--dumpdb"]
-
         try:
-            output = check_output(cmd)
+            output = vnstat("-i", self._interface, "--dumpdb")
+            output = str(output)
 
-        except CalledProcessError as exc:
-            _logger.warning(str(exc))
+        except ErrorReturnCode:
+            _logger.warning(format_exc())
 
             raise VnStatError
 
