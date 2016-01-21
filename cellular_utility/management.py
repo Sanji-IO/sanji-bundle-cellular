@@ -5,7 +5,8 @@ Helper library.
 from enum import Enum
 import logging
 from monotonic import monotonic
-from sh import ping, ErrorReturnCode
+import sh
+from sh import ErrorReturnCode
 import sys
 from threading import Thread
 from time import sleep
@@ -22,8 +23,6 @@ class StopException(Exception):
 
 
 class CellularInformation(object):
-
-    _cell_mgmt = CellMgmt()
 
     def __init__(
             self,
@@ -66,14 +65,16 @@ class CellularInformation(object):
     def cell_id(self):
         return self._cell_id
 
-    @classmethod
-    def get(cls):
+    @staticmethod
+    def get():
+        cell_mgmt = CellMgmt()
+
         try:
-            signal = cls._cell_mgmt.signal()
+            signal = cell_mgmt.signal()
 
-            operator = cls._cell_mgmt.operator()
+            operator = cell_mgmt.operator()
 
-            m_info = cls._cell_mgmt.m_info()
+            m_info = cell_mgmt.m_info()
 
             return CellularInformation(
                 signal.mode,
@@ -526,7 +527,7 @@ class Manager(object):
         """Return True on ping success, False on failure."""
         for _ in xrange(0, self.PING_REQUEST_COUNT):
             try:
-                ping(
+                sh.ping(
                     "-c", "1",
                     "-I", self._dev_name,
                     "-W", str(self.PING_TIMEOUT_SEC),

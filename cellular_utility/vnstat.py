@@ -1,6 +1,6 @@
 import logging
 import re
-from sh import vnstat, ErrorReturnCode
+from sh import ErrorReturnCode
 from traceback import format_exc
 
 _logger = logging.getLogger("sanji.cellular")
@@ -20,6 +20,8 @@ class VnStat(object):
         self._interface = interface
 
     def update(self):
+        vnstat = sh.vnstat
+
         try:
             vnstat("-i", self._interface, "-u")
 
@@ -36,6 +38,8 @@ class VnStat(object):
                 "rxkbyte": 3002
             }
         """
+        vnstat = sh.vnstat
+
         try:
             output = vnstat("-i", self._interface, "--dumpdb")
             output = str(output)
