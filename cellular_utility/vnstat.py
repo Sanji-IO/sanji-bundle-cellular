@@ -1,5 +1,6 @@
 import logging
 import re
+import sh
 from sh import ErrorReturnCode
 from traceback import format_exc
 
