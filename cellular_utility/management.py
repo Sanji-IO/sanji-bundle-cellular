@@ -230,6 +230,19 @@ class Manager(object):
             keepalive_period_sec=None,
             log_period_sec=None):
 
+        if (not isinstance(dev_name, str) or
+                not isinstance(enabled, bool) or
+                not isinstance(apn, str) or
+                not isinstance(keepalive_enabled, bool) or
+                not isinstance(keepalive_host, str) or
+                not isinstance(keepalive_period_sec, int) or
+                not isinstance(log_period_sec, int)):
+            raise ValueError
+
+        if pin is not None:
+            if not isinstance(pin, str) or len(pin) != 4:
+                raise ValueError
+
         self._dev_name = dev_name
         self._enabled = enabled
         self._pin = pin

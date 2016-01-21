@@ -70,10 +70,13 @@ class Index(Sanji):
         self._vnstat = VnStat(self._dev_name)
 
     def __create_manager(self):
+        pin = self.model.db[0]["pinCode"]
+        pin = None if pin == "" else pin
+
         self._mgr = Manager(
             dev_name=self._dev_name,
             enabled=self.model.db[0]["enable"],
-            pin=self.model.db[0]["pinCode"],
+            pin=pin,
             apn=self.model.db[0]["apn"],
             keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
