@@ -16,6 +16,7 @@ from cellular_utility.event import Log
 
 _logger = logging.getLogger("sanji.cellular")
 
+
 class StopException(Exception):
     pass
 
@@ -276,8 +277,8 @@ class Manager(object):
 
     def set_update_network_information_callback(
             self,
-            update_network_information_callback):
-        self._update_network_information_callback = update_network_information_callback
+            callback):
+        self._update_network_information_callback = callback
 
     def status(self):
         return self._status
@@ -501,7 +502,6 @@ class Manager(object):
             self._update_network_information_callback(nwk_info)
 
         return True
-
 
     def _power_cycle(self):
         try:

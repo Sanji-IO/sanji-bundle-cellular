@@ -88,7 +88,6 @@ class Index(Sanji):
 
         self._mgr.start()
 
-
     def __init_completed(self):
         if self._init_thread is None:
             return True
@@ -219,7 +218,6 @@ class Index(Sanji):
             }
         }
 
-
     def _publish_network_info(
             self,
             nwk_info):
@@ -229,7 +227,7 @@ class Index(Sanji):
             _logger.error("device name not available")
             return
 
-        data= {
+        data = {
             "name": name,
             "ip": nwk_info.ip,
             "netmask": nwk_info.netmask,
