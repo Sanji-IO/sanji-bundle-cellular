@@ -391,10 +391,7 @@ class Manager(object):
 
                     self._log.log_event_no_pin()
                     self._initialize_static_information()
-                    self._sleep_forever()
-
-                    # should not run here
-                    raise RuntimeError
+                    raise StopException
 
                 # set pin
                 try:
@@ -409,10 +406,7 @@ class Manager(object):
 
                     self._log.log_event_pin_error()
                     self._initialize_static_information()
-                    self._sleep_forever()
-
-                    # should not run here
-                    raise RuntimeError
+                    raise StopException
 
             assert sim_status == SimStatus.ready
 
@@ -431,7 +425,7 @@ class Manager(object):
         return False
 
     def _initialize_static_information(self):
-        _logger.warning("_initialize_static_information")
+        _logger.debug("_initialize_static_information")
         while True:
             try:
                 pin_retry_remain = self._cell_mgmt.get_pin_retry_remain()
@@ -542,10 +536,6 @@ class Manager(object):
         while monotonic() < until:
             self._interrupt_point()
             sleep(1)
-
-    def _sleep_forever(self):
-        while True:
-            self._sleep(60)
 
     def _checkalive_ping(self):
         """Return True on ping success, False on failure."""
