@@ -449,7 +449,6 @@ class Manager(object):
                 self._sleep(10)
                 continue
 
-
     def _operate(self):
         retry = 0
         while True:

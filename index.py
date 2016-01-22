@@ -204,7 +204,8 @@ class Index(Sanji):
             "operatorName": "n/a" if cinfo is None else cinfo.operator,
             "iccId": "n/a" if sinfo is None else sinfo.icc_id,
             "imei": "n/a" if sinfo is None else sinfo.imei,
-            "pinRetryRemain": "n/a" if sinfo is None else sinfo.pin_retry_remain,
+            "pinRetryRemain": (
+                "n/a" if sinfo is None else sinfo.pin_retry_remain),
 
             "status": status.name,
             "ip": "n/a" if ninfo is None else ninfo.ip,
