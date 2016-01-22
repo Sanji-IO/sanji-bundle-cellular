@@ -188,6 +188,14 @@ class Index(Sanji):
                 "rxkbyte": "n/a"
             }
 
+        # clear PIN code if pin error
+        if (config["pinCode"] != "" and
+                status == Manager.Status.pin):
+            config["pinCode"] = ""
+
+            self.model.db[0] = config
+            self.model.save_db()
+
         return {
             "id": config["id"],
             "name": name,
