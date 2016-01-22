@@ -188,6 +188,14 @@ class Index(Sanji):
                 "rxkbyte": "n/a"
             }
 
+        # clear PIN code if pin error
+        if (config["pinCode"] != "" and
+                status == Manager.Status.pin):
+            config["pinCode"] = ""
+
+            self.model.db[0] = config
+            self.model.save_db()
+
         return {
             "id": config["id"],
             "name": name,
@@ -196,7 +204,8 @@ class Index(Sanji):
             "operatorName": "n/a" if cinfo is None else cinfo.operator,
             "iccId": "n/a" if sinfo is None else sinfo.icc_id,
             "imei": "n/a" if sinfo is None else sinfo.imei,
-            "pinRetryRemain": -1 if sinfo is None else sinfo.pin_retry_remain,
+            "pinRetryRemain": (
+                "n/a" if sinfo is None else sinfo.pin_retry_remain),
 
             "status": status.name,
             "ip": "n/a" if ninfo is None else ninfo.ip,
