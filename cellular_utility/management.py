@@ -366,6 +366,10 @@ class Manager(object):
         self._cellular_information = None
         self._network_information = None
 
+        self._cell_mgmt.power_on()
+        # wait another few seconds to wait SIM Card Ready
+        self._sleep(10)
+
         retry = 0
         max_retry = 10
         while retry < max_retry:
@@ -376,6 +380,7 @@ class Manager(object):
 
             if sim_status == SimStatus.nosim:
                 self._status = Manager.Status.nosim
+
                 self._sleep(10)
                 retry += 1
                 continue
@@ -383,9 +388,13 @@ class Manager(object):
             if sim_status == SimStatus.pin:
                 if self._pin is None:
                     self._status = Manager.Status.pin
-                    self._sleep(10)
-                    retry += max_retry
-                    continue
+
+                    self._log.log_event_no_pin()
+                    self._initialize_static_information()
+                    self._sleep_forever()
+
+                    # should not run here
+                    raise RuntimeError
 
                 # set pin
                 try:
@@ -396,26 +405,18 @@ class Manager(object):
                 except CellMgmtError:
                     _logger.warning(format_exc())
 
+                    self._status = Manager.Status.pin
+
                     self._log.log_event_pin_error()
-                    self._pin = None
-                    retry += max_retry
-                    continue
+                    self._initialize_static_information()
+                    self._sleep_forever()
+
+                    # should not run here
+                    raise RuntimeError
 
             assert sim_status == SimStatus.ready
 
-            try:
-                pin_retry_remain = self._cell_mgmt.get_pin_retry_remain()
-                minfo = self._cell_mgmt.m_info()
-
-                self._static_information = Manager.StaticInformation(
-                    pin_retry_remain=pin_retry_remain,
-                    icc_id=minfo.icc_id,
-                    imei=minfo.imei)
-
-            except CellMgmtError:
-                self._sleep(10)
-                retry += 1
-                continue
+            self._initialize_static_information()
 
             while self._cellular_information is None:
                 self._cellular_information = CellularInformation.get()
@@ -428,6 +429,26 @@ class Manager(object):
             self._log.log_event_nosim()
 
         return False
+
+    def _initialize_static_information(self):
+        _logger.warning("_initialize_static_information")
+        while True:
+            try:
+                pin_retry_remain = self._cell_mgmt.get_pin_retry_remain()
+                minfo = self._cell_mgmt.m_info()
+
+                self._static_information = Manager.StaticInformation(
+                    pin_retry_remain=pin_retry_remain,
+                    icc_id=minfo.icc_id,
+                    imei=minfo.imei)
+
+                break
+
+            except CellMgmtError:
+                _logger.warning(format_exc())
+                self._sleep(10)
+                continue
+
 
     def _operate(self):
         retry = 0
@@ -522,6 +543,10 @@ class Manager(object):
         while monotonic() < until:
             self._interrupt_point()
             sleep(1)
+
+    def _sleep_forever(self):
+        while True:
+            self._sleep(60)
 
     def _checkalive_ping(self):
         """Return True on ping success, False on failure."""

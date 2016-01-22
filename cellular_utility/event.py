@@ -86,11 +86,17 @@ class Log(object):
         """
         self._log("checkalive-failure")
 
+    def log_event_no_pin(self):
+        """
+        No PIN provided.
+        """
+        self._log("no-pin")
+
     def log_event_pin_error(self):
         """
         PIN error.
         """
-        self._log("pin-error, switched SIM card?")
+        self._log("pin-error")
 
     def log_event_power_cycle(self):
         """

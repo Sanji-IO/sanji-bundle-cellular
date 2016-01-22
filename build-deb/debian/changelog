@@ -1,3 +1,12 @@
+sanji-bundle-cellular (1.0.25-1) unstable; urgency=low
+
+  * Fix power-cycle continuously when PIN not given.
+  * Wait longer after power-cycle to wait SIM card readiness.
+  * Fix PUT on power-cycle causes module disappear.
+  * Show PIN retry remain when connstion status is PIN.
+
+ -- TC Huang <tc.huang@moxa.com>  Fri, 22 Jan 2016 10:44:40 +0800
+
 sanji-bundle-cellular (1.0.24-1) unstable; urgency=low
 
   * Reimplement background thread.

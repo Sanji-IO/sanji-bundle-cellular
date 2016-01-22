@@ -462,13 +462,11 @@ class CellMgmt(object):
         try:
             self._cell_mgmt("set_pin", pin)
 
-            return True
-
         except ErrorReturnCode_60:
             raise
 
         except ErrorReturnCode:
-            return False
+            raise CellMgmtError
 
     @critical_section
     @retry_on_busy
