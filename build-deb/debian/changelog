@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.26-1) unstable; urgency=low
+
+  * Fix qmicli fails often.
+
+ -- TC Huang <tc.huang@moxa.com>  Fri, 22 Jan 2016 15:26:27 +0800
+
 sanji-bundle-cellular (1.0.25-1) unstable; urgency=low
 
   * Fix power-cycle continuously when PIN not given.
