@@ -509,8 +509,8 @@ class CellMgmt(object):
             _logger.warning("no qmi-port exist, return -1")
             return -1
 
-        _logger.debug("qmicli -d " + qmi_port + " --dms-uim-get-pin-status")
-        output = self._qmicli("-d", qmi_port, "--dms-uim-get-pin-status")
+        _logger.debug("qmicli -p -d " + qmi_port + " --dms-uim-get-pin-status")
+        output = self._qmicli("-p", "-d", qmi_port, "--dms-uim-get-pin-status")
         output = str(output)
 
         match = CellMgmt._pin_retry_remain_regex.match(output)
