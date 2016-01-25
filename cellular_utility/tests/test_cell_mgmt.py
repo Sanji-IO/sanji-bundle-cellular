@@ -272,7 +272,8 @@ class TestCellMgmt(unittest.TestCase):
         self.assertTrue(match)
         self.assertEqual("10263", match.group(1))
 
-    def test_cellular_location_cell_id_regex_with_unavailable_should_pass(self):
+    def test_cellular_location_cell_id_regex_with_unavailable_should_pass(
+            self):
         # arrange
         SUT = (
             "[/dev/cdc-wdm0] Successfully got cell location info\n"
