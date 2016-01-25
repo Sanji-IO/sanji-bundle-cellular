@@ -39,6 +39,9 @@ class CellularInformation(object):
                 not isinstance(cell_id, str)):
             raise ValueError
 
+        if lac == "Unknown" or cell_id == "Unknown":
+            _logger.warning("lac = {}, cell_id = {}".format(lac, cell_id))
+
         self._mode = mode
         self._signal_dbm = signal_dbm
         self._operator = operator
@@ -74,14 +77,14 @@ class CellularInformation(object):
 
             operator = cell_mgmt.operator()
 
-            m_info = cell_mgmt.m_info()
+            cellular_location = cell_mgmt.get_cellular_location()
 
             return CellularInformation(
                 signal.mode,
                 signal.rssi_dbm,
                 operator,
-                m_info.lac,
-                m_info.cell_id)
+                cellular_location.lac,
+                cellular_location.cell_id)
 
         except CellMgmtError:
             _logger.warning(format_exc())
