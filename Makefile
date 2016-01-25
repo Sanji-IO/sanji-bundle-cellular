@@ -21,6 +21,7 @@ TARGET_FILES = \
 	cellular_utility/event.py \
 	cellular_utility/management.py \
 	cellular_utility/vnstat.py \
+	cellular_utility/call-qmicli.sh \
 	data/cellular.json.factory
 
 DIST_FILES= \

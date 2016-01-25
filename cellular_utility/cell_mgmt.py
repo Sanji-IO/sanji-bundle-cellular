@@ -4,6 +4,7 @@ cell_mgmt utility wrapper
 
 from decorator import decorator
 from enum import Enum
+import os
 import logging
 import re
 import sh
@@ -14,6 +15,8 @@ from time import sleep
 from traceback import format_exc
 
 _logger = logging.getLogger("sanji.cellular")
+
+tool_path = os.path.dirname(os.path.realpath(__file__))
 
 
 class CellMgmtError(Exception):
@@ -233,7 +236,7 @@ class CellMgmt(object):
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
         self._cell_mgmt = sh.cell_mgmt
-        self._qmicli = sh.qmicli
+        self._qmicli = sh.Command(tool_path + "/call-qmicli.sh")
 
         self._invoke_period_sec = 0
 
