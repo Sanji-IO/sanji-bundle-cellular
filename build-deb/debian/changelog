@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.28-1) unstable; urgency=low
+
+  * Use qmicli to retrieve cellular location information.
+
+ -- TC Huang <tc.huang@moxa.com>  Mon, 25 Jan 2016 16:40:44 +0800
+
 sanji-bundle-cellular (1.0.27-1) unstable; urgency=low
 
   * Fix qmicli call fails when qmi-proxy not exist.

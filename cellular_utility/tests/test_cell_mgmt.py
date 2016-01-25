@@ -167,6 +167,112 @@ class TestCellMgmt(unittest.TestCase):
         self.assertTrue(match)
         self.assertEqual("3", match.group(1))
 
+    QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT = (
+        "[/dev/cdc-wdm0] Successfully got cell location info\n"
+        "UMTS Info\n"
+        "	Cell ID: '15086'\n"
+        "	PLMN: '466'\n"
+        "	Location Area Code: '10263'\n"
+        "	UTRA Absolute RF Channel Number: '10762'\n"
+        "	Primary Scrambling Code: '33'\n"
+        "	RSCP: '-109' dBm\n"
+        "	ECIO: '-17' dBm\n"
+        "	Cell [0]:\n"
+        "		UTRA Absolute RF Channel Number: '10762'\n"
+        "		Primary Scrambling Code: '335'\n"
+        "		RSCP: '-116' dBm\n"
+        "		ECIO: '-19' dBm\n"
+        "	Cell [1]:\n"
+        "		UTRA Absolute RF Channel Number: '10762'\n"
+        "		Primary Scrambling Code: '472'\n"
+        "		RSCP: '-121' dBm\n"
+        "		ECIO: '-24' dBm\n"
+        "	Cell [2]:\n"
+        "		UTRA Absolute RF Channel Number: '10762'\n"
+        "		Primary Scrambling Code: '480'\n"
+        "		RSCP: '-121' dBm\n"
+        "		ECIO: '-25' dBm\n"
+        "	Neighboring GERAN Cell [0]:\n"
+        "		GERAN Absolute RF Channel Number: '569'\n"
+        "		Network Color Code: '1'\n"
+        "		Base Station Color Code: '2'\n"
+        "		RSSI: '65438'\n"
+        "	Neighboring GERAN Cell [1]:\n"
+        "		GERAN Absolute RF Channel Number: '578'\n"
+        "		Network Color Code: 'unavailable'\n"
+        "		Base Station Color Code: 'unavailable'\n"
+        "		RSSI: '65432'\n"
+        "	Neighboring GERAN Cell [2]:\n"
+        "		GERAN Absolute RF Channel Number: '589'\n"
+        "		Network Color Code: 'unavailable'\n"
+        "		Base Station Color Code: 'unavailable'\n"
+        "		RSSI: '65424'\n"
+        "	Neighboring GERAN Cell [3]:\n"
+        "		GERAN Absolute RF Channel Number: '67'\n"
+        "		Network Color Code: 'unavailable'\n"
+        "		Base Station Color Code: 'unavailable'\n"
+        "		RSSI: '65424'\n"
+        "	Neighboring GERAN Cell [4]:\n"
+        "		GERAN Absolute RF Channel Number: '587'\n"
+        "		Network Color Code: 'unavailable'\n"
+        "		Base Station Color Code: 'unavailable'\n"
+        "		RSSI: '65423'\n"
+        "	Neighboring GERAN Cell [5]:\n"
+        "		GERAN Absolute RF Channel Number: '584'\n"
+        "		Network Color Code: 'unavailable'\n"
+        "		Base Station Color Code: 'unavailable'\n"
+        "		RSSI: '65423'\n"
+        "	Neighboring GERAN Cell [6]:\n"
+        "		GERAN Absolute RF Channel Number: '595'\n"
+        "		Network Color Code: 'unavailable'\n"
+        "		Base Station Color Code: 'unavailable'\n"
+        "		RSSI: '65422'\n"
+        "	Neighboring GERAN Cell [7]:\n"
+        "		GERAN Absolute RF Channel Number: '73'\n"
+        "		Network Color Code: 'unavailable'\n"
+        "		Base Station Color Code: 'unavailable'\n"
+        "		RSSI: '65422'\n"
+        "UMTS Cell ID: '17251054'\n"
+        "UMTS Info Neighboring LTE\n"
+        "	RRC State: 'disconnected'\n"
+        "	Frequency [0]:\n"
+        "		EUTRA Absolute RF Channel Number: '1725'\n"
+        "		Physical Cell ID: '388'\n"
+        "		RSRP: '-126.000000' dBm\n"
+        "		RSRQ: '-14.000000' dB\n"
+        "		Cell Selection RX Level: '-6'\n"
+        "		Is TDD?: 'no'\n"
+        "	Frequency [1]:\n"
+        "		EUTRA Absolute RF Channel Number: '3650'\n"
+        "		Physical Cell ID: '166'\n"
+        "		RSRP: '-128.000000' dBm\n"
+        "		RSRQ: '-14.000000' dB\n"
+        "		Cell Selection RX Level: '-8'\n"
+        "		Is TDD?: 'no'\n")
+
+    def test_cellular_location_cell_id_regex_should_pass(self):
+        # arrange
+        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT
+
+        # act
+        match = CellMgmt._cellular_location_cell_id_regex.search(SUT)
+
+        # assert
+        self.assertTrue(match)
+        self.assertEqual("15086", match.group(1))
+
+    def test_cellular_location_lac_regex_should_pass(self):
+        # arrange
+        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT
+
+        # act
+        match = CellMgmt._cellular_location_lac_regex.search(SUT)
+
+        # assert
+        self.assertTrue(match)
+        self.assertEqual("10263", match.group(1))
+
+
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
     logging.basicConfig(level=20, format=FORMAT)

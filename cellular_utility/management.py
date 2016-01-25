@@ -77,14 +77,14 @@ class CellularInformation(object):
 
             operator = cell_mgmt.operator()
 
-            m_info = cell_mgmt.m_info()
+            cellular_location = cell_mgmt.get_cellular_location()
 
             return CellularInformation(
                 signal.mode,
                 signal.rssi_dbm,
                 operator,
-                m_info.lac,
-                m_info.cell_id)
+                cellular_location.lac,
+                cellular_location.cell_id)
 
         except CellMgmtError:
             _logger.warning(format_exc())

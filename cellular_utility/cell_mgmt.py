@@ -192,6 +192,27 @@ class Signal(object):
         return self._rssi_dbm
 
 
+class CellularLocation(object):
+    def __init__(
+            self,
+            cell_id=None,
+            lac=None):
+        if (not isinstance(cell_id, str) or
+                not isinstance(lac, str)):
+            raise ValueError
+
+        self._cell_id = cell_id
+        self._lac = lac
+
+    @property
+    def cell_id(self):
+        return self._cell_id
+
+    @property
+    def lac(self):
+        return self._lac
+
+
 class CellMgmt(object):
     """
     cell_mgmt utilty wrapper
@@ -230,6 +251,11 @@ class CellMgmt(object):
         r"[\s]*Status:[\s]*[\S]*\n"
         r"[\s]*Verify:[\s]*([0-9]+)\n"
     )
+
+    _cellular_location_cell_id_regex = re.compile(
+        r"[\s]*Cell ID: '([\d]*)'")
+    _cellular_location_lac_regex = re.compile(
+        r"[\s]*Location Area Code: '([\d]*)'")
 
     _lock = RLock()
 
@@ -522,6 +548,42 @@ class CellMgmt(object):
             raise CellMgmtError
 
         return int(match.group(1))
+
+    @critical_section
+    @handle_error_return_code
+    def get_cellular_location(self):
+        """
+        Return CellularLocation instance.
+        """
+
+        _logger.debug("get_cellular_location")
+
+        qmi_port = self.m_info().qmi_port
+        if qmi_port is None:
+            _logger.warning("no qmi-port exist")
+            raise CellMgmtError
+
+        output = self._qmicli(
+            "-p", "-d", qmi_port, "--nas-get-cell-location-info")
+        output = str(output)
+
+        match = CellMgmt._cellular_location_cell_id_regex.search(output)
+        if not match:
+            _logger.warning("unexpected output: {}".format(output))
+            raise CellMgmtError
+
+        cell_id = match.group(1)
+
+        match = CellMgmt._cellular_location_lac_regex.search(output)
+        if not match:
+            _logger.warning("unexpected output: {}".format(output))
+            raise CellMgmtError
+
+        lac = match.group(1)
+
+        return CellularLocation(
+            cell_id=hex(int(cell_id)),
+            lac=hex(int(lac)))
 
 
 if __name__ == "__main__":
