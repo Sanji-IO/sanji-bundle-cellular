@@ -378,6 +378,8 @@ class Manager(object):
         while retry < max_retry:
             self._interrupt_point()
 
+            self._status = Manager.Status.initializing
+
             sim_status = self._cell_mgmt.sim_status()
             _logger.debug("sim_status = " + sim_status.name)
 
