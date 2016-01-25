@@ -253,9 +253,9 @@ class CellMgmt(object):
     )
 
     _cellular_location_cell_id_regex = re.compile(
-        r"\n[\s]*Cell ID: '([\d]*)'")
+        r"\n[\s]*Cell ID: '([\S]*)'")
     _cellular_location_lac_regex = re.compile(
-        r"[\s]*Location Area Code: '([\d]*)'")
+        r"[\s]*Location Area Code: '([\S]*)'")
 
     _lock = RLock()
 
@@ -572,18 +572,24 @@ class CellMgmt(object):
             _logger.warning("unexpected output: {}".format(output))
             raise CellMgmtError
 
-        cell_id = match.group(1)
+        try:
+            cell_id = hex(int(match.group(1)))
+        except ValueError:
+            cell_id = "unavailable"
 
         match = CellMgmt._cellular_location_lac_regex.search(output)
         if not match:
             _logger.warning("unexpected output: {}".format(output))
             raise CellMgmtError
 
-        lac = match.group(1)
+        try:
+            lac = hex(int(match.group(1)))
+        except ValueError:
+            lac = "unavailable"
 
         return CellularLocation(
-            cell_id=hex(int(cell_id)),
-            lac=hex(int(lac)))
+            cell_id=cell_id,
+            lac=lac)
 
 
 if __name__ == "__main__":

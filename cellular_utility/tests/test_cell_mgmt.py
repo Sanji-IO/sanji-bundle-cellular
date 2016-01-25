@@ -272,6 +272,59 @@ class TestCellMgmt(unittest.TestCase):
         self.assertTrue(match)
         self.assertEqual("10263", match.group(1))
 
+    def test_cellular_location_cell_id_regex_with_unavailable_should_pass(self):
+        # arrange
+        SUT = (
+            "[/dev/cdc-wdm0] Successfully got cell location info\n"
+            "UMTS Info\n"
+            "    Cell ID: 'unavailable'\n"
+            "    PLMN: '466'\n"
+            "    Location Area Code: '10233'\n"
+            "    UTRA Absolute RF Channel Number: '10762'\n"
+            "    Primary Scrambling Code: '335'\n"
+            "    RSCP: '-81' dBm\n"
+            "    ECIO: '-11' dBm\n"
+            "    Cell [0]:\n"
+            "        UTRA Absolute RF Channel Number: '10787'\n"
+            "        Primary Scrambling Code: '33'\n"
+            "        RSCP: '-89' dBm\n"
+            "        ECIO: '-17' dBm\n"
+            "    Cell [1]:\n"
+            "        UTRA Absolute RF Channel Number: '10787'\n"
+            "        Primary Scrambling Code: '365'\n"
+            "        RSCP: '-90' dBm\n"
+            "        ECIO: '-18' dBm\n"
+            "    Cell [2]:\n"
+            "        UTRA Absolute RF Channel Number: '10787'\n"
+            "        Primary Scrambling Code: '223'\n"
+            "        RSCP: '-92' dBm\n"
+            "        ECIO: '-20' dBm\n"
+            "    Cell [3]:\n"
+            "        UTRA Absolute RF Channel Number: '10787'\n"
+            "        Primary Scrambling Code: '343'\n"
+            "        RSCP: '-92' dBm\n"
+            "        ECIO: '-20' dBm\n"
+            "    Cell [4]:\n"
+            "        UTRA Absolute RF Channel Number: '10787'\n"
+            "        Primary Scrambling Code: '480'\n"
+            "        RSCP: '-94' dBm\n"
+            "        ECIO: '-21' dBm\n"
+            "    Cell [5]:\n"
+            "        UTRA Absolute RF Channel Number: '10787'\n"
+            "        Primary Scrambling Code: '207'\n"
+            "        RSCP: '-94' dBm\n"
+            "        ECIO: '-22' dBm\n"
+            "UMTS Cell ID: '4294967295'\n"
+            "UMTS Info Neighboring LTE\n"
+            "    RRC State: 'cell-dch'\n")
+
+        # act
+        match = CellMgmt._cellular_location_cell_id_regex.search(SUT)
+
+        # assert
+        self.assertTrue(match)
+        self.assertEqual("unavailable", match.group(1))
+
 
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
