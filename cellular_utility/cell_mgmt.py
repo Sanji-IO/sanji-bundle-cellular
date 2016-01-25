@@ -253,7 +253,7 @@ class CellMgmt(object):
     )
 
     _cellular_location_cell_id_regex = re.compile(
-        r"[\s]*Cell ID: '([\d]*)'")
+        r"\n[\s]*Cell ID: '([\d]*)'")
     _cellular_location_lac_regex = re.compile(
         r"[\s]*Location Area Code: '([\d]*)'")
 
