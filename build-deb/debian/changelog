@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.29-1) unstable; urgency=low
+
+  * Fix nosim may shown when still initializing.
+
+ -- TC Huang <tc.huang@moxa.com>  Mon, 25 Jan 2016 18:02:08 +0800
+
 sanji-bundle-cellular (1.0.28-1) unstable; urgency=low
 
   * Use qmicli to retrieve cellular location information.
