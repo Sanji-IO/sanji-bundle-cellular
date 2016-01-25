@@ -4,6 +4,7 @@ cell_mgmt utility wrapper
 
 from decorator import decorator
 from enum import Enum
+import os
 import logging
 import re
 import sh
@@ -15,6 +16,8 @@ from traceback import format_exc
 
 _logger = logging.getLogger("sanji.cellular")
 
+tool_path = os.path.dirname(os.path.realpath(__file__))
+
 
 class CellMgmtError(Exception):
     """CellMgmtError"""
@@ -22,11 +25,11 @@ class CellMgmtError(Exception):
 
 
 @decorator
-def handle_called_process_error(func, *args, **kwargs):
+def handle_error_return_code(func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
 
-    except CalledProcessError:
+    except ErrorReturnCode:
         _logger.warning(format_exc())
 
         raise CellMgmtError
@@ -75,6 +78,47 @@ def critical_section(func, *args, **kwargs):
     # lock by process
     with CellMgmt._lock:
         return func(*args, **kwargs)
+
+
+class NetworkInformation(object):
+    def __init__(
+            self,
+            ip,
+            netmask,
+            gateway,
+            dns_list):
+        if (not isinstance(ip, str) or
+                not isinstance(netmask, str) or
+                not isinstance(gateway, str)):
+            raise ValueError
+
+        if not isinstance(dns_list, list):
+            raise ValueError
+
+        for dns in dns_list:
+            if not isinstance(dns, str):
+                raise ValueError
+
+        self._ip = ip
+        self._netmask = netmask
+        self._gateway = gateway
+        self._dns_list = dns_list
+
+    @property
+    def ip(self):
+        return self._ip
+
+    @property
+    def netmask(self):
+        return self._netmask
+
+    @property
+    def gateway(self):
+        return self._gateway
+
+    @property
+    def dns_list(self):
+        return self._dns_list
 
 
 class MInfo(object):
@@ -148,6 +192,27 @@ class Signal(object):
         return self._rssi_dbm
 
 
+class CellularLocation(object):
+    def __init__(
+            self,
+            cell_id=None,
+            lac=None):
+        if (not isinstance(cell_id, str) or
+                not isinstance(lac, str)):
+            raise ValueError
+
+        self._cell_id = cell_id
+        self._lac = lac
+
+    @property
+    def cell_id(self):
+        return self._cell_id
+
+    @property
+    def lac(self):
+        return self._lac
+
+
 class CellMgmt(object):
     """
     cell_mgmt utilty wrapper
@@ -187,21 +252,26 @@ class CellMgmt(object):
         r"[\s]*Verify:[\s]*([0-9]+)\n"
     )
 
+    _cellular_location_cell_id_regex = re.compile(
+        r"\n[\s]*Cell ID: '([\S]*)'")
+    _cellular_location_lac_regex = re.compile(
+        r"[\s]*Location Area Code: '([\S]*)'")
+
     _lock = RLock()
 
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
         self._cell_mgmt = sh.cell_mgmt
-        self._qmicli = sh.qmicli
+        self._qmicli = sh.Command(tool_path + "/call-qmicli.sh")
 
         self._invoke_period_sec = 0
 
         self._use_shell = False
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
-    def start(self, apn, pin=None):
+    def start(self, apn):
         """
         Start cellular connection.
         Return dict like:
@@ -219,12 +289,9 @@ class CellMgmt(object):
             "start", "ignore-dns-gw",
             "APN=" + apn,
             "Username=",
-            "Password="
+            "Password=",
+            "PIN="
         ]
-        if pin is not None:
-            args.append("PIN=" + pin)
-        else:
-            args.append("PIN=")
 
         output = self._cell_mgmt(*args)
         output = str(output)
@@ -259,12 +326,11 @@ class CellMgmt(object):
 
         dns = match.group(1).split(" ")
 
-        return {
-            "ip": ip_,
-            "netmask": netmask,
-            "gateway": gateway,
-            "dns": dns
-        }
+        return NetworkInformation(
+            ip=ip_,
+            netmask=netmask,
+            gateway=gateway,
+            dns_list=dns)
 
     @critical_section
     @retry_on_busy
@@ -281,7 +347,7 @@ class CellMgmt(object):
             _logger.warning(format_exc() + ", ignored")
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def signal(self):
         """Returns an instance of Signal."""
@@ -329,7 +395,7 @@ class CellMgmt(object):
         return False
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def power_off(self):
         """
@@ -346,7 +412,7 @@ class CellMgmt(object):
             sleep(self._invoke_period_sec)
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def power_on(self, timeout_sec=60):
         """
@@ -360,7 +426,7 @@ class CellMgmt(object):
             sleep(self._invoke_period_sec)
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def m_info(self):
         """Return instance of MInfo."""
@@ -392,7 +458,7 @@ class CellMgmt(object):
             qmi_port=qmi_port)
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     @retry_on_busy
     def operator(self):
         """
@@ -425,13 +491,11 @@ class CellMgmt(object):
         try:
             self._cell_mgmt("set_pin", pin)
 
-            return True
-
         except ErrorReturnCode_60:
             raise
 
         except ErrorReturnCode:
-            return False
+            raise CellMgmtError
 
     @critical_section
     @retry_on_busy
@@ -461,7 +525,7 @@ class CellMgmt(object):
             return SimStatus.nosim
 
     @critical_section
-    @handle_called_process_error
+    @handle_error_return_code
     def get_pin_retry_remain(self):
         """
         Return the number of retries left for PIN.
@@ -474,8 +538,8 @@ class CellMgmt(object):
             _logger.warning("no qmi-port exist, return -1")
             return -1
 
-        _logger.debug("qmicli -d " + qmi_port + " --dms-uim-get-pin-status")
-        output = self._qmicli("-d", qmi_port, "--dms-uim-get-pin-status")
+        _logger.debug("qmicli -p -d " + qmi_port + " --dms-uim-get-pin-status")
+        output = self._qmicli("-p", "-d", qmi_port, "--dms-uim-get-pin-status")
         output = str(output)
 
         match = CellMgmt._pin_retry_remain_regex.match(output)
@@ -484,6 +548,48 @@ class CellMgmt(object):
             raise CellMgmtError
 
         return int(match.group(1))
+
+    @critical_section
+    @handle_error_return_code
+    def get_cellular_location(self):
+        """
+        Return CellularLocation instance.
+        """
+
+        _logger.debug("get_cellular_location")
+
+        qmi_port = self.m_info().qmi_port
+        if qmi_port is None:
+            _logger.warning("no qmi-port exist")
+            raise CellMgmtError
+
+        output = self._qmicli(
+            "-p", "-d", qmi_port, "--nas-get-cell-location-info")
+        output = str(output)
+
+        match = CellMgmt._cellular_location_cell_id_regex.search(output)
+        if not match:
+            _logger.warning("unexpected output: {}".format(output))
+            raise CellMgmtError
+
+        try:
+            cell_id = hex(int(match.group(1)))
+        except ValueError:
+            cell_id = "unavailable"
+
+        match = CellMgmt._cellular_location_lac_regex.search(output)
+        if not match:
+            _logger.warning("unexpected output: {}".format(output))
+            raise CellMgmtError
+
+        try:
+            lac = hex(int(match.group(1)))
+        except ValueError:
+            lac = "unavailable"
+
+        return CellularLocation(
+            cell_id=cell_id,
+            lac=lac)
 
 
 if __name__ == "__main__":

@@ -39,8 +39,8 @@ class Log(object):
         self._log(
             "mode {}, signal {} dBm, rssi {}, lac {}, cell_id {}".format(
                 cellular_information.mode,
-                str(cellular_information.signal),
-                str(self._rssi_from_dbm(cellular_information.signal)),
+                str(cellular_information.signal_dbm),
+                str(self._rssi_from_dbm(cellular_information.signal_dbm)),
                 cellular_information.lac,
                 cellular_information.cell_id)
         )
@@ -86,11 +86,17 @@ class Log(object):
         """
         self._log("checkalive-failure")
 
+    def log_event_no_pin(self):
+        """
+        No PIN provided.
+        """
+        self._log("no-pin")
+
     def log_event_pin_error(self):
         """
         PIN error.
         """
-        self._log("pin-error, switched SIM card?")
+        self._log("pin-error")
 
     def log_event_power_cycle(self):
         """

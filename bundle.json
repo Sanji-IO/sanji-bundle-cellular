@@ -1,6 +1,6 @@
 {
   "name": "cellular",
-  "version": "1.0.22",
+  "version": "1.0.28",
   "author": "TC Huang",
   "email": "tc.huang@moxa.com",
   "description": "Provides Cellular configuration interface.",
@@ -12,7 +12,7 @@
   "dependencies": {},
   "repository": "",
   "role": "model",
-  "ttl": 10,
+  "ttl": 60,
   "resources": [
     {
       "methods": ["get"],
