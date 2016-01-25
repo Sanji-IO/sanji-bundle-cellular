@@ -18,6 +18,7 @@ _logger = logging.getLogger("sanji.cellular")
 
 tool_path = os.path.dirname(os.path.realpath(__file__))
 
+
 class CellMgmtError(Exception):
     """CellMgmtError"""
     pass
