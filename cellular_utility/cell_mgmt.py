@@ -4,6 +4,7 @@ cell_mgmt utility wrapper
 
 from decorator import decorator
 from enum import Enum
+import os
 import logging
 import re
 import sh
@@ -15,6 +16,7 @@ from traceback import format_exc
 
 _logger = logging.getLogger("sanji.cellular")
 
+tool_path = os.path.dirname(os.path.realpath(__file__))
 
 class CellMgmtError(Exception):
     """CellMgmtError"""
@@ -233,8 +235,7 @@ class CellMgmt(object):
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
         self._cell_mgmt = sh.cell_mgmt
-        self._qmicli = sh.qmicli
-        self._qmi_proxy = sh.Command("/usr/lib/libqmi/qmi-proxy")
+        self._qmicli = sh.Command(tool_path + "/call-qmicli.sh")
 
         self._invoke_period_sec = 0
 
@@ -510,7 +511,6 @@ class CellMgmt(object):
             _logger.warning("no qmi-port exist, return -1")
             return -1
 
-        self._qmi_proxy(_bg=True)
         _logger.debug("qmicli -p -d " + qmi_port + " --dms-uim-get-pin-status")
         output = self._qmicli("-p", "-d", qmi_port, "--dms-uim-get-pin-status")
         output = str(output)
