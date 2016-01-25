@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.27-1) unstable; urgency=low
+
+  * Fix qmicli call fails when qmi-proxy not exist.
+
+ -- TC Huang <tc.huang@moxa.com>  Mon, 25 Jan 2016 13:40:08 +0800
+
 sanji-bundle-cellular (1.0.26-1) unstable; urgency=low
 
   * Fix qmicli fails often.

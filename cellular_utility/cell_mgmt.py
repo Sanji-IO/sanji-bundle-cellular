@@ -234,6 +234,7 @@ class CellMgmt(object):
         self._exe_path = "/sbin/cell_mgmt"
         self._cell_mgmt = sh.cell_mgmt
         self._qmicli = sh.qmicli
+        self._qmi_proxy = sh.Command("/usr/lib/libqmi/qmi-proxy")
 
         self._invoke_period_sec = 0
 
@@ -509,6 +510,7 @@ class CellMgmt(object):
             _logger.warning("no qmi-port exist, return -1")
             return -1
 
+        self._qmi_proxy(_bg=True)
         _logger.debug("qmicli -p -d " + qmi_port + " --dms-uim-get-pin-status")
         output = self._qmicli("-p", "-d", qmi_port, "--dms-uim-get-pin-status")
         output = str(output)

@@ -39,6 +39,9 @@ class CellularInformation(object):
                 not isinstance(cell_id, str)):
             raise ValueError
 
+        if lac == "Unknown" or cell_id == "Unknown":
+            _logger.warning("lac = {}, cell_id = {}".format(lac, cell_id))
+
         self._mode = mode
         self._signal_dbm = signal_dbm
         self._operator = operator
