@@ -253,9 +253,9 @@ class CellMgmt(object):
     )
 
     _cellular_location_cell_id_regex = re.compile(
-        r"\n[\s]*Cell ID: '([\S]*)'")
+        r"\n[\s]*(?:(?:Cell ID)|(?:Global Cell ID)): '([\S]*)'")
     _cellular_location_lac_regex = re.compile(
-        r"[\s]*Location Area Code: '([\S]*)'")
+        r"[\s]*(?:(?:Location Area Code)|(?:Tracking Area Code)): '([\S]*)'")
 
     _lock = RLock()
 

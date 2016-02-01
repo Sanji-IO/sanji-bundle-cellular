@@ -259,6 +259,7 @@ class TestCellMgmt(unittest.TestCase):
 
         # assert
         self.assertTrue(match)
+        print match.group(0)
         self.assertEqual("15086", match.group(1))
 
     def test_cellular_location_lac_regex_should_pass(self):
@@ -326,6 +327,139 @@ class TestCellMgmt(unittest.TestCase):
         self.assertTrue(match)
         self.assertEqual("unavailable", match.group(1))
 
+    QMICLI_NAS_GET_CELL_LOCATION_INFO_LTE_OUTPUT = (
+        "[/dev/cdc-wdm0] Successfully got cell location info\n"
+        "Intrafrequency LTE Info\n"
+        "        UE In Idle: 'yes'\n"
+        "        PLMN: '466'\n"
+        "        Tracking Area Code: '12000'\n"
+        "        Global Cell ID: '29419041'\n"
+        "        EUTRA Absolute RF Channel Number: '1725'\n"
+        "        Serving Cell ID: '56'\n"
+        "        Cell Reselection Priority: '6'\n"
+        "        S Non Intra Search Threshold: '6'\n"
+        "        Serving Cell Low Threshold: '4'\n"
+        "        S Intra Search Threshold: '62'\n"
+        "        Cell [0]:\n"
+        "                Physical Cell ID: '56'\n"
+        "                RSRQ: '-6.5' dB\n"
+        "                RSRP: '-78.3' dBm\n"
+        "                RSSI: '-53.1' dBm\n"
+        "                Cell Selection RX Level: '41'\n"
+        "        Cell [1]:\n"
+        "                Physical Cell ID: '429'\n"
+        "                RSRQ: '-20.0' dB\n"
+        "                RSRP: '-97.1' dBm\n"
+        "                RSSI: '-66.4' dBm\n"
+        "                Cell Selection RX Level: '22'\n"
+        "Interfrequency LTE Info\n"
+        "        UE In Idle: 'yes'\n"
+        "        Frequency [0]:\n"
+        "                EUTRA Absolute RF Channel Number: '3650'\n"
+        "                Selection RX Level Low Threshold: '0'\n"
+        "                Cell Selection RX Level High Threshold: '8'\n"
+        "                Cell Reselection Priority: '5'\n"
+        "LTE Info Neighboring GSM\n"
+        "        UE In Idle: 'yes'\n"
+        "        Frequency [0]:\n"
+        "                Cell Reselection Priority: '2'\n"
+        "                Cell Reselection High Threshold: '4'\n"
+        "                Cell Reselection Low Threshold: '10'\n"
+        "                NCC Permitted: '0xFF'\n"
+        "                Cell [0]:\n"
+        "                        GERAN Absolute RF Channel Number: '25'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "                Cell [1]:\n"
+        "                        GERAN Absolute RF Channel Number: '26'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "                Cell [2]:\n"
+        "                        GERAN Absolute RF Channel Number: '27'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "                Cell [3]:\n"
+        "                        GERAN Absolute RF Channel Number: '28'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "                Cell [4]:\n"
+        "                        GERAN Absolute RF Channel Number: '29'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "                Cell [5]:\n"
+        "                        GERAN Absolute RF Channel Number: '30'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "                Cell [6]:\n"
+        "                        GERAN Absolute RF Channel Number: '31'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "                Cell [7]:\n"
+        "                        GERAN Absolute RF Channel Number: '32'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "        Frequency [1]:\n"
+        "                Cell Reselection Priority: '1'\n"
+        "                Cell Reselection High Threshold: '4'\n"
+        "                Cell Reselection Low Threshold: '10'\n"
+        "                NCC Permitted: '0xFF'\n"
+        "                Cell [0]:\n"
+        "                        GERAN Absolute RF Channel Number: '569'\n"
+        "                        Band Is 1900: 'no'\n"
+        "                        Base Station Identity Code: 'unknown'\n"
+        "                        RSSI: '-192.0' dB\n"
+        "                        Cell Selection RX Level: '0'\n"
+        "LTE Info Neighboring WCDMA\n"
+        "        UE In Idle: 'yes'\n"
+        "        Frequency [0]:\n"
+        "                UTRA Absolute RF Channel Number: '10762'\n"
+        "                Cell Reselection Priority: '4'\n"
+        "                Cell Reselection High Threshold: '8'\n"
+        "                Cell Reselection Low Threshold: '6'\n"
+        "        Frequency [1]:\n"
+        "                UTRA Absolute RF Channel Number: '10787'\n"
+        "                Cell Reselection Priority: '4'\n"
+        "                Cell Reselection High Threshold: '8'\n"
+        "                Cell Reselection Low Threshold: '6'\n"
+    )
+
+    def test_cellular_location_cell_id_regex_with_lte_output_should_pass(self):
+        # arrange
+        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_LTE_OUTPUT
+
+        # act
+        match = CellMgmt._cellular_location_cell_id_regex.search(SUT)
+
+        # assert
+        self.assertTrue(match)
+        self.assertEqual("29419041", match.group(1))
+
+    def test_cellular_location_lac_regex_with_lte_output_should_pass(self):
+        # arrange
+        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_LTE_OUTPUT
+
+        # act
+        match = CellMgmt._cellular_location_lac_regex.search(SUT)
+
+        # assert
+        self.assertTrue(match)
+        self.assertEqual("12000", match.group(1))
 
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
