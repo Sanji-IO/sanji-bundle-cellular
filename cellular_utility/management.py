@@ -12,7 +12,9 @@ from threading import Thread
 from time import sleep
 from traceback import format_exc
 
-from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal
+from cellular_utility.cell_mgmt import (
+    CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal
+)
 from cellular_utility.event import Log
 
 _logger = logging.getLogger("sanji.cellular")
