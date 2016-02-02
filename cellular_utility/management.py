@@ -12,7 +12,7 @@ from threading import Thread
 from time import sleep
 from traceback import format_exc
 
-from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError, SimStatus
+from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal
 from cellular_utility.event import Log
 
 _logger = logging.getLogger("sanji.cellular")
@@ -75,20 +75,29 @@ class CellularInformation(object):
         try:
             signal = cell_mgmt.signal()
 
+        except CellMgmtError:
+            signal = Signal(mode="n/a", rssi_dbm=0)
+
+        try:
             operator = cell_mgmt.operator()
 
+        except CellMgmtError:
+            operator = "n/a"
+
+        try:
             cellular_location = cell_mgmt.get_cellular_location()
 
-            return CellularInformation(
-                signal.mode,
-                signal.rssi_dbm,
-                operator,
-                cellular_location.lac,
-                cellular_location.cell_id)
-
         except CellMgmtError:
-            _logger.warning(format_exc())
-            return None
+            cellular_location = CellularLocation(
+                lac="n/a",
+                cell_id="n/a")
+
+        return CellularInformation(
+            signal.mode,
+            signal.rssi_dbm,
+            operator,
+            cellular_location.lac,
+            cellular_location.cell_id)
 
 
 class CellularObserver(object):
@@ -417,8 +426,7 @@ class Manager(object):
 
             self._initialize_static_information()
 
-            while self._cellular_information is None:
-                self._cellular_information = CellularInformation.get()
+            self._cellular_information = CellularInformation.get()
 
             self._status = Manager.Status.ready
             return True
