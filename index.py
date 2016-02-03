@@ -202,6 +202,8 @@ class Index(Sanji):
             "mode": "n/a" if cinfo is None else cinfo.mode,
             "signal": 0 if cinfo is None else cinfo.signal_dbm,
             "operatorName": "n/a" if cinfo is None else cinfo.operator,
+            "lac": "n/a" if cinfo is None else cinfo.lac,
+            "cellId": "n/a" if cinfo is None else cinfo.cell_id,
             "iccId": "n/a" if sinfo is None else sinfo.icc_id,
             "imei": "n/a" if sinfo is None else sinfo.imei,
             "pinRetryRemain": (
