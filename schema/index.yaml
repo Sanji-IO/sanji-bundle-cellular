@@ -1,0 +1,213 @@
+swagger: '2.0'
+info:
+  title: Cellular API
+  description: Handle the Cellular interface(s)
+  version: "1.0.32"
+
+schemes:
+  - http
+  - https
+produces:
+  - application/json
+paths:
+  /network/cellulars:
+    get:
+      summary: Cellular Interface(s)
+      description: |
+        The system returns information about the settings of all
+        *Cellular interface(s)*.
+      responses:
+        200:
+          description: An array of Cellular interface(s)
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Cellular'
+          examples:
+            {
+              "application/json": {
+                $ref: '#/externalDocs/x-mocks/Cellulars'
+              }
+            }
+
+  /network/cellulars/{id}:
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    get:
+      description: |
+        Get settings of indicated Cellular interface.
+      responses:
+        200:
+          description: An Cellular interface settings.
+          schema:
+            $ref: '#/definitions/Cellular'
+          examples:
+            {
+              "application/json": {
+                $ref: '#/externalDocs/x-mocks/Cellular'
+              }
+            }
+    put:
+      summary: Cellular Interface
+      description: Update an Cellular interface settings.
+      parameters:
+      - name: body
+        in: body
+        description: ''
+        required: true
+        schema:
+          $ref: '#/definitions/Cellular'
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Cellular'
+          examples:
+            {
+              "application/json": {
+                $ref: '#/externalDocs/x-mocks/Cellular'
+              }
+            }
+
+definitions:
+  Cellular:
+    title: Cellular
+    required:
+    - id
+    - enable
+    - pinCode
+    - apn
+    - keepalive
+    properties:
+      id:
+        type: integer
+        description: Identifier for an Cellular interface.
+      name:
+        type: string
+        description: Interface name.
+      mode:
+        type: string
+        description: Given cellular connection mode. Could be one of `"umts"`, `"lte"`.
+      signal:
+        type: integer
+        description: Cellular RF signal strength, in `dbm`. Value `0` indicates no SIM card found.
+      operatorName:
+        type: string
+        description: Indicate current operator name if exist.
+      lac:
+        type: string
+        description: Location area code.
+      cellId:
+        type: string
+        description: Cell ID.
+      iccId:
+          type: string
+          description: ICC ID of SIM card.
+      imei:
+        type: string
+        description: IMEI of cellular module.
+      pinRetryRemain:
+        type: integer
+        description: PIN Retry remaining.
+      status:
+        type: string
+        description: Indicate current status of cellular connection. Could be one of "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed".
+      ip:
+        type: string
+        pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+        description: IP address. `""` when not connected.
+      netmask:
+        type: string
+        pattern: ^(254|252|248|240|224|192|128)\.0\.0\.0|255\.(254|252|248|240|224|192|128|0)\.0\.0|255\.255\.(254|252|248|240|224|192|128|0)\.0|255\.255\.255\.(254|252|248|240|224|192|128|0)
+        description: Subnet mask. `""` when not connected.
+      gateway:
+        type: string
+        pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+        description: Gateway IP address. `""` when not connected.
+      dns:
+        type: string
+        pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+        description: A list of DNS IP addresses. `[]` when not connected.
+      usage:
+        type: object
+        description: Data usage.
+        required:
+        - txkbyte
+        - rxkbyte
+        properties:
+          txkbyte:
+            type: integer
+            description: Amount of data transmitted, in Kbytes.
+          rxkbyte:
+            type: integer
+            description: Amount of data received, in Kbytes.
+      enable:
+        type: boolean
+        description: Enable Cellular Networking.
+      apn:
+        type: string
+        description: APN used when dialing up to Cellular Network.
+      pinCode:
+        type: string
+        description: PIN code of SIM card. Takes no effect when SIM card PIN weren't not set.
+      keepalive:
+        type: object
+        description: Keep-alive configuration.
+        required:
+        - enable
+        - targetHost
+        - intervalSec
+        properties:
+          enable:
+            type: boolean
+            description: Enable/disable Cellular connection keep-alive by ping.
+          targetHost:
+            type: string
+            description: IP address to ping.
+          intervalSec:
+            type: integer
+            description: Check alive interval.
+    example:
+          $ref: '#/externalDocs/x-mocks/Cellular'
+
+externalDocs:
+  url: '#'
+  x-mocks:
+    Cellular:
+      {
+        "id": 1,
+        "name": "wwan1",
+        "mode": "umts",
+        "signal": -96,
+        "operatorName": "Chunghwa Telecom",
+        "lac": "0xF339",
+        "cellId": "0x3194",
+        "iccId": "",
+        "imei": "356853050370859",
+        "pinRetryRemain": 3,
+        "status": "connected",
+        "ip": "111.70.146.125",
+        "netmask": "255.255.255.252",
+        "gateway": "111.70.146.126",
+        "dns": ["168.95.1.1" , "168.95.192.1"],
+        "usage": {
+            "txkbyte": 40023,
+            "rxkbyte": 3493
+        },
+        "enable": true,
+        "apn": "internet",
+        "pinCode": "0000",
+        "keepalive":
+        {
+          "enable": true,
+          "targetHost": "8.8.8.8",
+          "intervalSec": 60
+        }
+      }
+    Cellulars:
+      [
+        $ref: '#/externalDocs/x-mocks/Cellular'
+      ]
