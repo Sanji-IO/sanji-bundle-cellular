@@ -246,7 +246,8 @@ class Index(Sanji):
             "dns": nwk_info.dns_list
         }
         _logger.info("publish network info: " + str(data))
-        self.publish.event.put("/network/interface", data=data)
+        self.publish.event.put("/network/interfaces/{}".format(name),
+                               data=data)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.33-1) unstable; urgency=low
+
+  * Update `/network/interface` API.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 02 Mar 2016 17:44:45 +0800
+
 sanji-bundle-cellular (1.0.32-1) unstable; urgency=low
 
   * Add LAC and CellID to GET.
