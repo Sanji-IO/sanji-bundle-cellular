@@ -1,0 +1,26 @@
+{
+  "name": "view_cellular",
+  "version": "1.0",
+  "author": "Jimmy Chen",
+  "email": "jimmy.chen@moxa.com",
+  "description": "A test to join process into cellular bundle",
+  "license": "MOXA",
+  "main": "view_cellular.py",
+  "argument": "",
+  "priority": 20,
+  "hook": [],
+  "dependencies": {},
+  "repository": "",
+  "role": "view",
+  "ttl": 10,
+  "resources": [
+    {
+      "methods": ["get", "put"],
+      "resource": "/network/cellulars"
+    },
+    {
+      "methods": ["get", "put"],
+      "resource": "/network/cellulars/:id"
+    }
+  ]
+}
