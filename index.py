@@ -184,8 +184,8 @@ class Index(Sanji):
 
         except VnStatError:
             usage = {
-                "txkbyte": "n/a",
-                "rxkbyte": "n/a"
+                "txkbyte": -1,
+                "rxkbyte": -1
             }
 
         # clear PIN code if pin error
@@ -207,7 +207,7 @@ class Index(Sanji):
             "iccId": "n/a" if sinfo is None else sinfo.icc_id,
             "imei": "n/a" if sinfo is None else sinfo.imei,
             "pinRetryRemain": (
-                "n/a" if sinfo is None else sinfo.pin_retry_remain),
+                -1 if sinfo is None else sinfo.pin_retry_remain),
 
             "status": status.name,
             "ip": "n/a" if ninfo is None else ninfo.ip,
