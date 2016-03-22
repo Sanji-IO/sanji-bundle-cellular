@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.34-1) unstable; urgency=low
+
+  * Fix return value type.
+
+ -- Donald Hsu <donald.hsu@moxa.com>  Tue, 22 Mar 2016 11:54:29 +0800
+
 sanji-bundle-cellular (1.0.33-1) unstable; urgency=low
 
   * Update `/network/interface` API.
