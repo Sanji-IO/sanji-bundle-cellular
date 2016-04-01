@@ -1,3 +1,9 @@
+sanji-bundle-cellular (1.0.35-1) unstable; urgency=low
+
+  * Power cycle cellular module only when enabled.
+
+ -- TC Huang <tc.huang@moxa.com>  Fri, 01 Apr 2016 09:57:56 +0800
+
 sanji-bundle-cellular (1.0.34-1) unstable; urgency=low
 
   * Fix return value type.
