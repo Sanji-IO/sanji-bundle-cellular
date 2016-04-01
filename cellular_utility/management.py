@@ -346,7 +346,9 @@ class Manager(object):
     def _loop(self):
         try:
             if not self._initialize():
-                self._power_cycle()
+                if self._enabled:
+                    self._power_cycle()
+
                 return
 
             # start observation
