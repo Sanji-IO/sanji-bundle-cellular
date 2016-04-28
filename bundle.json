@@ -3,7 +3,7 @@
   "version": "1.0.35",
   "author": "TC Huang",
   "email": "tc.huang@moxa.com",
-  "description": "Provides Cellular configuration interface.",
+  "description": "Provides the cellular configuration interface.",
   "license": "MOXA",
   "main": "index.py",
   "argument": "",
