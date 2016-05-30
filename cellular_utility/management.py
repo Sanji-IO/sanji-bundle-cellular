@@ -6,7 +6,7 @@ from enum import Enum
 import logging
 from monotonic import monotonic
 import sh
-from sh import ErrorReturnCode
+from sh import ErrorReturnCode, TimeoutException
 import sys
 from threading import Thread
 from time import sleep
@@ -140,10 +140,13 @@ class CellularObserver(object):
 
             next_check = now + self._period_sec
 
-            cellular_information = CellularInformation.get()
-
-            if cellular_information is not None:
-                self._cellular_information = cellular_information
+            try:
+                cellular_information = CellularInformation.get()
+                if cellular_information is not None:
+                    self._cellular_information = cellular_information
+            except Exception as e:
+                _logger.error("should not reach here")
+                _logger.warning(e)
 
 
 class CellularLogger(object):
@@ -186,11 +189,15 @@ class CellularLogger(object):
 
             next_check = now + self._period_sec
 
-            cinfo = self._mgr.cellular_information()
-            if cinfo is not None:
-                self._log.log_cellular_information(cinfo)
-            else:
-                next_check = now + 10
+            try:
+                cinfo = self._mgr.cellular_information()
+                if cinfo is not None:
+                    self._log.log_cellular_information(cinfo)
+                else:
+                    next_check = now + 10
+            except Exception as e:
+                _logger.error("should not reach here")
+                _logger.warning(e)
 
 
 class Manager(object):
@@ -562,10 +569,12 @@ class Manager(object):
                     "-c", "1",
                     "-I", self._dev_name,
                     "-W", str(self.PING_TIMEOUT_SEC),
-                    self._keepalive_host)
+                    self._keepalive_host,
+                    _timeout=self.PING_TIMEOUT_SEC + 5
+                )
 
                 return True
-            except ErrorReturnCode:
+            except (ErrorReturnCode, TimeoutException):
                 _logger.warning(format_exc())
 
                 continue

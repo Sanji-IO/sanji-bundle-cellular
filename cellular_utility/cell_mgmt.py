@@ -8,7 +8,7 @@ import os
 import logging
 import re
 import sh
-from sh import ErrorReturnCode, ErrorReturnCode_60
+from sh import ErrorReturnCode, ErrorReturnCode_60, TimeoutException
 from subprocess import CalledProcessError
 from threading import RLock
 from time import sleep
@@ -31,8 +31,11 @@ def handle_error_return_code(func, *args, **kwargs):
 
     except ErrorReturnCode:
         _logger.warning(format_exc())
+    except TimeoutException:
+        _logger.warning("qmicli TimeoutException")
+        _logger.warning(format_exc())
 
-        raise CellMgmtError
+    raise CellMgmtError
 
 
 BUSY_RETRY_COUNT = 10
@@ -268,6 +271,10 @@ class CellMgmt(object):
 
         self._use_shell = False
 
+        # Add default timeout to cell_mgmt and qmicli
+        # will raise TimeoutException
+        self._cell_mgmt._call_args["timeout"] = 50
+        self._qmicli._call_args["timeout"] = 50
     @critical_section
     @handle_error_return_code
     @retry_on_busy
@@ -333,6 +340,7 @@ class CellMgmt(object):
             dns_list=dns)
 
     @critical_section
+    @handle_error_return_code
     @retry_on_busy
     def stop(self):
         """
@@ -384,7 +392,7 @@ class CellMgmt(object):
 
                 return True
 
-            except ErrorReturnCode_60:
+            except (ErrorReturnCode_60, TimeoutException):
                 if retry < BUSY_RETRY_COUNT:
                     sleep(10)
                     continue
@@ -420,7 +428,7 @@ class CellMgmt(object):
         """
         _logger.debug("cell_mgmt power_on")
 
-        sh.timeout(str(timeout_sec), "cell_mgmt", "power_on")
+        self._cell_mgmt("power_on", _timeout=timeout_sec)
 
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
@@ -481,6 +489,7 @@ class CellMgmt(object):
         return match.group(1)
 
     @critical_section
+    @handle_error_return_code
     @retry_on_busy
     def set_pin(self, pin):
         """
@@ -498,6 +507,7 @@ class CellMgmt(object):
             raise CellMgmtError
 
     @critical_section
+    @handle_error_return_code
     @retry_on_busy
     def sim_status(self):
         """
