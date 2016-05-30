@@ -289,7 +289,8 @@ class CellMgmt(object):
     @critical_section
     @handle_error_return_code
     @retry_on_busy
-    @retrying(stop_max_attempt_number=3)
+    @retrying(
+        stop_max_attempt_number=10, wait_random_min=500, wait_random_max=1500)
     def at(self, cmd):
         """
         Send AT command.
