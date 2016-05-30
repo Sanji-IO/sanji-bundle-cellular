@@ -6,7 +6,7 @@ from enum import Enum
 import logging
 from monotonic import monotonic
 import sh
-from sh import ErrorReturnCode
+from sh import ErrorReturnCode, TimeoutException
 import sys
 from threading import Thread
 from time import sleep
@@ -140,10 +140,13 @@ class CellularObserver(object):
 
             next_check = now + self._period_sec
 
-            cellular_information = CellularInformation.get()
-
-            if cellular_information is not None:
-                self._cellular_information = cellular_information
+            try:
+                cellular_information = CellularInformation.get()
+                if cellular_information is not None:
+                    self._cellular_information = cellular_information
+            except Exception as e:
+                _logger.error("should not reach here")
+                _logger.warning(e)
 
 
 class CellularLogger(object):
@@ -186,11 +189,15 @@ class CellularLogger(object):
 
             next_check = now + self._period_sec
 
-            cinfo = self._mgr.cellular_information()
-            if cinfo is not None:
-                self._log.log_cellular_information(cinfo)
-            else:
-                next_check = now + 10
+            try:
+                cinfo = self._mgr.cellular_information()
+                if cinfo is not None:
+                    self._log.log_cellular_information(cinfo)
+                else:
+                    next_check = now + 10
+            except Exception as e:
+                _logger.error("should not reach here")
+                _logger.warning(e)
 
 
 class Manager(object):
@@ -206,6 +213,8 @@ class Manager(object):
         connect_failure = 5
         connected = 6
         power_cycle = 7
+        service_searching = 8
+        service_attached = 9
 
     class StaticInformation(object):
         def __init__(
@@ -287,6 +296,9 @@ class Manager(object):
         self._network_information = None
 
         self._update_network_information_callback = None
+
+        # set apn (workaround for Sierra Wireless MC73x4)
+        self._cell_mgmt.set_apn(self._apn)
 
         self._log = Log()
 
@@ -461,6 +473,9 @@ class Manager(object):
                 continue
 
     def _operate(self):
+        if not self._attach():
+            return
+
         retry = 0
         while True:
             self._interrupt_point()
@@ -498,6 +513,26 @@ class Manager(object):
                     self._keepalive_period_sec
                     if self._keepalive_enabled
                     else 60)
+
+    def _attach(self):
+        """Return True on success, False on failure.
+        """
+        _logger.debug("check if module attached with service")
+
+        retry = 0
+        while True:
+            self._status = Manager.Status.service_searching
+
+            if not self._cell_mgmt.attach():
+                retry += 1
+                if retry > 180:
+                    return False
+                self._sleep(1)
+                continue
+            break
+
+        self._status = Manager.Status.service_attached
+        return True
 
     def _connect(self):
         """Return True on success, False on failure.
@@ -562,10 +597,12 @@ class Manager(object):
                     "-c", "1",
                     "-I", self._dev_name,
                     "-W", str(self.PING_TIMEOUT_SEC),
-                    self._keepalive_host)
+                    self._keepalive_host,
+                    _timeout=self.PING_TIMEOUT_SEC + 5
+                )
 
                 return True
-            except ErrorReturnCode:
+            except (ErrorReturnCode, TimeoutException):
                 _logger.warning(format_exc())
 
                 continue

@@ -12,6 +12,7 @@ class VnStatError(Exception):
 
 
 class VnStat(object):
+    TXRX_MAX = 9223372036854775807
     _totalrx_regex = re.compile(r"totalrx;([0-9]+)\n")
     _totalrxk_regex = re.compile(r"totalrxk;([0-9]+)\n")
     _totaltx_regex = re.compile(r"totaltx;([0-9]+)\n")
@@ -26,6 +27,19 @@ class VnStat(object):
         try:
             vnstat("-i", self._interface, "-u")
 
+        except ErrorReturnCode:
+            _logger.warning(format_exc())
+
+            raise VnStatError
+
+    def delete(self):
+        vnstat = sh.vnstat
+        service = sh.service
+
+        try:
+            service("vnstat", "stop")
+            vnstat("-i", self._interface, "--delete", "--force")
+            service("vnstat", "start")
         except ErrorReturnCode:
             _logger.warning(format_exc())
 
@@ -78,10 +92,19 @@ class VnStat(object):
 
         txk = int(match.group(1))
 
-        return {
+        txrx_data = {
             "txkbyte": tx_ * 1024 + txk,
             "rxkbyte": rx_ * 1024 + rxk
         }
+
+        if txrx_data["txkbyte"] >= VnStat.TXRX_MAX or \
+           txrx_data["rxkbyte"] >= VnStat.TXRX_MAX:
+            self.delete()
+            _logger.warning("VnStat TxRx error tx:{}, rx:{}".format(
+                txrx_data["txkbyte"], txrx_data["rxkbyte"]))
+            raise VnStatError
+
+        return txrx_data
 
 if __name__ == "__main__":
     vns = VnStat("wwan0")
