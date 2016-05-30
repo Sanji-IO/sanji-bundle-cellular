@@ -295,6 +295,9 @@ class Manager(object):
 
         self._update_network_information_callback = None
 
+        # set apn (workaround for Sierra Wireless MC73x4)
+        self._cell_mgmt.set_apn(self._apn)
+
         self._log = Log()
 
     def set_update_network_information_callback(

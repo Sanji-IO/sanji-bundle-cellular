@@ -13,6 +13,7 @@ from subprocess import CalledProcessError
 from threading import RLock
 from time import sleep
 from traceback import format_exc
+from retrying import retry as retrying
 
 _logger = logging.getLogger("sanji.cellular")
 
@@ -260,6 +261,12 @@ class CellMgmt(object):
     _cellular_location_lac_regex = re.compile(
         r"[\s]*(?:(?:Location Area Code)|(?:Tracking Area Code)): '([\S]*)'")
 
+    _at_response_ok_regex = re.compile(
+        r"^[\r\n]*([+\S :]*)[\r\n]*OK[\r\n]*$")
+    _at_response_err_regex = re.compile(
+        r"^[\r\n]*ERROR[\r\n]*$")
+    _at_response_cme_err_regex = re.compile(
+        r"^[\r\n]*\+CME ERROR: ([\S ]*)[\r\n]*$")
     _lock = RLock()
 
     def __init__(self):
@@ -275,6 +282,39 @@ class CellMgmt(object):
         # will raise TimeoutException
         self._cell_mgmt._call_args["timeout"] = 50
         self._qmicli._call_args["timeout"] = 50
+
+    @critical_section
+    @handle_error_return_code
+    @retry_on_busy
+    @retrying(stop_max_attempt_number=3)
+    def at(self, cmd):
+        """
+        Send AT command.
+        Return the AT command response with dict like
+            {
+                "status": "ok",    # ok, err, cme-err
+                "info": "+CFUN: 1"   # or cme error like: SIM not inserted
+            }
+        """
+        _logger.debug("cell_mgmt at {}".format(cmd))
+        output = self._cell_mgmt("at", cmd)
+        output = str(output)
+
+        match = self._at_response_ok_regex.match(output)
+        if match:
+            return {"status": "ok", "info": match.group(1)}
+
+        match = self._at_response_cme_err_regex.match(output)
+        if match:
+            return {"status": "cme-err", "info": match.group(1)}
+
+        match = self._at_response_err_regex.match(output)
+        if match:
+            return {"status": "err", "info": ""}
+
+        _logger.warning("unexpected output: " + output)
+        raise CellMgmtError
+
     @critical_section
     @handle_error_return_code
     @retry_on_busy
@@ -487,6 +527,27 @@ class CellMgmt(object):
             raise CellMgmtError
 
         return match.group(1)
+
+    @critical_section
+    @handle_error_return_code
+    @retry_on_busy
+    def set_apn(self, apn):
+        """
+        Return True if APN set.
+        """
+
+        _logger.debug(
+            "set_apn: 'at+cgdcont=1,\"IPV4V6\",\"{}\"'".format(apn))
+        try:
+            self.at("at+cfun=4")
+            self.at("at+cgdcont=1,\"IPV4V6\",\"{}\"".format(apn))
+            self.at("at+cfun=1")
+
+        except ErrorReturnCode_60:
+            raise
+
+        except ErrorReturnCode:
+            raise CellMgmtError
 
     @critical_section
     @handle_error_return_code
