@@ -213,6 +213,8 @@ class Manager(object):
         connect_failure = 5
         connected = 6
         power_cycle = 7
+        service_searching = 8
+        service_attached = 9
 
     class StaticInformation(object):
         def __init__(
@@ -471,6 +473,9 @@ class Manager(object):
                 continue
 
     def _operate(self):
+        if not self._attach():
+            return
+
         retry = 0
         while True:
             self._interrupt_point()
@@ -508,6 +513,26 @@ class Manager(object):
                     self._keepalive_period_sec
                     if self._keepalive_enabled
                     else 60)
+
+    def _attach(self):
+        """Return True on success, False on failure.
+        """
+        _logger.debug("check if module attached with service")
+
+        retry = 0
+        while True:
+            self._status = Manager.Status.service_searching
+
+            if not self._cell_mgmt.attach():
+                retry += 1
+                if retry > 180:
+                    return False
+                self._sleep(1)
+                continue
+            break
+
+        self._status = Manager.Status.service_attached
+        return True
 
     def _connect(self):
         """Return True on success, False on failure.

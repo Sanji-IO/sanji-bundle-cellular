@@ -267,6 +267,9 @@ class CellMgmt(object):
         r"^[\r\n]*ERROR[\r\n]*$")
     _at_response_cme_err_regex = re.compile(
         r"^[\r\n]*\+CME ERROR: ([\S ]*)[\r\n]*$")
+    _at_sysinfo_attached_regex = re.compile(
+        r"^\^SYSINFO: 2,([23])[,\d]*$")
+
     _lock = RLock()
 
     def __init__(self):
@@ -314,6 +317,30 @@ class CellMgmt(object):
 
         _logger.warning("unexpected output: " + output)
         raise CellMgmtError
+
+    @critical_section
+    @handle_error_return_code
+    @retry_on_busy
+    def attach(self):
+        """
+        Return True if service attached.
+        """
+
+        _logger.debug("sysinfo: 'at^sysinfo'")
+        try:
+            # ^SYSINFO: 2,2,...
+            # ^SYSINFO: 2,3,...
+            res = self.at("at^sysinfo")
+            if res["status"] != "ok":
+                return False
+            match = self._at_sysinfo_attached_regex.match(res["info"])
+            return True if match else False
+
+        except ErrorReturnCode_60:
+            raise
+
+        except ErrorReturnCode:
+            raise CellMgmtError
 
     @critical_section
     @handle_error_return_code
