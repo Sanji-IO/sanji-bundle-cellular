@@ -54,15 +54,11 @@ class Index(Sanji):
                 return
 
             try:
-                cell_mgmt.power_on(timeout_sec=60)
-
                 wwan_node = cell_mgmt.m_info().wwan_node
-
                 break
-
             except CellMgmtError:
                 _logger.warning("get wwan_node failure: " + format_exc())
-                cell_mgmt.power_off()
+                cell_mgmt.power_cycle(timeout_sec=60)
 
         self._dev_name = wwan_node
         self.__create_manager()

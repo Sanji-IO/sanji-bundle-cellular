@@ -297,7 +297,6 @@ class Manager(object):
 
         self._update_network_information_callback = None
 
-        # set apn (workaround for Sierra Wireless MC73x4)
         self._cell_mgmt.set_apn(self._apn)
 
         self._log = Log()
@@ -393,10 +392,6 @@ class Manager(object):
         self._static_information = None
         self._cellular_information = None
         self._network_information = None
-
-        self._cell_mgmt.power_on()
-        # wait another few seconds to wait SIM Card Ready
-        self._sleep(10)
 
         retry = 0
         max_retry = 10
@@ -521,6 +516,10 @@ class Manager(object):
 
         retry = 0
         while True:
+            if self._status == Manager.Status.power_cycle:
+                self._sleep(1)
+                continue
+
             self._status = Manager.Status.service_searching
 
             if not self._cell_mgmt.attach():
@@ -575,9 +574,7 @@ class Manager(object):
             self._log.log_event_power_cycle()
             self._status = Manager.Status.power_cycle
 
-            self._cell_mgmt.power_off()
-            self._sleep(1)
-            self._cell_mgmt.power_on(timeout_sec=60)
+            self._cell_mgmt.power_cycle(timeout_sec=60)
 
         except CellMgmtError:
             _logger.warning(format_exc())
