@@ -470,10 +470,9 @@ class CellMgmt(object):
 
         return False
 
-    @critical_section
     @handle_error_return_code
     @retry_on_busy
-    def power_off(self):
+    def _power_off(self):
         """
         Power off Cellular module.
         """
@@ -487,10 +486,9 @@ class CellMgmt(object):
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
 
-    @critical_section
     @handle_error_return_code
     @retry_on_busy
-    def power_on(self, timeout_sec=60):
+    def _power_on(self, timeout_sec=60):
         """
         Power on Cellular module.
         """
@@ -500,6 +498,17 @@ class CellMgmt(object):
 
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
+
+    @critical_section
+    @handle_error_return_code
+    @retry_on_busy
+    def power_cycle(self, timeout_sec=60):
+        """
+        Power cycle Cellular module.
+        """
+        self._power_off()
+        sleep(1)
+        self._power_on(timeout_sec)
 
     @critical_section
     @handle_error_return_code
@@ -712,8 +721,7 @@ if __name__ == "__main__":
         cm.status()
 
         cm.stop()
-        cm.power_off()
-        cm.power_on()
+        cm.power_cycle()
         while True:
             _operator = cm.operator()
             if _operator == "":

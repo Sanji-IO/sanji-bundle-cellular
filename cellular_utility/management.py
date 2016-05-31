@@ -516,6 +516,10 @@ class Manager(object):
 
         retry = 0
         while True:
+            if self._status == Manager.Status.power_cycle:
+                self._sleep(1)
+                continue
+
             self._status = Manager.Status.service_searching
 
             if not self._cell_mgmt.attach():
@@ -570,9 +574,7 @@ class Manager(object):
             self._log.log_event_power_cycle()
             self._status = Manager.Status.power_cycle
 
-            self._cell_mgmt.power_off()
-            self._sleep(1)
-            self._cell_mgmt.power_on(timeout_sec=60)
+            self._cell_mgmt.power_cycle(timeout_sec=60)
 
         except CellMgmtError:
             _logger.warning(format_exc())
