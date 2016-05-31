@@ -1,3 +1,13 @@
+sanji-bundle-cellular (1.0.36-1) unstable; urgency=low
+
+  * Fix VnStat huge tx,rx issue.
+  * Add default timeout for all qmicli, cell_mgmt.
+  * Set APN into profile.
+  * Check if module attached before connecting.
+  * Combine power_off and power_on to power_cycle.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Tue, 31 May 2016 18:03:38 +0800
+
 sanji-bundle-cellular (1.0.35-1) unstable; urgency=low
 
   * Power cycle cellular module only when enabled.
