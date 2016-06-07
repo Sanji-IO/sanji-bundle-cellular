@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: Cellular API
   description: Handle the Cellular interface(s)
-  version: "1.0.32"
+  version: "2.0.0"
 
 schemes:
   - http
@@ -79,7 +79,7 @@ definitions:
     - id
     - enable
     - pinCode
-    - apn
+    - pdpContext
     - keepalive
     properties:
       id:
@@ -149,9 +149,55 @@ definitions:
       enable:
         type: boolean
         description: Enable Cellular Networking.
-      apn:
-        type: string
-        description: APN used when dialing up to Cellular Network.
+      pdpContext:
+        type: object
+        description: PDP context data for dialing up to Cellular Network.
+        required:
+        - static
+        - id
+        properties:
+          static:
+            type: boolean
+            description: Use static APN and/or PDP type.
+          id:
+            type: integer
+            description: Specifies PDP context id.
+            minimum: 1
+            maximum: 16
+          apn:
+            type: string
+            description: Edit APN of the specified PDP context.
+          type:
+            type: string
+            description: Indicate the PDP type to use.
+            enum:
+            - ipv4
+            - ipv6
+            - ipv4v6
+          list:
+            readOnly: true
+            type: array
+            description: PDP context list.
+            items:
+              type: object
+              description: An PDP context
+              required:
+              - id
+              - apn
+              - type
+              properties:
+                id:
+                  type: integer
+                  minimum: 1
+                  maximum: 16
+                apn:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                  - ipv4
+                  - ipv6
+                  - ipv4v6
       pinCode:
         type: string
         description: PIN code of SIM card. Takes no effect when SIM card PIN weren't not set.
@@ -200,10 +246,13 @@ externalDocs:
             "rxkbyte": 3493
         },
         "enable": true,
-        "apn": "internet",
+        "pdpContext": {
+          "static": true,
+          "id": 1,
+          "apn": "internet"
+        },
         "pinCode": "0000",
-        "keepalive":
-        {
+        "keepalive": {
           "enable": true,
           "targetHost": "8.8.8.8",
           "intervalSec": 60
