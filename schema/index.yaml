@@ -249,7 +249,15 @@ externalDocs:
         "pdpContext": {
           "static": true,
           "id": 1,
-          "apn": "internet"
+          "apn": "internet",
+          "type": "ipv4v6",
+          "list": [
+            {
+              "id": 1,
+              "apn": "internet",
+              "type": "ipv4v6"
+            }
+          ]
         },
         "pinCode": "0000",
         "keepalive": {
