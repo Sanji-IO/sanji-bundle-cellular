@@ -262,7 +262,7 @@ class CellMgmt(object):
         r"[\s]*(?:(?:Location Area Code)|(?:Tracking Area Code)): '([\S]*)'")
 
     _at_response_ok_regex = re.compile(
-        r"^[\r\n]*([+\S :]*)[\r\n]*OK[\r\n]*$")
+        r"^[\r\n]*([+\S\s :]*)[\r\n]+OK[\r\n]*$")
     _at_response_err_regex = re.compile(
         r"^[\r\n]*ERROR[\r\n]*$")
     _at_response_cme_err_regex = re.compile(
@@ -306,11 +306,11 @@ class CellMgmt(object):
 
         match = self._at_response_ok_regex.match(output)
         if match:
-            return {"status": "ok", "info": match.group(1)}
+            return {"status": "ok", "info": match.group(1).rstrip("\r\n")}
 
         match = self._at_response_cme_err_regex.match(output)
         if match:
-            return {"status": "cme-err", "info": match.group(1)}
+            return {"status": "cme-err", "info": match.group(1).rstrip("\r\n")}
 
         match = self._at_response_err_regex.match(output)
         if match:
