@@ -12,7 +12,7 @@ from sanji.core import Route
 from sanji.model_initiator import ModelInitiator
 
 from voluptuous import All, Any, Length, Match, Range, Required, Schema
-from voluptuous import REMOVE_EXTRA
+from voluptuous import REMOVE_EXTRA, Optional, In
 
 from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 from cellular_utility.management import Manager
@@ -67,13 +67,16 @@ class Index(Sanji):
 
     def __create_manager(self):
         pin = self.model.db[0]["pinCode"]
-        pin = None if pin == "" else pin
+        pdpc_type = self.model.db[0]["pdpContext"].get("type", "ipv4v6")
 
         self._mgr = Manager(
             dev_name=self._dev_name,
             enabled=self.model.db[0]["enable"],
-            pin=pin,
-            apn=self.model.db[0]["apn"],
+            pin=None if pin == "" else pin,
+            pdp_context_static=self.model.db[0]["pdpContext"]["static"],
+            pdp_context_id=self.model.db[0]["pdpContext"]["id"],
+            pdp_context_apn=self.model.db[0]["pdpContext"].get("apn", ""),
+            pdp_context_type=pdpc_type,
             keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"],
@@ -122,7 +125,12 @@ class Index(Sanji):
         {
             "id": int,
             Required("enable"): bool,
-            Required("apn"): All(str, Length(max=100)),
+            Required("pdpContext"): {
+                Required("static"): bool,
+                Required("id"): int,
+                Optional("apn"): All(Any(unicode, str), Length(0, 100)),
+                Optional("type"): In(frozenset(["ipv4", "ipv6", "ipv4v6"]))
+            },
             Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
             Required("keepalive"): {
                 Required("enable"): bool,
@@ -149,6 +157,16 @@ class Index(Sanji):
 
         _logger.info(str(data))
 
+        # always use the 1st PDP context for static
+        if data["pdpContext"]["static"] is True:
+            data["pdpContext"]["id"] = 1
+            if data["pdpContext"].get("apn", None) is None:
+                return response(code=400,
+                                data={"message": "APN should be provided"})
+        else:
+            data["pdpContext"].pop("apn", None)
+            data["pdpContext"].pop("type", None)
+
         # since all items are required in PUT,
         # its schema is identical to cellular.json
         self.model.db[0] = data
@@ -173,6 +191,7 @@ class Index(Sanji):
         sinfo = self._mgr.static_information()
         cinfo = self._mgr.cellular_information()
         ninfo = self._mgr.network_information()
+        pdpc_list = self._mgr.pdp_context_list()
 
         try:
             self._vnstat.update()
@@ -191,6 +210,16 @@ class Index(Sanji):
 
             self.model.db[0] = config
             self.model.save_db()
+
+        config["pdpContext"]["list"] = pdpc_list
+        try:
+            pdpc = (item for item in config["pdpContext"]["list"]
+                    if item["id"] == config["pdpContext"]["id"]).next()
+            config["pdpContext"]["apn"] = pdpc["apn"]
+            config["pdpContext"]["type"] = pdpc["type"]
+        except:
+            config["pdpContext"]["apn"] = ""
+            config["pdpContext"]["type"] = "ipv4v6"
 
         return {
             "id": config["id"],
@@ -216,7 +245,7 @@ class Index(Sanji):
             },
 
             "enable": config["enable"],
-            "apn": config["apn"],
+            "pdpContext": config["pdpContext"],
             "pinCode": config["pinCode"],
             "keepalive": {
                 "enable": config["keepalive"]["enable"],

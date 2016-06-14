@@ -249,7 +249,10 @@ class Manager(object):
             dev_name=None,
             enabled=None,
             pin=None,
-            apn=None,
+            pdp_context_static=None,
+            pdp_context_id=None,
+            pdp_context_apn=None,
+            pdp_context_type=None,
             keepalive_enabled=None,
             keepalive_host=None,
             keepalive_period_sec=None,
@@ -257,7 +260,13 @@ class Manager(object):
 
         if (not isinstance(dev_name, str) or
                 not isinstance(enabled, bool) or
-                not isinstance(apn, str) or
+                not isinstance(pdp_context_static, bool) or
+                not isinstance(pdp_context_id, int) or
+                not (isinstance(pdp_context_apn, str) or
+                     isinstance(pdp_context_apn, unicode) or
+                     pdp_context_apn is None) or
+                not (isinstance(pdp_context_type, str) or
+                     pdp_context_type is None) or
                 not isinstance(keepalive_enabled, bool) or
                 not isinstance(keepalive_host, str) or
                 not isinstance(keepalive_period_sec, int) or
@@ -271,7 +280,10 @@ class Manager(object):
         self._dev_name = dev_name
         self._enabled = enabled
         self._pin = pin
-        self._apn = apn
+        self._pdp_context_static = pdp_context_static
+        self._pdp_context_id = pdp_context_id
+        self._pdp_context_apn = pdp_context_apn
+        self._pdp_context_type = pdp_context_type
         self._keepalive_enabled = keepalive_enabled
         self._keepalive_host = keepalive_host
         self._keepalive_period_sec = keepalive_period_sec
@@ -297,7 +309,11 @@ class Manager(object):
 
         self._update_network_information_callback = None
 
-        self._cell_mgmt.set_apn(self._apn)
+        if self._pdp_context_static is True:
+            self._cell_mgmt.set_pdp_context(
+                self._pdp_context_id,
+                self._pdp_context_apn,
+                self._pdp_context_type)
 
         self._log = Log()
 
@@ -324,6 +340,10 @@ class Manager(object):
     def network_information(self):
         """Return an instance of NetworkInformation or None."""
         return self._network_information
+
+    def pdp_context_list(self):
+        """Return a list of PDP context."""
+        return self._cell_mgmt.pdp_context_list()
 
     def start(self):
         self._stop = False
@@ -542,7 +562,19 @@ class Manager(object):
             self._log.log_event_connect_begin()
 
             self._cell_mgmt.stop()
-            nwk_info = self._cell_mgmt.start(apn=self._apn)
+
+            try:
+                pdpc = (item for item in self.pdp_context_list()
+                        if item["id"] == self._pdp_context_id).next()
+                apn = pdpc["apn"]
+            except:
+                self._log.log_event_no_pdp_context()
+                return False
+            if apn == "":
+                self._log.log_event_no_apn()
+                return False
+
+            nwk_info = self._cell_mgmt.start(apn=apn)
 
             self._log.log_event_connect_success(nwk_info)
 

@@ -22,7 +22,11 @@ class TestCellularStatic(unittest.TestCase):
         # arrange
         SUT = {
             "enable": True,
-            "apn": "internet",
+            "pdpContext": {
+                "static": True,
+                "id": 1,
+                "apn": "internet"
+            },
             "pinCode": "0000",
             "keepalive": {
                 "enable": True,
@@ -42,7 +46,11 @@ class TestCellularStatic(unittest.TestCase):
         SUT = {
             "id": 0,
             "enable": True,
-            "apn": "internet",
+            "pdpContext": {
+                "static": True,
+                "id": 1,
+                "apn": "internet"
+            },
             "pinCode": u"0000",
             "keepalive": {
                 "enable": True,
@@ -62,7 +70,11 @@ class TestCellularStatic(unittest.TestCase):
         SUT = {
             "id": 1,
             "enable": True,
-            "apn": "internet",
+            "pdpContext": {
+                "static": True,
+                "id": 1,
+                "apn": "internet"
+            },
             "pinCode": u"",
             "keepalive": {
                 "enable": True,

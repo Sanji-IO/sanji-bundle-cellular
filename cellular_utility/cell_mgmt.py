@@ -262,13 +262,18 @@ class CellMgmt(object):
         r"[\s]*(?:(?:Location Area Code)|(?:Tracking Area Code)): '([\S]*)'")
 
     _at_response_ok_regex = re.compile(
-        r"^[\r\n]*([+\S :]*)[\r\n]*OK[\r\n]*$")
+        r"^[\r\n]*([+\S\s :]*)[\r\n]+OK[\r\n]*$")
     _at_response_err_regex = re.compile(
         r"^[\r\n]*ERROR[\r\n]*$")
     _at_response_cme_err_regex = re.compile(
         r"^[\r\n]*\+CME ERROR: ([\S ]*)[\r\n]*$")
     _at_sysinfo_attached_regex = re.compile(
         r"^\^SYSINFO: 2,([23])[,\d]*$")
+
+    _at_cgdcont_regex = re.compile(
+        r"^\+CGDCONT: ([\s\S]+)")
+    _split_param_by_comma_regex = re.compile(
+        r",{0,1}\"{0,1}([^\s\",]*)\"{0,1},{0,1}")
 
     _lock = RLock()
 
@@ -306,11 +311,11 @@ class CellMgmt(object):
 
         match = self._at_response_ok_regex.match(output)
         if match:
-            return {"status": "ok", "info": match.group(1)}
+            return {"status": "ok", "info": match.group(1).rstrip("\r\n")}
 
         match = self._at_response_cme_err_regex.match(output)
         if match:
-            return {"status": "cme-err", "info": match.group(1)}
+            return {"status": "cme-err", "info": match.group(1).rstrip("\r\n")}
 
         match = self._at_response_err_regex.match(output)
         if match:
@@ -568,16 +573,68 @@ class CellMgmt(object):
     @critical_section
     @handle_error_return_code
     @retry_on_busy
-    def set_apn(self, apn):
+    def pdp_context_list(self):
         """
-        Return True if APN set.
+        Return PDP context list.
+
+        Response of "AT+CGDCONT?"
+            +CGDCONT: <id>,<type>,<apn>[,...]
+            OK
+        Example:
+            +CGDCONT: 1,"IP","internet","0.0.0.0",0,0
+            +CGDCONT: 2,"IPV4V6","TPC","0.0.0.0",0,0
+            OK
         """
+        _logger.debug("pdp_context_list: 'at+cgdcont?'")
+        try:
+            pdpc_list = []
+            res = self.at("at+cgdcont?")
+            if res["status"] != "ok":
+                return pdpc_list
+
+            for item in res["info"].splitlines(True):
+                match = self._at_cgdcont_regex.match(item)
+                if match:
+                    pdpc = self._split_param_by_comma_regex.findall(
+                        match.group(1))
+                    if len(pdpc) <= 3:
+                        continue
+                    pdpc_list.append(
+                        {"id": int(pdpc[0]),
+                         "type": "ipv4" if pdpc[1] == "IP"
+                                 else pdpc[1].lower(),
+                         "apn": pdpc[2]})
+                    '''
+                    pdpc = match.group(1).split(",")
+                    pdpc_list.append(
+                        {"id": int(pdpc[0]),
+                         "type": pdpc[1].strip("\""),
+                         "apn": pdpc[2].strip("\"")})
+                    '''
+            return pdpc_list
+
+        except ErrorReturnCode_60:
+            raise
+
+        except ErrorReturnCode:
+            raise CellMgmtError
+
+    @critical_section
+    @handle_error_return_code
+    @retry_on_busy
+    def set_pdp_context(self, id, apn, type="ipv4v6"):
+        """
+        Return True if PDP context set.
+        """
+        pdp_type = "ip" if type == "ipv4" else type
 
         _logger.debug(
-            "set_apn: 'at+cgdcont=1,\"IPV4V6\",\"{}\"'".format(apn))
+            "set_pdp_context: "
+            "'at+cgdcont={},\"{}\",\"{}\"'".format(id, pdp_type, apn))
         try:
             self.at("at+cfun=4")
-            self.at("at+cgdcont=1,\"IPV4V6\",\"{}\"".format(apn))
+            self.at(
+                "at+cgdcont={},\"{}\",\"{}\"".format(id, pdp_type, apn))
             self.at("at+cfun=1")
 
         except ErrorReturnCode_60:

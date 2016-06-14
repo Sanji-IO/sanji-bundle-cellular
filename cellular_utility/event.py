@@ -104,6 +104,18 @@ class Log(object):
         """
         self._log("power-cycle")
 
+    def log_event_no_apn(self):
+        """
+        No APN or APN is empty.
+        """
+        self._log("no-apn")
+
+    def log_event_no_pdp_context(self):
+        """
+        PDP context not found.
+        """
+        self._log("no-pdp-context")
+
     def _log(self, msg):
         """
         Do actual logging.
