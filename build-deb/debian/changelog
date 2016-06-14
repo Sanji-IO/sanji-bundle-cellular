@@ -1,3 +1,9 @@
+sanji-bundle-cellular (2.0.0-1) unstable; urgency=low
+
+  * Provide static APN setting or dynamic with PDP cid.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Tue, 14 Jun 2016 14:28:36 +0800
+
 sanji-bundle-cellular (1.0.36-1) unstable; urgency=low
 
   * Fix VnStat huge tx,rx issue.
