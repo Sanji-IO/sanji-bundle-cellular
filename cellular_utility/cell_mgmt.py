@@ -576,6 +576,14 @@ class CellMgmt(object):
     def pdp_context_list(self):
         """
         Return PDP context list.
+
+        Response of "AT+CGDCONT?"
+            +CGDCONT: <id>,<type>,<apn>[,...]
+            OK
+        Example:
+            +CGDCONT: 1,"IP","internet","0.0.0.0",0,0
+            +CGDCONT: 2,"IPV4V6","TPC","0.0.0.0",0,0
+            OK
         """
         _logger.debug("pdp_context_list: 'at+cgdcont?'")
         try:
@@ -589,7 +597,7 @@ class CellMgmt(object):
                 if match:
                     pdpc = self._split_param_by_comma_regex.findall(
                         match.group(1))
-                    if not match:
+                    if len(pdpc) <= 3:
                         continue
                     pdpc_list.append(
                         {"id": int(pdpc[0]),
