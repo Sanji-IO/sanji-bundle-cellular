@@ -3,8 +3,13 @@
     "id": 1,
 
     "enable": false,
-    "apn": "internet",
     "pinCode": "",
+    "pdpContext": {
+      "static": true,
+      "id": 1,
+      "apn": "internet",
+      "type": "ipv4v6"
+    },
 
     "keepalive": {
       "enable": true,

@@ -1,3 +1,9 @@
+sanji-bundle-cellular (2.0.1-1) unstable; urgency=low
+
+  * Update factory settings.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 15 Jun 2016 10:21:59 +0800
+
 sanji-bundle-cellular (2.0.0-1) unstable; urgency=low
 
   * Provide static APN setting or dynamic with PDP cid.
