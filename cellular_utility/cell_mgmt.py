@@ -682,6 +682,8 @@ class CellMgmt(object):
                 return SimStatus.ready
             elif self._sim_status_sim_pin_regex.match(output):
                 return SimStatus.pin
+            else:
+                return SimStatus.nosim
 
         except ErrorReturnCode_60:
             raise
