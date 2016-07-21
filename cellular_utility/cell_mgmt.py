@@ -283,10 +283,9 @@ class CellMgmt(object):
         r"^\+CME\s+ERROR:\s*SIM\s+not\s+inserted$")
 
     _pin_retry_remain_regex = re.compile(
-        r"\[[\S]+\][\S ]+\n"
-        r"\[[\S]+\] PIN1:\n"
-        r"[\s]*Status:[\s]*[\S]*\n"
-        r"[\s]*Verify:[\s]*([0-9]+)\n"
+        r"[\s\S]*PIN1 state: '([\S]+)'\n"
+        r"[\n\t ]*PIN1 retries: '([0-9]+)'\n"
+        r"[\n\t ]*PUK1 retries: '([0-9]+)'\n"
     )
 
     _at_response_ok_regex = re.compile(
@@ -735,8 +734,8 @@ class CellMgmt(object):
             _logger.warning("no qmi-port exist, return -1")
             return -1
 
-        _logger.debug("qmicli -p -d " + qmi_port + " --dms-uim-get-pin-status")
-        output = self._qmicli("-p", "-d", qmi_port, "--dms-uim-get-pin-status")
+        _logger.debug("qmicli -p -d " + qmi_port + " --uim-get-card-status")
+        output = self._qmicli("-p", "-d", qmi_port, "--uim-get-card-status")
         output = str(output)
 
         match = CellMgmt._pin_retry_remain_regex.match(output)
@@ -744,7 +743,10 @@ class CellMgmt(object):
             _logger.warning("unexpected output: {}".format(output))
             raise CellMgmtError
 
-        return int(match.group(1))
+        if match.group(1) == "disabled":
+            return -1
+
+        return int(match.group(2))
 
     @critical_section
     @handle_error_return_code
