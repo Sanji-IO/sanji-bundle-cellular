@@ -1,3 +1,10 @@
+sanji-bundle-cellular (2.0.3-1) unstable; urgency=low
+
+  * Retrieve cell id and lac from `cell_mgmt m_info`.
+  * Use `--uim-get-card-status` instead of `--dms-uim-get-pin-status`.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 21 Jul 2016 18:11:00 +0800
+
 sanji-bundle-cellular (2.0.2-1) unstable; urgency=low
 
   * Show `nosim` status for unknown status for SIM card.
