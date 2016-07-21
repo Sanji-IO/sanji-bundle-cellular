@@ -1,3 +1,9 @@
+sanji-bundle-cellular (2.0.2-1) unstable; urgency=low
+
+  * Show `nosim` status for unknown status for SIM card.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 21 Jul 2016 10:18:26 +0800
+
 sanji-bundle-cellular (2.0.1+4-1) unstable; urgency=low
 
   * fix: power_cycle forever when SIM status is none.
