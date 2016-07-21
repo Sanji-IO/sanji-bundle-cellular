@@ -148,16 +148,30 @@ class TestCellMgmt(unittest.TestCase):
 
     def test_pin_retry_remain_regex_should_pass(self):
         # arrange
-        SUT = (
-            "[/dev/cdc-wdm0] PIN status retrieved successfully\n"
-            "[/dev/cdc-wdm0] PIN1:\n"
-            "\tStatus: enabled-not-verified\n"
-            "\tVerify: 3\n"
-            "\tUnblock: 10\n"
-            "[/dev/cdc-wdm0] PIN2:\n"
-            "\tStatus: blocked\n"
-            "\tVerify: 0\n"
-            "\tUnblock: 10\n"
+        SUT = ("[/dev/cdc-wdm1] Successfully got card status\n"
+               "Provisioning applications:\n"
+               "\tPrimary GW:   slot '0', application '0'\n"
+               "\tPrimary 1X:   session doesn't exist\n"
+               "\tSecondary GW: session doesn't exist\n"
+               "\tSecondary 1X: session doesn't exist\n"
+               "Card [0]:\n"
+               "\tCard state: 'present'\n"
+               "\tUPIN state: 'not-initialized'\n"
+               "\t\tUPIN retries: '0'\n"
+               "\t\tUPUK retries: '0'\n"
+               "\tApplication [0]:\n"
+               "\t\tApplication type:  'usim (2)'\n"
+               "\t\tApplication state: 'ready'\n"
+               "\t\tApplication ID:\n"
+               "\t\t\tA0:00:00:00:87:10:02:FF:33:FF:01:89:06:05:00:FF\n"
+               "\t\tPersonalization state: 'ready'\n"
+               "\t\tUPIN replaces PIN1: 'no'\n"
+               "\t\tPIN1 state: 'enabled-verified'\n"
+               "\t\t\tPIN1 retries: '3'\n"
+               "\t\t\tPUK1 retries: '10'\n"
+               "\t\tPIN2 state: 'blocked'\n"
+               "\t\t\tPIN2 retries: '0'\n"
+               "\t\t\tPUK2 retries: '10'\n"
         )
 
         # act
@@ -165,334 +179,8 @@ class TestCellMgmt(unittest.TestCase):
 
         # assert
         self.assertTrue(match)
-        self.assertEqual("3", match.group(1))
+        self.assertEqual("3", match.group(2))
 
-    QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT = (
-        "[/dev/cdc-wdm0] Successfully got cell location info\n"
-        "UMTS Info\n"
-        "	Cell ID: '15086'\n"
-        "	PLMN: '466'\n"
-        "	Location Area Code: '10263'\n"
-        "	UTRA Absolute RF Channel Number: '10762'\n"
-        "	Primary Scrambling Code: '33'\n"
-        "	RSCP: '-109' dBm\n"
-        "	ECIO: '-17' dBm\n"
-        "	Cell [0]:\n"
-        "		UTRA Absolute RF Channel Number: '10762'\n"
-        "		Primary Scrambling Code: '335'\n"
-        "		RSCP: '-116' dBm\n"
-        "		ECIO: '-19' dBm\n"
-        "	Cell [1]:\n"
-        "		UTRA Absolute RF Channel Number: '10762'\n"
-        "		Primary Scrambling Code: '472'\n"
-        "		RSCP: '-121' dBm\n"
-        "		ECIO: '-24' dBm\n"
-        "	Cell [2]:\n"
-        "		UTRA Absolute RF Channel Number: '10762'\n"
-        "		Primary Scrambling Code: '480'\n"
-        "		RSCP: '-121' dBm\n"
-        "		ECIO: '-25' dBm\n"
-        "	Neighboring GERAN Cell [0]:\n"
-        "		GERAN Absolute RF Channel Number: '569'\n"
-        "		Network Color Code: '1'\n"
-        "		Base Station Color Code: '2'\n"
-        "		RSSI: '65438'\n"
-        "	Neighboring GERAN Cell [1]:\n"
-        "		GERAN Absolute RF Channel Number: '578'\n"
-        "		Network Color Code: 'unavailable'\n"
-        "		Base Station Color Code: 'unavailable'\n"
-        "		RSSI: '65432'\n"
-        "	Neighboring GERAN Cell [2]:\n"
-        "		GERAN Absolute RF Channel Number: '589'\n"
-        "		Network Color Code: 'unavailable'\n"
-        "		Base Station Color Code: 'unavailable'\n"
-        "		RSSI: '65424'\n"
-        "	Neighboring GERAN Cell [3]:\n"
-        "		GERAN Absolute RF Channel Number: '67'\n"
-        "		Network Color Code: 'unavailable'\n"
-        "		Base Station Color Code: 'unavailable'\n"
-        "		RSSI: '65424'\n"
-        "	Neighboring GERAN Cell [4]:\n"
-        "		GERAN Absolute RF Channel Number: '587'\n"
-        "		Network Color Code: 'unavailable'\n"
-        "		Base Station Color Code: 'unavailable'\n"
-        "		RSSI: '65423'\n"
-        "	Neighboring GERAN Cell [5]:\n"
-        "		GERAN Absolute RF Channel Number: '584'\n"
-        "		Network Color Code: 'unavailable'\n"
-        "		Base Station Color Code: 'unavailable'\n"
-        "		RSSI: '65423'\n"
-        "	Neighboring GERAN Cell [6]:\n"
-        "		GERAN Absolute RF Channel Number: '595'\n"
-        "		Network Color Code: 'unavailable'\n"
-        "		Base Station Color Code: 'unavailable'\n"
-        "		RSSI: '65422'\n"
-        "	Neighboring GERAN Cell [7]:\n"
-        "		GERAN Absolute RF Channel Number: '73'\n"
-        "		Network Color Code: 'unavailable'\n"
-        "		Base Station Color Code: 'unavailable'\n"
-        "		RSSI: '65422'\n"
-        "UMTS Cell ID: '17251054'\n"
-        "UMTS Info Neighboring LTE\n"
-        "	RRC State: 'disconnected'\n"
-        "	Frequency [0]:\n"
-        "		EUTRA Absolute RF Channel Number: '1725'\n"
-        "		Physical Cell ID: '388'\n"
-        "		RSRP: '-126.000000' dBm\n"
-        "		RSRQ: '-14.000000' dB\n"
-        "		Cell Selection RX Level: '-6'\n"
-        "		Is TDD?: 'no'\n"
-        "	Frequency [1]:\n"
-        "		EUTRA Absolute RF Channel Number: '3650'\n"
-        "		Physical Cell ID: '166'\n"
-        "		RSRP: '-128.000000' dBm\n"
-        "		RSRQ: '-14.000000' dB\n"
-        "		Cell Selection RX Level: '-8'\n"
-        "		Is TDD?: 'no'\n")
-
-    def test_cellular_location_cell_id_regex_should_pass(self):
-        # arrange
-        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT
-
-        # act
-        match = CellMgmt._cellular_location_cell_id_regex.search(SUT)
-
-        # assert
-        self.assertTrue(match)
-        print match.group(0)
-        self.assertEqual("15086", match.group(1))
-
-    def test_cellular_location_lac_regex_should_pass(self):
-        # arrange
-        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT
-
-        # act
-        match = CellMgmt._cellular_location_lac_regex.search(SUT)
-
-        # assert
-        self.assertTrue(match)
-        self.assertEqual("10263", match.group(1))
-
-    QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT_CDMA = (
-        "[/dev/cdc-wdm0] Successfully got cell location info\n"
-        "CDMA Info\n"
-        "   System ID: '2'\n"
-        "   Network ID: '51'\n"
-        "   Base Station ID: '9137'\n"
-        "   Reference PN: '184'\n"
-        "   Latitude: '0.000000'\n"
-        "   Longtitude: '0.000000'\n")
-
-    def test_cellular_location_bid_regex_should_pass(self):
-        # arrange
-        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT_CDMA
-
-        # act
-        match = CellMgmt._cellular_location_cell_id_regex.search(SUT)
-
-        # assert
-        self.assertTrue(match)
-        print match.group(0)
-        self.assertEqual("9137", match.group(1))
-
-    def test_cellular_location_nid_regex_should_pass(self):
-        # arrange
-        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT_CDMA
-
-        # act
-        match = CellMgmt._cellular_location_lac_regex.search(SUT)
-
-        # assert
-        self.assertTrue(match)
-        self.assertEqual("51", match.group(1))
-
-    def test_cellular_location_cell_id_regex_with_unavailable_should_pass(
-            self):
-        # arrange
-        SUT = (
-            "[/dev/cdc-wdm0] Successfully got cell location info\n"
-            "UMTS Info\n"
-            "    Cell ID: 'unavailable'\n"
-            "    PLMN: '466'\n"
-            "    Location Area Code: '10233'\n"
-            "    UTRA Absolute RF Channel Number: '10762'\n"
-            "    Primary Scrambling Code: '335'\n"
-            "    RSCP: '-81' dBm\n"
-            "    ECIO: '-11' dBm\n"
-            "    Cell [0]:\n"
-            "        UTRA Absolute RF Channel Number: '10787'\n"
-            "        Primary Scrambling Code: '33'\n"
-            "        RSCP: '-89' dBm\n"
-            "        ECIO: '-17' dBm\n"
-            "    Cell [1]:\n"
-            "        UTRA Absolute RF Channel Number: '10787'\n"
-            "        Primary Scrambling Code: '365'\n"
-            "        RSCP: '-90' dBm\n"
-            "        ECIO: '-18' dBm\n"
-            "    Cell [2]:\n"
-            "        UTRA Absolute RF Channel Number: '10787'\n"
-            "        Primary Scrambling Code: '223'\n"
-            "        RSCP: '-92' dBm\n"
-            "        ECIO: '-20' dBm\n"
-            "    Cell [3]:\n"
-            "        UTRA Absolute RF Channel Number: '10787'\n"
-            "        Primary Scrambling Code: '343'\n"
-            "        RSCP: '-92' dBm\n"
-            "        ECIO: '-20' dBm\n"
-            "    Cell [4]:\n"
-            "        UTRA Absolute RF Channel Number: '10787'\n"
-            "        Primary Scrambling Code: '480'\n"
-            "        RSCP: '-94' dBm\n"
-            "        ECIO: '-21' dBm\n"
-            "    Cell [5]:\n"
-            "        UTRA Absolute RF Channel Number: '10787'\n"
-            "        Primary Scrambling Code: '207'\n"
-            "        RSCP: '-94' dBm\n"
-            "        ECIO: '-22' dBm\n"
-            "UMTS Cell ID: '4294967295'\n"
-            "UMTS Info Neighboring LTE\n"
-            "    RRC State: 'cell-dch'\n")
-
-        # act
-        match = CellMgmt._cellular_location_cell_id_regex.search(SUT)
-
-        # assert
-        self.assertTrue(match)
-        self.assertEqual("unavailable", match.group(1))
-
-    QMICLI_NAS_GET_CELL_LOCATION_INFO_LTE_OUTPUT = (
-        "[/dev/cdc-wdm0] Successfully got cell location info\n"
-        "Intrafrequency LTE Info\n"
-        "        UE In Idle: 'yes'\n"
-        "        PLMN: '466'\n"
-        "        Tracking Area Code: '12000'\n"
-        "        Global Cell ID: '29419041'\n"
-        "        EUTRA Absolute RF Channel Number: '1725'\n"
-        "        Serving Cell ID: '56'\n"
-        "        Cell Reselection Priority: '6'\n"
-        "        S Non Intra Search Threshold: '6'\n"
-        "        Serving Cell Low Threshold: '4'\n"
-        "        S Intra Search Threshold: '62'\n"
-        "        Cell [0]:\n"
-        "                Physical Cell ID: '56'\n"
-        "                RSRQ: '-6.5' dB\n"
-        "                RSRP: '-78.3' dBm\n"
-        "                RSSI: '-53.1' dBm\n"
-        "                Cell Selection RX Level: '41'\n"
-        "        Cell [1]:\n"
-        "                Physical Cell ID: '429'\n"
-        "                RSRQ: '-20.0' dB\n"
-        "                RSRP: '-97.1' dBm\n"
-        "                RSSI: '-66.4' dBm\n"
-        "                Cell Selection RX Level: '22'\n"
-        "Interfrequency LTE Info\n"
-        "        UE In Idle: 'yes'\n"
-        "        Frequency [0]:\n"
-        "                EUTRA Absolute RF Channel Number: '3650'\n"
-        "                Selection RX Level Low Threshold: '0'\n"
-        "                Cell Selection RX Level High Threshold: '8'\n"
-        "                Cell Reselection Priority: '5'\n"
-        "LTE Info Neighboring GSM\n"
-        "        UE In Idle: 'yes'\n"
-        "        Frequency [0]:\n"
-        "                Cell Reselection Priority: '2'\n"
-        "                Cell Reselection High Threshold: '4'\n"
-        "                Cell Reselection Low Threshold: '10'\n"
-        "                NCC Permitted: '0xFF'\n"
-        "                Cell [0]:\n"
-        "                        GERAN Absolute RF Channel Number: '25'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "                Cell [1]:\n"
-        "                        GERAN Absolute RF Channel Number: '26'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "                Cell [2]:\n"
-        "                        GERAN Absolute RF Channel Number: '27'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "                Cell [3]:\n"
-        "                        GERAN Absolute RF Channel Number: '28'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "                Cell [4]:\n"
-        "                        GERAN Absolute RF Channel Number: '29'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "                Cell [5]:\n"
-        "                        GERAN Absolute RF Channel Number: '30'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "                Cell [6]:\n"
-        "                        GERAN Absolute RF Channel Number: '31'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "                Cell [7]:\n"
-        "                        GERAN Absolute RF Channel Number: '32'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "        Frequency [1]:\n"
-        "                Cell Reselection Priority: '1'\n"
-        "                Cell Reselection High Threshold: '4'\n"
-        "                Cell Reselection Low Threshold: '10'\n"
-        "                NCC Permitted: '0xFF'\n"
-        "                Cell [0]:\n"
-        "                        GERAN Absolute RF Channel Number: '569'\n"
-        "                        Band Is 1900: 'no'\n"
-        "                        Base Station Identity Code: 'unknown'\n"
-        "                        RSSI: '-192.0' dB\n"
-        "                        Cell Selection RX Level: '0'\n"
-        "LTE Info Neighboring WCDMA\n"
-        "        UE In Idle: 'yes'\n"
-        "        Frequency [0]:\n"
-        "                UTRA Absolute RF Channel Number: '10762'\n"
-        "                Cell Reselection Priority: '4'\n"
-        "                Cell Reselection High Threshold: '8'\n"
-        "                Cell Reselection Low Threshold: '6'\n"
-        "        Frequency [1]:\n"
-        "                UTRA Absolute RF Channel Number: '10787'\n"
-        "                Cell Reselection Priority: '4'\n"
-        "                Cell Reselection High Threshold: '8'\n"
-        "                Cell Reselection Low Threshold: '6'\n"
-    )
-
-    def test_cellular_location_cell_id_regex_with_lte_output_should_pass(self):
-        # arrange
-        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_LTE_OUTPUT
-
-        # act
-        match = CellMgmt._cellular_location_cell_id_regex.search(SUT)
-
-        # assert
-        self.assertTrue(match)
-        self.assertEqual("29419041", match.group(1))
-
-    def test_cellular_location_lac_regex_with_lte_output_should_pass(self):
-        # arrange
-        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_LTE_OUTPUT
-
-        # act
-        match = CellMgmt._cellular_location_lac_regex.search(SUT)
-
-        # assert
-        self.assertTrue(match)
-        self.assertEqual("12000", match.group(1))
 
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
