@@ -5,8 +5,7 @@ import os
 import sys
 import logging
 import unittest
-from mock import patch
-from mock import Mock, MagicMock
+from mock import patch, Mock
 
 
 def mock_retrying(f):
@@ -16,7 +15,7 @@ def mock_retrying(f):
 
 try:
     sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
-    patch('cellular_utility.cell_mgmt.retrying', lambda x:x).start()
+    patch('cellular_utility.cell_mgmt.retrying', lambda x: x).start()
     from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 except ImportError as e:
     print os.path.dirname(os.path.realpath(__file__)) + "/../"
@@ -144,7 +143,6 @@ class TestCellMgmt(unittest.TestCase):
 
         # assert
         self.assertTrue(match)
-
 
     def test_sim_status_ready_regex_should_pass(self):
         # arrange
@@ -307,7 +305,7 @@ class TestCellMgmt(unittest.TestCase):
 
         # assert
         with self.assertRaises(CellMgmtError):
-            res = self.cell_mgmt.at("at")
+            self.cell_mgmt.at("at")
 
 
 if __name__ == "__main__":
