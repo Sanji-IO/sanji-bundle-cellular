@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-
 import os
 import sys
 import logging
 import unittest
+from mock import patch
+from mock import Mock, MagicMock
+
+
+def mock_retrying(f):
+    def wrapped_f():
+        return f()
+    return wrapped_f
 
 try:
     sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
-    from cellular_utility.cell_mgmt import CellMgmt
+    patch('cellular_utility.cell_mgmt.retrying', lambda x:x).start()
+    from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 except ImportError as e:
     print os.path.dirname(os.path.realpath(__file__)) + "/../"
     print sys.path
@@ -22,8 +30,9 @@ dirpath = os.path.dirname(os.path.realpath(__file__))
 
 
 class TestCellMgmt(unittest.TestCase):
-    def setUp(self):
-        pass
+    @patch("cellular_utility.cell_mgmt.sh")
+    def setUp(self, mock_sh):
+        self.cell_mgmt = CellMgmt()
 
     def tearDown(self):
         pass
@@ -126,6 +135,17 @@ class TestCellMgmt(unittest.TestCase):
         self.assertEqual("0123456789012345", match.group(6))
         self.assertEqual("/dev/cdc-wdm0", match.group(7))
 
+    def test_operator_regex_should_pass(self):
+        # arrange
+        SUT = "Chunghwa Telecom\n"
+
+        # act
+        match = CellMgmt._operator_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
+
     def test_sim_status_ready_regex_should_pass(self):
         # arrange
         SUT = "+CPIN: READY\n"
@@ -179,6 +199,115 @@ class TestCellMgmt(unittest.TestCase):
         # assert
         self.assertTrue(match)
         self.assertEqual("3", match.group(2))
+
+    def test_at_response_ok_regex_should_pass(self):
+        # arrange
+        SUT = "\n\nOK\n\n"
+
+        # act
+        match = CellMgmt._at_response_ok_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
+    def test_at_response_err_regex_should_pass(self):
+        # arrange
+        SUT = "\n\nERROR\n\n"
+
+        # act
+        match = CellMgmt._at_response_err_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
+    def test_at_response_cme_err_regex_should_pass(self):
+        # arrange
+        SUT = "\n\n+CME ERROR: Unknown error\n\n"
+
+        # act
+        match = CellMgmt._at_response_cme_err_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
+    def test_at_sysinfo_attached_regex_should_pass(self):
+        # arrange
+        SUT = "^SYSINFO: 2,3,0,5,1"
+
+        # act
+        match = CellMgmt._at_sysinfo_attached_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
+    def test_at_cgdcont_regex_should_pass(self):
+        # arrange
+        SUT = (
+            "+CGDCONT: 1,\"IPV4V6\",\"internet\","
+            "\"0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0\",0,0,0,0")
+
+        # act
+        match = CellMgmt._at_cgdcont_regex.match(SUT)
+
+        # assert
+        self.assertTrue(match)
+
+    def test_at_with_response_ok(self):
+        # arrange
+        SUT = "\n\nOK\n\n"
+
+        # act
+        self.cell_mgmt._cell_mgmt = Mock(return_value=SUT)
+        res = self.cell_mgmt.at("at")
+
+        # assert
+        self.assertEqual("ok", res["status"])
+
+    def test_at_with_response_ok_and_data(self):
+        # arrange
+        SUT = "\n\n+CFUN: 1\n\nOK\n\n"
+
+        # act
+        self.cell_mgmt._cell_mgmt = Mock(return_value=SUT)
+        res = self.cell_mgmt.at("at")
+
+        # assert
+        self.assertEqual("ok", res["status"])
+        self.assertEqual("+CFUN: 1", res["info"])
+
+    def test_at_with_response_cme_err(self):
+        # arrange
+        SUT = "\n\n+CME ERROR: Unknown error\n\n"
+
+        # act
+        self.cell_mgmt._cell_mgmt = Mock(return_value=SUT)
+        res = self.cell_mgmt.at("at")
+
+        # assert
+        self.assertEqual("cme-err", res["status"])
+        self.assertEqual("Unknown error", res["info"])
+
+    def test_at_with_response_err(self):
+        # arrange
+        SUT = "\n\nERROR\n\n"
+
+        # act
+        self.cell_mgmt._cell_mgmt = Mock(return_value=SUT)
+        res = self.cell_mgmt.at("at")
+
+        # assert
+        self.assertEqual("err", res["status"])
+
+    def test_at_with_unexpected_output_should_raise_fail(self):
+        # arrange
+        SUT = "\n\nERR\n\n"
+
+        # act
+        self.cell_mgmt._cell_mgmt = Mock(return_value=SUT)
+
+        # assert
+        with self.assertRaises(CellMgmtError):
+            res = self.cell_mgmt.at("at")
 
 
 if __name__ == "__main__":
