@@ -1,3 +1,10 @@
+sanji-bundle-cellular (2.0.4-1) unstable; urgency=low
+
+  * Fix: `cell_mgmt` may blocked by `qmi-proxy`.
+  * Fix: unittest.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Fri, 22 Jul 2016 10:42:46 +0800
+
 sanji-bundle-cellular (2.0.3-1) unstable; urgency=low
 
   * Retrieve cell id and lac from `cell_mgmt m_info`.
