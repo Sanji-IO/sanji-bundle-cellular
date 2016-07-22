@@ -171,8 +171,7 @@ class TestCellMgmt(unittest.TestCase):
                "\t\t\tPUK1 retries: '10'\n"
                "\t\tPIN2 state: 'blocked'\n"
                "\t\t\tPIN2 retries: '0'\n"
-               "\t\t\tPUK2 retries: '10'\n"
-        )
+               "\t\t\tPUK2 retries: '10'\n")
 
         # act
         match = CellMgmt._pin_retry_remain_regex.match(SUT)
