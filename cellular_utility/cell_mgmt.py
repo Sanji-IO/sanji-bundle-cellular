@@ -250,16 +250,10 @@ class CellMgmt(object):
         r"^\+CPIN:\s*SIM\s+PIN$")
 
     _pin_retry_remain_regex = re.compile(
-        r"\[[\S]+\][\S ]+\n"
-        r"\[[\S]+\] PIN1:\n"
-        r"[\s]*Status:[\s]*[\S]*\n"
-        r"[\s]*Verify:[\s]*([0-9]+)\n"
+        r"[\s\S]*PIN1 state: '([\S]+)'\n"
+        r"[\n\t ]*PIN1 retries: '([0-9]+)'\n"
+        r"[\n\t ]*PUK1 retries: '([0-9]+)'\n"
     )
-
-    _cellular_location_cell_id_regex = re.compile(
-        r"\n[\s]*(?:(?:Cell ID)|(?:Global Cell ID)): '([\S]*)'")
-    _cellular_location_lac_regex = re.compile(
-        r"[\s]*(?:(?:Location Area Code)|(?:Tracking Area Code)): '([\S]*)'")
 
     _at_response_ok_regex = re.compile(
         r"^[\r\n]*([+\S\s :]*)[\r\n]+OK[\r\n]*$")
@@ -705,8 +699,8 @@ class CellMgmt(object):
             _logger.warning("no qmi-port exist, return -1")
             return -1
 
-        _logger.debug("qmicli -p -d " + qmi_port + " --dms-uim-get-pin-status")
-        output = self._qmicli("-p", "-d", qmi_port, "--dms-uim-get-pin-status")
+        _logger.debug("qmicli -p -d " + qmi_port + " --uim-get-card-status")
+        output = self._qmicli("-p", "-d", qmi_port, "--uim-get-card-status")
         output = str(output)
 
         match = CellMgmt._pin_retry_remain_regex.match(output)
@@ -714,7 +708,10 @@ class CellMgmt(object):
             _logger.warning("unexpected output: {}".format(output))
             raise CellMgmtError
 
-        return int(match.group(1))
+        if match.group(1) == "disabled":
+            return -1
+
+        return int(match.group(2))
 
     @critical_section
     @handle_error_return_code
@@ -725,38 +722,10 @@ class CellMgmt(object):
 
         _logger.debug("get_cellular_location")
 
-        qmi_port = self.m_info().qmi_port
-        if qmi_port is None:
-            _logger.warning("no qmi-port exist")
-            raise CellMgmtError
-
-        output = self._qmicli(
-            "-p", "-d", qmi_port, "--nas-get-cell-location-info")
-        output = str(output)
-
-        match = CellMgmt._cellular_location_cell_id_regex.search(output)
-        if not match:
-            _logger.warning("unexpected output: {}".format(output))
-            raise CellMgmtError
-
-        try:
-            cell_id = hex(int(match.group(1)))
-        except ValueError:
-            cell_id = "unavailable"
-
-        match = CellMgmt._cellular_location_lac_regex.search(output)
-        if not match:
-            _logger.warning("unexpected output: {}".format(output))
-            raise CellMgmtError
-
-        try:
-            lac = hex(int(match.group(1)))
-        except ValueError:
-            lac = "unavailable"
-
+        minfo = self.m_info()
         return CellularLocation(
-            cell_id=cell_id,
-            lac=lac)
+            cell_id=minfo.cell_id,
+            lac=minfo.lac)
 
 
 if __name__ == "__main__":
