@@ -231,7 +231,7 @@ class CellMgmt(object):
     _start_dns_regex = re.compile(
         r"DNS=([0-9\. ]*)\n")
     _signal_regex = re.compile(
-        r"^([a-zA-Z0-9]+) (-[0-9]+) dbm\n$")
+        r"^([\S]+) (-[0-9]+) dbm\n$")
     _m_info_regex = re.compile(
         r"^Module=([\S ]+)\n"
         r"WWAN_node=([\S]+)\n"
@@ -257,9 +257,11 @@ class CellMgmt(object):
     )
 
     _cellular_location_cell_id_regex = re.compile(
-        r"\n[\s]*(?:(?:Cell ID)|(?:Global Cell ID)): '([\S]*)'")
+        r"\n[\s]*(?:(?:Cell ID)|(?:Global Cell ID)|(?:Base Station ID)): "
+        r"'([\S]*)'")
     _cellular_location_lac_regex = re.compile(
-        r"[\s]*(?:(?:Location Area Code)|(?:Tracking Area Code)): '([\S]*)'")
+        r"[\s]*(?:(?:Location Area Code)|(?:Tracking Area Code)|"
+        r"(?:Network ID)): '([\S]*)'")
 
     _at_response_ok_regex = re.compile(
         r"^[\r\n]*([+\S\s :]*)[\r\n]+OK[\r\n]*$")

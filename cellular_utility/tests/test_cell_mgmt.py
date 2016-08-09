@@ -273,6 +273,39 @@ class TestCellMgmt(unittest.TestCase):
         self.assertTrue(match)
         self.assertEqual("10263", match.group(1))
 
+    QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT_CDMA = (
+        "[/dev/cdc-wdm0] Successfully got cell location info\n"
+        "CDMA Info\n"
+        "   System ID: '2'\n"
+        "   Network ID: '51'\n"
+        "   Base Station ID: '9137'\n"
+        "   Reference PN: '184'\n"
+        "   Latitude: '0.000000'\n"
+        "   Longtitude: '0.000000'\n")
+
+    def test_cellular_location_bid_regex_should_pass(self):
+        # arrange
+        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT_CDMA
+
+        # act
+        match = CellMgmt._cellular_location_cell_id_regex.search(SUT)
+
+        # assert
+        self.assertTrue(match)
+        print match.group(0)
+        self.assertEqual("9137", match.group(1))
+
+    def test_cellular_location_nid_regex_should_pass(self):
+        # arrange
+        SUT = TestCellMgmt.QMICLI_NAS_GET_CELL_LOCATION_INFO_OUTPUT_CDMA
+
+        # act
+        match = CellMgmt._cellular_location_lac_regex.search(SUT)
+
+        # assert
+        self.assertTrue(match)
+        self.assertEqual("51", match.group(1))
+
     def test_cellular_location_cell_id_regex_with_unavailable_should_pass(
             self):
         # arrange
