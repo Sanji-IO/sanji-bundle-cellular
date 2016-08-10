@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: Cellular API
   description: Handle the Cellular interface(s)
-  version: "2.0.0"
+  version: "3.0.0"
 
 schemes:
   - http
@@ -92,8 +92,29 @@ definitions:
         type: string
         description: Given cellular connection mode. Could be one of `"umts"`, `"lte"`.
       signal:
-        type: integer
-        description: Cellular RF signal strength, in `dbm`. Value `0` indicates no SIM card found.
+        type: object
+        description: Cellular RF signal strength, include RSSI and EcIo.
+        required:
+        - csq
+        - rssi
+        - ecio
+        properties:
+          csq:
+            type: string
+            description: |
+              Signal quality, The first part of the response is RSSI
+              (Received signal strength indicator). The second part of the
+              response is the Bit Error Rate (BER)
+          rssi:
+            type: integer
+            description: |
+              Cellular RF signal strength, in `dbm`. Value `0` indicates no
+              SIM card found.
+          ecio:
+            type: integer
+            description: |
+              The ratio of the received energy per chip (= code bit) and the
+              interference level, given in `dBm`.
       operatorName:
         type: string
         description: Indicate current operator name if exist.
@@ -112,6 +133,9 @@ definitions:
       pinRetryRemain:
         type: integer
         description: PIN Retry remaining.
+      phoneNumber:
+        type: string
+        description: Phone number of the SIM card.
       status:
         type: string
         description: Indicate current status of cellular connection. Could be one of "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed".
@@ -155,25 +179,52 @@ definitions:
         required:
         - static
         - id
+        - primary
+        - secondary
         properties:
           static:
             type: boolean
-            description: Use static APN and/or PDP type.
+            description: Use static APN or dynamic.
           id:
             type: integer
             description: Specifies PDP context id.
             minimum: 1
             maximum: 16
-          apn:
-            type: string
-            description: Edit APN of the specified PDP context.
-          type:
-            type: string
-            description: Indicate the PDP type to use.
-            enum:
-            - ipv4
-            - ipv6
-            - ipv4v6
+          retryTimeout:
+            type: integer
+            description: |
+              Retry timeout in seconds for static APN to switch primary to
+              secondary settings.
+            minimum: 60
+            maximum: 86400
+          primary:
+            type: object
+            description: Primary PDP context.
+            properties:
+              apn:
+                type: string
+                description: Edit APN of the specified PDP context.
+              type:
+                type: string
+                description: Indicate the PDP type to use.
+                enum:
+                - ipv4
+                - ipv6
+                - ipv4v6
+          secondary:
+            type: object
+            description: Secondary PDP context.
+            properties:
+              apn:
+                type: string
+                description: Edit APN of the specified PDP context.
+              type:
+                type: string
+                description: Indicate the PDP type to use.
+                enum:
+                - ipv4
+                - ipv6
+                - ipv4v6
           list:
             readOnly: true
             type: array
@@ -229,11 +280,16 @@ externalDocs:
         "id": 1,
         "name": "wwan1",
         "mode": "umts",
-        "signal": -96,
+        "signal": {
+          "csq": "14,99",
+          "rssi": -76,
+          "ecio": -8.5
+        },
         "operatorName": "Chunghwa Telecom",
         "lac": "0xF339",
         "cellId": "0x3194",
         "iccId": "",
+        "phoneNumber": "",
         "imei": "356853050370859",
         "pinRetryRemain": 3,
         "status": "connected",
@@ -249,8 +305,15 @@ externalDocs:
         "pdpContext": {
           "static": true,
           "id": 1,
-          "apn": "internet",
-          "type": "ipv4v6",
+          "retryTimeout": 1200,
+          "primary": {
+            "apn": "internet",
+            "type": "ipv4v6",
+          },
+          "secondary": {
+            "apn": "internet",
+            "type": "ipv4v6",
+          },
           "list": [
             {
               "id": 1,
