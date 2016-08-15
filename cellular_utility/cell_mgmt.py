@@ -83,6 +83,13 @@ def critical_section(func, *args, **kwargs):
     with CellMgmt._lock:
         return func(*args, **kwargs)
 
+def sh_default_timeout(func, timeout):
+    def _sh_default_timeout(*args, **kwargs):
+        if kwargs.get("_timeout", None) is None:
+            kwargs.update({"_timeout": timeout})
+        return func(*args, **kwargs)
+    return _sh_default_timeout
+
 
 class NetworkInformation(object):
     def __init__(
@@ -281,17 +288,16 @@ class CellMgmt(object):
 
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
-        self._cell_mgmt = sh.cell_mgmt
-        self._qmicli = sh.Command(tool_path + "/call-qmicli.sh")
+
+        # Add default timeout to cell_mgmt and qmicli
+        # will raise TimeoutException
+        self._cell_mgmt = sh_default_timeout(sh.cell_mgmt, 70)
+        self._qmicli = sh_default_timeout(
+            sh.Command(tool_path + "/call-qmicli.sh"), 70)
 
         self._invoke_period_sec = 0
 
         self._use_shell = False
-
-        # Add default timeout to cell_mgmt and qmicli
-        # will raise TimeoutException
-        self._cell_mgmt._call_args["timeout"] = 50
-        self._qmicli._call_args["timeout"] = 50
 
     @critical_section
     @handle_error_return_code
