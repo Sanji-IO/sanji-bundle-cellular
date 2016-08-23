@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: Cellular API
   description: Handle the Cellular interface(s)
-  version: "3.0.0"
+  version: "3.0.1"
 
 schemes:
   - http
@@ -326,7 +326,11 @@ externalDocs:
         "keepalive": {
           "enable": true,
           "targetHost": "8.8.8.8",
-          "intervalSec": 60
+          "intervalSec": 60,
+          "reboot": {
+            "enable": fales,
+            "intervalSec": 1200
+          }
         }
       }
     Cellulars:
