@@ -362,17 +362,23 @@ class Manager(object):
         self._cellular_logger.stop()
 
     def _main_thread(self):
-        try:
-            while True:
+        while True:
+            try:
                 self._loop()
 
-        except StopException:
-            if self._observer is not None:
-                self._observer.stop()
-                self._observer = None
+            except StopException:
+                if self._observer is not None:
+                    self._observer.stop()
+                    self._observer = None
 
-            self._log.log_event_cellular_disconnect()
-            self._cell_mgmt.stop()
+                self._log.log_event_cellular_disconnect()
+                self._cell_mgmt.stop()
+                break
+
+            except Exception:
+                _logger.error("should not reach here")
+                _logger.warning(format_exc())
+                self._power_cycle(force=True)
 
     def _loop(self):
         try:
@@ -601,13 +607,12 @@ class Manager(object):
 
         return True
 
-    def _power_cycle(self):
+    def _power_cycle(self, force=False):
         try:
             self._log.log_event_power_cycle()
             self._status = Manager.Status.power_cycle
 
-            self._cell_mgmt.power_cycle(timeout_sec=60)
-
+            self._cell_mgmt.power_cycle(force, timeout_sec=60)
         except CellMgmtError:
             _logger.warning(format_exc())
 

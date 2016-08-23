@@ -13,6 +13,6 @@ X-Python-Version: >= 2.5
 Package: sanji-bundle-cellular
 Section: libs
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, python2.7, python-pip, vnstat
+Depends: ${shlibs:Depends}, ${misc:Depends}, python2.7, python-pip, vnstat, moxa-cellular-utils (>= 1.7.2)
 Description: This model provides cellular using QMI.
 
