@@ -83,6 +83,7 @@ def critical_section(func, *args, **kwargs):
     with CellMgmt._lock:
         return func(*args, **kwargs)
 
+
 def sh_default_timeout(func, timeout):
     def _sh_default_timeout(*args, **kwargs):
         if kwargs.get("_timeout", None) is None:
@@ -477,13 +478,13 @@ class CellMgmt(object):
 
     @handle_error_return_code
     @retry_on_busy
-    def _power_off(self):
+    def _power_off(self, force=False):
         """
         Power off Cellular module.
         """
         _logger.debug("cell_mgmt power_off")
 
-        self._cell_mgmt("power_off")
+        self._cell_mgmt("power_off", "force" if force else "")
 
         # sleep to make sure GPIO is pulled down for enough time
         sleep(1)
@@ -493,13 +494,14 @@ class CellMgmt(object):
 
     @handle_error_return_code
     @retry_on_busy
-    def _power_on(self, timeout_sec=60):
+    def _power_on(self, force=False, timeout_sec=60):
         """
         Power on Cellular module.
         """
         _logger.debug("cell_mgmt power_on")
 
-        self._cell_mgmt("power_on", _timeout=timeout_sec)
+        self._cell_mgmt(
+            "power_on", "force" if force else "", _timeout=timeout_sec)
 
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
@@ -507,13 +509,13 @@ class CellMgmt(object):
     @critical_section
     @handle_error_return_code
     @retry_on_busy
-    def power_cycle(self, timeout_sec=60):
+    def power_cycle(self, force=False, timeout_sec=60):
         """
         Power cycle Cellular module.
         """
-        self._power_off()
+        self._power_off(force)
         sleep(1)
-        self._power_on(timeout_sec)
+        self._power_on(force, timeout_sec)
 
     @critical_section
     @handle_error_return_code
