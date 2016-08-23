@@ -10,6 +10,7 @@ import re
 import sh
 from sh import ErrorReturnCode, ErrorReturnCode_60, TimeoutException
 from subprocess import CalledProcessError
+import thread
 from threading import RLock
 from time import sleep
 from traceback import format_exc
@@ -79,9 +80,31 @@ def retry_on_busy(func, *args, **kwargs):
 
 @decorator
 def critical_section(func, *args, **kwargs):
+    if CellMgmt._lock._RLock__owner == thread.get_ident() \
+        or CellMgmt._lock._RLock__owner is None:
+        with CellMgmt._lock:
+            return func(*args, **kwargs)
+
     # lock by process
-    with CellMgmt._lock:
-        return func(*args, **kwargs)
+    timeout = 120
+    while timeout > 0:
+        if CellMgmt._lock.acquire(blocking=False) is True:
+            try:
+                return func(*args, **kwargs)
+            finally:
+                CellMgmt._lock.release()
+        else:
+            timeout = timeout - 1
+            sleep(1)
+            continue
+
+    _logger.warning("cell_mgmt timeout, release lock")
+    try:
+        os.remove("/tmp/cell_mgmt.lock")
+    except OSError as e:
+        _logger.warning(str(e))
+    except:
+        _logger.warning(format_exc())
 
 
 def sh_default_timeout(func, timeout):
