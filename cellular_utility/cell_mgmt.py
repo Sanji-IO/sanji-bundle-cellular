@@ -81,7 +81,7 @@ def retry_on_busy(func, *args, **kwargs):
 @decorator
 def critical_section(func, *args, **kwargs):
     if CellMgmt._lock._RLock__owner == thread.get_ident() \
-        or CellMgmt._lock._RLock__owner is None:
+            or CellMgmt._lock._RLock__owner is None:
         with CellMgmt._lock:
             return func(*args, **kwargs)
 

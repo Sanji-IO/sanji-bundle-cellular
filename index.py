@@ -18,6 +18,8 @@ from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
 from cellular_utility.management import Manager
 from cellular_utility.vnstat import VnStat, VnStatError
 
+from sh import rm, service
+
 if __name__ == "__main__":
     FORMAT = "%(asctime)s - %(levelname)s - %(lineno)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=FORMAT)
@@ -40,6 +42,11 @@ class Index(Sanji):
             target=self.__initial_procedure)
         self._init_thread.daemon = True
         self._init_thread.start()
+        self.__init_monit_config(
+            enable=(self.model.db[0]["enable"] and
+                    self.model.db[0]["keepalive"]["enable"] and True),
+            target_host=self.model.db[0]["keepalive"]["targetHost"]
+        )
 
     def __initial_procedure(self):
         """
@@ -97,6 +104,22 @@ class Index(Sanji):
 
         self._init_thread = None
         return True
+
+    def __init_monit_config(self, enable=False, target_host="8.8.8.8"):
+        if enable is False:
+            rm("-rf", "/etc/monit/conf.d/keepalive")
+            service("monit", "restart")
+            return
+
+        config = """check host targethost with address {target_host}
+    if failed icmp type echo
+        count 3 with timeout 20 seconds
+    then exec "/bin/bash -c '/sbin/cell_mgmt power_off force && /bin/sleep 5 && /sbin/reboot -i -f -d'"
+    every 2 cycles
+"""
+        with open("/etc/monit/conf.d/keepalive", "w") as f:
+            f.write(config.format(target_host=target_host))
+        service("monit", "restart")
 
     @Route(methods="get", resource="/network/cellulars")
     def get_list(self, message, response):
@@ -177,6 +200,11 @@ class Index(Sanji):
             self._mgr = None
 
         self.__create_manager()
+        self.__init_monit_config(
+            enable=(self.model.db[0]["enable"] and
+                    self.model.db[0]["keepalive"]["enable"] and True),
+            target_host=self.model.db[0]["keepalive"]["targetHost"]
+        )
 
         return response(code=200, data=self._get())
 
