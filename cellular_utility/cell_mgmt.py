@@ -262,7 +262,7 @@ class CellMgmt(object):
     _start_dns_regex = re.compile(
         r"DNS=([0-9\. ]*)\n")
     _signal_regex = re.compile(
-        r"^([a-zA-Z0-9]+) (-[0-9]+) dbm\n$")
+        r"^([\S]+) (-[0-9]+) dbm\n$")
     _m_info_regex = re.compile(
         r"^Module=([\S ]+)\n"
         r"WWAN_node=([\S]+)\n"

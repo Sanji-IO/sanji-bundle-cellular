@@ -6,6 +6,7 @@ sanji-bundle-cellular (2.1.0-1) unstable; urgency=low
   * feat: Add monit for external keepalive
   * feat: Use cycles instead of intervalSec
   * fix: Apply default settings to config
+  * fix: Query signal failed under CDMA.
 
  -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 25 Aug 2016 16:05:02 +0800
 
