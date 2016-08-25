@@ -1,8 +1,8 @@
 {
   "name": "cellular",
-  "version": "2.0.4",
-  "author": "TC Huang",
-  "email": "tc.huang@moxa.com",
+  "version": "2.1.0",
+  "author": "Aeluin Chen",
+  "email": "aeluin.chen@moxa.com",
   "description": "Provides the cellular configuration interface",
   "license": "MOXA",
   "main": "index.py",
