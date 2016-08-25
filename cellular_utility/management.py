@@ -309,12 +309,6 @@ class Manager(object):
 
         self._update_network_information_callback = None
 
-        if self._pdp_context_static is True:
-            self._cell_mgmt.set_pdp_context(
-                self._pdp_context_id,
-                self._pdp_context_apn,
-                self._pdp_context_type)
-
         self._log = Log()
 
     def set_update_network_information_callback(
@@ -364,6 +358,12 @@ class Manager(object):
     def _main_thread(self):
         while True:
             try:
+                if self._pdp_context_static is True:
+                    self._cell_mgmt.set_pdp_context(
+                        self._pdp_context_id,
+                        self._pdp_context_apn,
+                        self._pdp_context_type)
+
                 self._loop()
 
             except StopException:
