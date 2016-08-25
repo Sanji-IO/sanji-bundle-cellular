@@ -29,9 +29,38 @@ _logger = logging.getLogger("sanji.cellular")
 
 class Index(Sanji):
 
+    CONF_SCHEMA = Schema(
+        {
+            "id": int,
+            Required("enable"): bool,
+            Required("pdpContext"): {
+                Required("static"): bool,
+                Required("id"): int,
+                Optional("apn"): All(Any(unicode, str), Length(0, 100)),
+                Optional("type"): In(frozenset(["ipv4", "ipv6", "ipv4v6"]))
+            },
+            Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
+            Required("keepalive"): {
+                Required("enable"): bool,
+                Required("targetHost"): str,
+                Required("intervalSec"): All(
+                    int,
+                    Any(0, Range(min=60, max=86400-1))),
+                Required("reboot",
+                         default={"enable": False, "cycles": 1}): {
+                    Required("enable", default=False): bool,
+                    Required("cycles", default=1): All(
+                        int,
+                        Any(0, Range(min=1, max=48))),
+                }
+            }
+        },
+        extra=REMOVE_EXTRA)
+
     def init(self, *args, **kwargs):
         path_root = os.path.abspath(os.path.dirname(__file__))
         self.model = ModelInitiator("cellular", path_root)
+        self.model.db[0] = Index.CONF_SCHEMA(self.model.db[0])
 
         self._dev_name = None
         self._mgr = None
@@ -148,33 +177,7 @@ class Index(Sanji):
 
         return response(code=200, data=self._get())
 
-    PUT_SCHEMA = Schema(
-        {
-            "id": int,
-            Required("enable"): bool,
-            Required("pdpContext"): {
-                Required("static"): bool,
-                Required("id"): int,
-                Optional("apn"): All(Any(unicode, str), Length(0, 100)),
-                Optional("type"): In(frozenset(["ipv4", "ipv6", "ipv4v6"]))
-            },
-            Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
-            Required("keepalive"): {
-                Required("enable"): bool,
-                Required("targetHost"): str,
-                Required("intervalSec"): All(
-                    int,
-                    Any(0, Range(min=60, max=86400-1))),
-                Required("reboot",
-                         default={"enable": False, "cycles": 1}): {
-                    Required("enable", default=False): bool,
-                    Required("cycles", default=1): All(
-                        int,
-                        Any(0, Range(min=1, max=48))),
-                }
-            }
-        },
-        extra=REMOVE_EXTRA)
+    PUT_SCHEMA = CONF_SCHEMA
 
     @Route(methods="put", resource="/network/cellulars/:id", schema=PUT_SCHEMA)
     def put(self, message, response):
