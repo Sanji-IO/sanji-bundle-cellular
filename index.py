@@ -44,8 +44,11 @@ class Index(Sanji):
         self._init_thread.start()
         self.__init_monit_config(
             enable=(self.model.db[0]["enable"] and
-                    self.model.db[0]["keepalive"]["enable"] and True),
-            target_host=self.model.db[0]["keepalive"]["targetHost"]
+                    self.model.db[0]["keepalive"]["enable"] and True and
+                    self.model.db[0]["keepalive"]["reboot"]["enable"] and
+                    True),
+            target_host=self.model.db[0]["keepalive"]["targetHost"],
+            cycles=self.model.db[0]["keepalive"]["reboot"]["cycles"]
         )
 
     def __initial_procedure(self):
@@ -105,7 +108,8 @@ class Index(Sanji):
         self._init_thread = None
         return True
 
-    def __init_monit_config(self, enable=False, target_host="8.8.8.8"):
+    def __init_monit_config(
+            self, enable=False, target_host="8.8.8.8", cycles=1):
         if enable is False:
             rm("-rf", "/etc/monit/conf.d/keepalive")
             service("monit", "restart")
@@ -115,10 +119,10 @@ class Index(Sanji):
     if failed icmp type echo
         count 3 with timeout 20 seconds
     then exec "/bin/bash -c '/sbin/cell_mgmt power_off force && /bin/sleep 5 && /sbin/reboot -i -f -d'"
-    every 2 cycles
+    every {cycles} cycles
 """
         with open("/etc/monit/conf.d/keepalive", "w") as f:
-            f.write(config.format(target_host=target_host))
+            f.write(config.format(target_host=target_host, cycles=cycles))
         service("monit", "restart")
 
     @Route(methods="get", resource="/network/cellulars")
@@ -160,7 +164,14 @@ class Index(Sanji):
                 Required("targetHost"): str,
                 Required("intervalSec"): All(
                     int,
-                    Any(0, Range(min=60, max=86400-1)))
+                    Any(0, Range(min=60, max=86400-1))),
+                Required("reboot",
+                         default={"enable": False, "cycles": 1}): {
+                    Required("enable", default=False): bool,
+                    Required("cycles", default=1): All(
+                        int,
+                        Any(0, Range(min=1, max=48))),
+                }
             }
         },
         extra=REMOVE_EXTRA)
@@ -202,8 +213,11 @@ class Index(Sanji):
         self.__create_manager()
         self.__init_monit_config(
             enable=(self.model.db[0]["enable"] and
-                    self.model.db[0]["keepalive"]["enable"] and True),
-            target_host=self.model.db[0]["keepalive"]["targetHost"]
+                    self.model.db[0]["keepalive"]["enable"] and True and
+                    self.model.db[0]["keepalive"]["reboot"]["enable"] and
+                    True),
+            target_host=self.model.db[0]["keepalive"]["targetHost"],
+            cycles=self.model.db[0]["keepalive"]["reboot"]["cycles"]
         )
 
         return response(code=200, data=self._get())
