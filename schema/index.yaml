@@ -329,7 +329,7 @@ externalDocs:
           "intervalSec": 60,
           "reboot": {
             "enable": fales,
-            "intervalSec": 1200
+            "cycles": 1
           }
         }
       }
