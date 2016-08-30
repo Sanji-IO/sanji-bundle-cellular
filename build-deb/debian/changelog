@@ -1,3 +1,12 @@
+sanji-bundle-cellular (2.0.1+2-1) unstable; urgency=low
+
+  * fix: sh default timeout
+  * fix: Power cycle the module for unknown crash.
+  * fix: Add timeout for RLock in cell_mgmt.
+  * feat: Add monit for external keepalive.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Tue, 30 Aug 2016 15:22:54 +0800
+
 sanji-bundle-cellular (2.0.1+1-1) unstable; urgency=low
 
   * Fix: Query signal failed under CDMA.
