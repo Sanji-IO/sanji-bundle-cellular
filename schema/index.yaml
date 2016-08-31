@@ -2,7 +2,7 @@ swagger: '2.0'
 info:
   title: Cellular API
   description: Handle the Cellular interface(s)
-  version: "2.0.0"
+  version: "2.1.0"
 
 schemes:
   - http
@@ -218,6 +218,21 @@ definitions:
           intervalSec:
             type: integer
             description: Check alive interval.
+          reboot:
+            type: object
+            description: |
+              Reboot system while check alive failed after a defined cycle(s).
+            properties:
+              enable:
+                type: boolean
+                description: |
+                  Enable/disable reboot policy for check alive failed.
+              cycles:
+                type: integer
+                description: |
+                  Define cycles to check if reboot is required; a cycle is
+                  a global value defined by system, default should be 30
+                  minutes.
     example:
           $ref: '#/externalDocs/x-mocks/Cellular'
 
@@ -263,7 +278,11 @@ externalDocs:
         "keepalive": {
           "enable": true,
           "targetHost": "8.8.8.8",
-          "intervalSec": 60
+          "intervalSec": 60,
+          "reboot": {
+            "enable": false,
+            "cycles": 1
+          }
         }
       }
     Cellulars:

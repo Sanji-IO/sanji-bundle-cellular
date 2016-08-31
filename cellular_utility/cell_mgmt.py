@@ -10,6 +10,7 @@ import re
 import sh
 from sh import ErrorReturnCode, ErrorReturnCode_60, TimeoutException
 from subprocess import CalledProcessError
+import thread
 from threading import RLock
 from time import sleep
 from traceback import format_exc
@@ -79,9 +80,39 @@ def retry_on_busy(func, *args, **kwargs):
 
 @decorator
 def critical_section(func, *args, **kwargs):
+    if CellMgmt._lock._RLock__owner == thread.get_ident() \
+            or CellMgmt._lock._RLock__owner is None:
+        with CellMgmt._lock:
+            return func(*args, **kwargs)
+
     # lock by process
-    with CellMgmt._lock:
+    timeout = 120
+    while timeout > 0:
+        if CellMgmt._lock.acquire(blocking=False) is True:
+            try:
+                return func(*args, **kwargs)
+            finally:
+                CellMgmt._lock.release()
+        else:
+            timeout = timeout - 1
+            sleep(1)
+            continue
+
+    _logger.warning("cell_mgmt timeout, release lock")
+    try:
+        os.remove("/tmp/cell_mgmt.lock")
+    except OSError as e:
+        _logger.warning(str(e))
+    except:
+        _logger.warning(format_exc())
+
+
+def sh_default_timeout(func, timeout):
+    def _sh_default_timeout(*args, **kwargs):
+        if kwargs.get("_timeout", None) is None:
+            kwargs.update({"_timeout": timeout})
         return func(*args, **kwargs)
+    return _sh_default_timeout
 
 
 class NetworkInformation(object):
@@ -281,17 +312,16 @@ class CellMgmt(object):
 
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
-        self._cell_mgmt = sh.cell_mgmt
-        self._qmicli = sh.Command(tool_path + "/call-qmicli.sh")
+
+        # Add default timeout to cell_mgmt and qmicli
+        # will raise TimeoutException
+        self._cell_mgmt = sh_default_timeout(sh.cell_mgmt, 70)
+        self._qmicli = sh_default_timeout(
+            sh.Command(tool_path + "/call-qmicli.sh"), 70)
 
         self._invoke_period_sec = 0
 
         self._use_shell = False
-
-        # Add default timeout to cell_mgmt and qmicli
-        # will raise TimeoutException
-        self._cell_mgmt._call_args["timeout"] = 50
-        self._qmicli._call_args["timeout"] = 50
 
     @critical_section
     @handle_error_return_code
@@ -479,13 +509,13 @@ class CellMgmt(object):
 
     @handle_error_return_code
     @retry_on_busy
-    def _power_off(self):
+    def _power_off(self, force=False):
         """
         Power off Cellular module.
         """
         _logger.debug("cell_mgmt power_off")
 
-        self._cell_mgmt("power_off")
+        self._cell_mgmt("power_off", "force" if force else "")
 
         # sleep to make sure GPIO is pulled down for enough time
         sleep(1)
@@ -495,13 +525,14 @@ class CellMgmt(object):
 
     @handle_error_return_code
     @retry_on_busy
-    def _power_on(self, timeout_sec=60):
+    def _power_on(self, force=False, timeout_sec=60):
         """
         Power on Cellular module.
         """
         _logger.debug("cell_mgmt power_on")
 
-        self._cell_mgmt("power_on", _timeout=timeout_sec)
+        self._cell_mgmt(
+            "power_on", "force" if force else "", _timeout=timeout_sec)
 
         if self._invoke_period_sec != 0:
             sleep(self._invoke_period_sec)
@@ -509,13 +540,13 @@ class CellMgmt(object):
     @critical_section
     @handle_error_return_code
     @retry_on_busy
-    def power_cycle(self, timeout_sec=60):
+    def power_cycle(self, force=False, timeout_sec=60):
         """
         Power cycle Cellular module.
         """
-        self._power_off()
+        self._power_off(force)
         sleep(1)
-        self._power_on(timeout_sec)
+        self._power_on(force, timeout_sec)
 
     @critical_section
     @handle_error_return_code

@@ -31,7 +31,11 @@ class TestCellularStatic(unittest.TestCase):
             "keepalive": {
                 "enable": True,
                 "targetHost": "8.8.8.8",
-                "intervalSec": 60
+                "intervalSec": 60,
+                "reboot": {
+                    "enable": False,
+                    "cycles": 1
+                }
             }
         }
 
@@ -55,7 +59,11 @@ class TestCellularStatic(unittest.TestCase):
             "keepalive": {
                 "enable": True,
                 "targetHost": "8.8.8.8",
-                "intervalSec": 60
+                "intervalSec": 60,
+                "reboot": {
+                    "enable": False,
+                    "cycles": 1
+                }
             }
         }
 
@@ -79,7 +87,11 @@ class TestCellularStatic(unittest.TestCase):
             "keepalive": {
                 "enable": True,
                 "targetHost": "8.8.8.8",
-                "intervalSec": 60
+                "intervalSec": 60,
+                "reboot": {
+                    "enable": False,
+                    "cycles": 1
+                }
             }
         }
 
