@@ -269,6 +269,21 @@ definitions:
           intervalSec:
             type: integer
             description: Check alive interval.
+          reboot:
+            type: object
+            description: |
+              Reboot system while check alive failed after a defined cycle(s).
+            properties:
+              enable:
+                type: boolean
+                description: |
+                  Enable/disable reboot policy for check alive failed.
+              cycles:
+                type: integer
+                description: |
+                  Define cycles to check if reboot is required; a cycle is
+                  a global value defined by system, default should be 30
+                  minutes.
     example:
           $ref: '#/externalDocs/x-mocks/Cellular'
 
@@ -328,8 +343,8 @@ externalDocs:
           "targetHost": "8.8.8.8",
           "intervalSec": 60,
           "reboot": {
-            "enable": fales,
-            "intervalSec": 1200
+            "enable": false,
+            "cycles": 1
           }
         }
       }
