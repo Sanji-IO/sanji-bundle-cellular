@@ -191,6 +191,7 @@ class Index(Sanji):
         _logger.info(str(message.data))
 
         data = Index.PUT_SCHEMA(message.data)
+        data["id"] = id_
 
         _logger.info(str(data))
 
