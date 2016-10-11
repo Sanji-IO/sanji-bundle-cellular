@@ -279,6 +279,8 @@ class CellMgmt(object):
         r"^\+CPIN:\s*READY$")
     _sim_status_sim_pin_regex = re.compile(
         r"^\+CPIN:\s*SIM\s+PIN$")
+    _sim_status_nosim_regex = re.compile(
+        r"^\+CME\s+ERROR:\s*SIM\s+not\s+inserted$")
 
     _pin_retry_remain_regex = re.compile(
         r"\[[\S]+\][\S ]+\n"
@@ -715,6 +717,10 @@ class CellMgmt(object):
                 return SimStatus.ready
             elif self._sim_status_sim_pin_regex.match(output):
                 return SimStatus.pin
+            elif self._sim_status_nosim_regex.match(output):
+                return SimStatus.nosim
+            else:
+                return SimStatus.nosim
 
         except ErrorReturnCode_60:
             raise
