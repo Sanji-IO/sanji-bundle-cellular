@@ -293,7 +293,10 @@ class Index(Sanji):
             "id": config["id"],
             "name": name,
             "mode": "n/a" if cinfo is None else cinfo.mode,
-            "signal": 0 if cinfo is None else cinfo.signal_dbm,
+            "signal": {"csq": 0, "rssi": 0, "ecio": 0} if cinfo is None else
+                {"csq": cinfo.signal_csq,
+                 "rssi": cinfo.signal_rssi_dbm,
+                 "ecio": cinfo.signal_ecio_dbm},
             "operatorName": "n/a" if cinfo is None else cinfo.operator,
             "lac": "n/a" if cinfo is None else cinfo.lac,
             "cellId": "n/a" if cinfo is None else cinfo.cell_id,

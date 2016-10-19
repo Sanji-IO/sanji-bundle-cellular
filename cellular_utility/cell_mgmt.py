@@ -214,17 +214,29 @@ class Signal(object):
     def __init__(
             self,
             mode=None,
-            rssi_dbm=None):
+            rssi_dbm=None,
+            ecio_dbm=None,
+            csq=None):
         self._mode = "none" if mode is None else mode
         self._rssi_dbm = 0 if rssi_dbm is None else rssi_dbm
+        self._ecio_dbm = 0.0 if ecio_dbm is None else ecio_dbm
+        self._csq = 0 if csq is None else csq
 
     @property
     def mode(self):
         return self._mode
 
     @property
+    def csq(self):
+        return self._csq
+
+    @property
     def rssi_dbm(self):
         return self._rssi_dbm
+
+    @property
+    def ecio_dbm(self):
+        return self._ecio_dbm
 
 
 class CellularLocation(object):
@@ -263,6 +275,10 @@ class CellMgmt(object):
         r"DNS=([0-9\. ]*)\n")
     _signal_regex = re.compile(
         r"^([\S]+) (-[0-9]+) dbm\n$")
+    _signal_adv_regex = re.compile(
+        r"^CSQ: ([0-9]+)\n"
+        r"RSSI: ([\S]+) (-[0-9]+) dBm\n"
+        r"EcIo: ([\S]+) (-[0-9.]+) dBm\n")
     _m_info_regex = re.compile(
         r"^Module=([\S ]+)\n"
         r"WWAN_node=([\S]+)\n"
@@ -470,6 +486,32 @@ class CellMgmt(object):
             return Signal(
                 mode=match.group(1),
                 rssi_dbm=int(match.group(2)))
+
+        _logger.warning("unexpected output: " + output)
+        # signal out of range
+        return Signal()
+
+    @critical_section
+    @handle_error_return_code
+    @retry_on_busy
+    def signal_adv(self):
+        """Returns an instance of Signal."""
+
+        _logger.debug("cell_mgmt signal_adv")
+
+        output = self._cell_mgmt("signal_adv")
+        output = str(output)
+
+        if self._invoke_period_sec != 0:
+            sleep(self._invoke_period_sec)
+
+        match = CellMgmt._signal_adv_regex.match(output)
+        if match:
+            return Signal(
+                csq=int(match.group(1)),
+                mode=match.group(2),
+                rssi_dbm=int(match.group(3)),
+                ecio_dbm=float(match.group(5)))
 
         _logger.warning("unexpected output: " + output)
         # signal out of range

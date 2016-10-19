@@ -29,13 +29,17 @@ class CellularInformation(object):
     def __init__(
             self,
             mode=None,
-            signal_dbm=None,
+            signal_csq=None,
+            signal_rssi_dbm=None,
+            signal_ecio_dbm=None,
             operator=None,
             lac=None,
             cell_id=None):
 
         if (not isinstance(mode, str) or
-                not isinstance(signal_dbm, int) or
+                not isinstance(signal_csq, int) or
+                not isinstance(signal_rssi_dbm, int) or
+                not isinstance(signal_ecio_dbm, float) or
                 not isinstance(operator, str) or
                 not isinstance(lac, str) or
                 not isinstance(cell_id, str)):
@@ -45,7 +49,9 @@ class CellularInformation(object):
             _logger.warning("lac = {}, cell_id = {}".format(lac, cell_id))
 
         self._mode = mode
-        self._signal_dbm = signal_dbm
+        self._signal_csq = signal_csq
+        self._signal_rssi_dbm = signal_rssi_dbm
+        self._signal_ecio_dbm = signal_ecio_dbm
         self._operator = operator
         self._lac = lac
         self._cell_id = cell_id
@@ -55,8 +61,16 @@ class CellularInformation(object):
         return self._mode
 
     @property
-    def signal_dbm(self):
-        return self._signal_dbm
+    def signal_csq(self):
+        return self._signal_csq
+
+    @property
+    def signal_rssi_dbm(self):
+        return self._signal_rssi_dbm
+
+    @property
+    def signal_ecio_dbm(self):
+        return self._signal_ecio_dbm
 
     @property
     def operator(self):
@@ -75,10 +89,10 @@ class CellularInformation(object):
         cell_mgmt = CellMgmt()
 
         try:
-            signal = cell_mgmt.signal()
+            signal = cell_mgmt.signal_adv()
 
         except CellMgmtError:
-            signal = Signal(mode="n/a", rssi_dbm=0)
+            signal = Signal(mode="n/a", rssi_dbm=0, ecio_dbm=0.0, csq=0)
 
         try:
             operator = cell_mgmt.operator()
@@ -96,7 +110,9 @@ class CellularInformation(object):
 
         return CellularInformation(
             signal.mode,
+            signal.csq,
             signal.rssi_dbm,
+            signal.ecio_dbm,
             operator,
             cellular_location.lac,
             cellular_location.cell_id)
