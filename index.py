@@ -294,9 +294,9 @@ class Index(Sanji):
             "name": name,
             "mode": "n/a" if cinfo is None else cinfo.mode,
             "signal": {"csq": 0, "rssi": 0, "ecio": 0.0} if cinfo is None else
-                {"csq": cinfo.signal_csq,
-                 "rssi": cinfo.signal_rssi_dbm,
-                 "ecio": cinfo.signal_ecio_dbm},
+                    {"csq": cinfo.signal_csq,
+                     "rssi": cinfo.signal_rssi_dbm,
+                     "ecio": cinfo.signal_ecio_dbm},
             "operatorName": "n/a" if cinfo is None else cinfo.operator,
             "lac": "n/a" if cinfo is None else cinfo.lac,
             "cellId": "n/a" if cinfo is None else cinfo.cell_id,
@@ -304,6 +304,7 @@ class Index(Sanji):
             "imei": "n/a" if sinfo is None else sinfo.imei,
             "pinRetryRemain": (
                 -1 if sinfo is None else sinfo.pin_retry_remain),
+            "phoneNumber": "n/a" if cinfo is None else cinfo.number,
 
             "status": status.name,
             "ip": "n/a" if ninfo is None else ninfo.ip,

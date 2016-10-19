@@ -13,7 +13,8 @@ from time import sleep
 from traceback import format_exc
 
 from cellular_utility.cell_mgmt import (
-    CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal
+    CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal,
+    CellularNumber
 )
 from cellular_utility.event import Log
 
@@ -34,7 +35,8 @@ class CellularInformation(object):
             signal_ecio_dbm=None,
             operator=None,
             lac=None,
-            cell_id=None):
+            cell_id=None,
+            number=None):
 
         if (not isinstance(mode, str) or
                 not isinstance(signal_csq, int) or
@@ -42,7 +44,8 @@ class CellularInformation(object):
                 not isinstance(signal_ecio_dbm, float) or
                 not isinstance(operator, str) or
                 not isinstance(lac, str) or
-                not isinstance(cell_id, str)):
+                not isinstance(cell_id, str) or
+                not isinstance(number, str)):
             raise ValueError
 
         if lac == "Unknown" or cell_id == "Unknown":
@@ -55,6 +58,7 @@ class CellularInformation(object):
         self._operator = operator
         self._lac = lac
         self._cell_id = cell_id
+        self._number = number
 
     @property
     def mode(self):
@@ -84,6 +88,10 @@ class CellularInformation(object):
     def cell_id(self):
         return self._cell_id
 
+    @property
+    def number(self):
+        return self._number
+
     @staticmethod
     def get():
         cell_mgmt = CellMgmt()
@@ -108,6 +116,13 @@ class CellularInformation(object):
                 lac="n/a",
                 cell_id="n/a")
 
+        try:
+            number = cell_mgmt.number()
+
+        except CellMgmtError:
+            number = CellularNumber(
+                number="n/a")
+
         return CellularInformation(
             signal.mode,
             signal.csq,
@@ -115,7 +130,8 @@ class CellularInformation(object):
             signal.ecio_dbm,
             operator,
             cellular_location.lac,
-            cellular_location.cell_id)
+            cellular_location.cell_id,
+            number.number)
 
 
 class CellularObserver(object):

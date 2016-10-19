@@ -260,6 +260,20 @@ class CellularLocation(object):
         return self._lac
 
 
+class CellularNumber(object):
+    def __init__(
+            self,
+            number=None):
+        if not isinstance(number, str):
+            raise ValueError
+
+        self._number = number
+
+    @property
+    def number(self):
+        return self._number
+
+
 class CellMgmt(object):
     """
     cell_mgmt utilty wrapper
@@ -301,6 +315,9 @@ class CellMgmt(object):
         r"[\n\t ]*PIN1 retries: '([0-9]+)'\n"
         r"[\n\t ]*PUK1 retries: '([0-9]+)'\n"
     )
+
+    _number_regex = re.compile(
+        r"^([^\n]*)[\n]{0,1}")
 
     _at_response_ok_regex = re.compile(
         r"^[\r\n]*([+\S\s :]*)[\r\n]+OK[\r\n]*$")
@@ -516,6 +533,28 @@ class CellMgmt(object):
         _logger.warning("unexpected output: " + output)
         # signal out of range
         return Signal()
+
+    @critical_section
+    @handle_error_return_code
+    @retry_on_busy
+    def number(self):
+        """Returns an instance of CellularNumber."""
+
+        _logger.debug("cell_mgmt number")
+
+        output = self._cell_mgmt("number")
+        output = str(output)
+
+        if self._invoke_period_sec != 0:
+            sleep(self._invoke_period_sec)
+
+        match = CellMgmt._number_regex.match(output)
+        if match:
+            return CellularNumber(
+                number=match.group(1))
+
+        _logger.warning("unexpected output: " + output)
+        return CellularNumber()
 
     @critical_section
     def status(self):
