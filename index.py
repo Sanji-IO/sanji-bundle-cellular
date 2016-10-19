@@ -36,7 +36,9 @@ class Index(Sanji):
             Required("pdpContext"): {
                 Required("static"): bool,
                 Required("id"): int,
-                Required("retryTimeout"): int,
+                Required("retryTimeout", default=120): All(
+                    int,
+                    Any(0, Range(min=10, max=86400-1))),
                 Required("primary"): {
                     Required("apn", default="internet"):
                         All(Any(unicode, str), Length(0, 100)),
