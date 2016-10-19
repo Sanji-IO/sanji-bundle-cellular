@@ -3,10 +3,18 @@
 
 
 import os
+import sys
 import logging
 import unittest
 
-from index import Index
+try:
+    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
+    from index import Index
+except ImportError as e:
+    print "Please check the python PATH for import test module. (%s)" \
+        % __file__
+    print (e)
+    exit(1)
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
@@ -25,7 +33,14 @@ class TestCellularStatic(unittest.TestCase):
             "pdpContext": {
                 "static": True,
                 "id": 1,
-                "apn": "internet"
+                "retryTimeout": 1200,
+                "primary": {
+                    "apn": "internet",
+                    "type": "ipv4v6"
+                },
+                "secondary": {
+                    "type": "ipv4v6"
+                }
             },
             "pinCode": "0000",
             "keepalive": {
@@ -53,7 +68,14 @@ class TestCellularStatic(unittest.TestCase):
             "pdpContext": {
                 "static": True,
                 "id": 1,
-                "apn": "internet"
+                "retryTimeout": 1200,
+                "primary": {
+                    "apn": "internet",
+                    "type": "ipv4v6"
+                },
+                "secondary": {
+                    "type": "ipv4v6"
+                }
             },
             "pinCode": u"0000",
             "keepalive": {
@@ -81,7 +103,14 @@ class TestCellularStatic(unittest.TestCase):
             "pdpContext": {
                 "static": True,
                 "id": 1,
-                "apn": "internet"
+                "retryTimeout": 1200,
+                "primary": {
+                    "apn": "internet",
+                    "type": "ipv4v6"
+                },
+                "secondary": {
+                    "type": "ipv4v6"
+                }
             },
             "pinCode": u"",
             "keepalive": {

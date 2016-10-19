@@ -36,8 +36,18 @@ class Index(Sanji):
             Required("pdpContext"): {
                 Required("static"): bool,
                 Required("id"): int,
-                Optional("apn"): All(Any(unicode, str), Length(0, 100)),
-                Optional("type"): In(frozenset(["ipv4", "ipv6", "ipv4v6"]))
+                Required("retryTimeout"): int,
+                Required("primary"): {
+                    Required("apn", default="internet"):
+                        All(Any(unicode, str), Length(0, 100)),
+                    Optional("type", default="ipv4v6"):
+                        In(frozenset(["ipv4", "ipv6", "ipv4v6"]))
+                },
+                Required("secondary", default={}): {
+                    Optional("apn"): All(Any(unicode, str), Length(0, 100)),
+                    Optional("type", default="ipv4v6"):
+                        In(frozenset(["ipv4", "ipv6", "ipv4v6"]))
+                }
             },
             Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
             Required("keepalive"): {
@@ -106,7 +116,25 @@ class Index(Sanji):
 
     def __create_manager(self):
         pin = self.model.db[0]["pinCode"]
-        pdpc_type = self.model.db[0]["pdpContext"].get("type", "ipv4v6")
+        if "primary" in self.model.db[0]["pdpContext"]:
+            pdpc_primary_apn = \
+                self.model.db[0]["pdpContext"]["primary"].get(
+                    "apn", "internet")
+            pdpc_primary_type = \
+                self.model.db[0]["pdpContext"]["primary"].get("type", "ipv4v6")
+        else:
+            pdpc_primary_apn = "internet"
+            pdpc_primary_type = "ipv4v6"
+        if "secondary" in self.model.db[0]["pdpContext"]:
+            pdpc_secondary_apn = \
+                self.model.db[0]["pdpContext"]["secondary"].get("apn", "")
+            pdpc_secondary_type = \
+                self.model.db[0]["pdpContext"]["secondary"].get(
+                    "type", "ipv4v6")
+        else:
+            pdpc_secondary_apn = ""
+            pdpc_secondary_type = "ipv4v6"
+        pdpc_retry_timeout = self.model.db[0]["pdpContext"]["retryTimeout"]
 
         self._mgr = Manager(
             dev_name=self._dev_name,
@@ -114,8 +142,11 @@ class Index(Sanji):
             pin=None if pin == "" else pin,
             pdp_context_static=self.model.db[0]["pdpContext"]["static"],
             pdp_context_id=self.model.db[0]["pdpContext"]["id"],
-            pdp_context_apn=self.model.db[0]["pdpContext"].get("apn", ""),
-            pdp_context_type=pdpc_type,
+            pdp_context_primary_apn=pdpc_primary_apn,
+            pdp_context_primary_type=pdpc_primary_type,
+            pdp_context_secondary_apn=pdpc_secondary_apn,
+            pdp_context_secondary_type=pdpc_secondary_type,
+            pdp_context_retry_timeout=pdpc_retry_timeout,
             keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"],
@@ -198,12 +229,6 @@ class Index(Sanji):
         # always use the 1st PDP context for static
         if data["pdpContext"]["static"] is True:
             data["pdpContext"]["id"] = 1
-            if data["pdpContext"].get("apn", None) is None:
-                return response(code=400,
-                                data={"message": "APN should be provided"})
-        else:
-            data["pdpContext"].pop("apn", None)
-            data["pdpContext"].pop("type", None)
 
         # since all items are required in PUT,
         # its schema is identical to cellular.json
@@ -261,14 +286,6 @@ class Index(Sanji):
             self.model.save_db()
 
         config["pdpContext"]["list"] = pdpc_list
-        try:
-            pdpc = (item for item in config["pdpContext"]["list"]
-                    if item["id"] == config["pdpContext"]["id"]).next()
-            config["pdpContext"]["apn"] = pdpc["apn"]
-            config["pdpContext"]["type"] = pdpc["type"]
-        except:
-            config["pdpContext"]["apn"] = ""
-            config["pdpContext"]["type"] = "ipv4v6"
 
         return {
             "id": config["id"],

@@ -7,14 +7,24 @@
     "pdpContext": {
       "static": true,
       "id": 1,
-      "apn": "internet",
-      "type": "ipv4v6"
+      "retryTimeout": 600,
+      "primary": {
+        "apn": "internet",
+        "type": "ipv4v6"
+      },
+      "secondary": {
+        "type": "ipv4v6"
+      }
     },
 
     "keepalive": {
       "enable": true,
       "targetHost": "8.8.8.8",
-      "intervalSec": 60
+      "intervalSec": 60,
+      "reboot": {
+        "enable": false,
+        "cycles": 1
+      }
     }
   }
 ]
