@@ -13,7 +13,8 @@ from time import sleep
 from traceback import format_exc
 
 from cellular_utility.cell_mgmt import (
-    CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal
+    CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal,
+    CellularNumber
 )
 from cellular_utility.event import Log
 
@@ -29,34 +30,51 @@ class CellularInformation(object):
     def __init__(
             self,
             mode=None,
-            signal_dbm=None,
+            signal_csq=None,
+            signal_rssi_dbm=None,
+            signal_ecio_dbm=None,
             operator=None,
             lac=None,
-            cell_id=None):
+            cell_id=None,
+            number=None):
 
         if (not isinstance(mode, str) or
-                not isinstance(signal_dbm, int) or
+                not isinstance(signal_csq, int) or
+                not isinstance(signal_rssi_dbm, int) or
+                not isinstance(signal_ecio_dbm, float) or
                 not isinstance(operator, str) or
                 not isinstance(lac, str) or
-                not isinstance(cell_id, str)):
+                not isinstance(cell_id, str) or
+                not isinstance(number, str)):
             raise ValueError
 
         if lac == "Unknown" or cell_id == "Unknown":
             _logger.warning("lac = {}, cell_id = {}".format(lac, cell_id))
 
         self._mode = mode
-        self._signal_dbm = signal_dbm
+        self._signal_csq = signal_csq
+        self._signal_rssi_dbm = signal_rssi_dbm
+        self._signal_ecio_dbm = signal_ecio_dbm
         self._operator = operator
         self._lac = lac
         self._cell_id = cell_id
+        self._number = number
 
     @property
     def mode(self):
         return self._mode
 
     @property
-    def signal_dbm(self):
-        return self._signal_dbm
+    def signal_csq(self):
+        return self._signal_csq
+
+    @property
+    def signal_rssi_dbm(self):
+        return self._signal_rssi_dbm
+
+    @property
+    def signal_ecio_dbm(self):
+        return self._signal_ecio_dbm
 
     @property
     def operator(self):
@@ -70,15 +88,19 @@ class CellularInformation(object):
     def cell_id(self):
         return self._cell_id
 
+    @property
+    def number(self):
+        return self._number
+
     @staticmethod
     def get():
         cell_mgmt = CellMgmt()
 
         try:
-            signal = cell_mgmt.signal()
+            signal = cell_mgmt.signal_adv()
 
         except CellMgmtError:
-            signal = Signal(mode="n/a", rssi_dbm=0)
+            signal = Signal(mode="n/a", rssi_dbm=0, ecio_dbm=0.0, csq=0)
 
         try:
             operator = cell_mgmt.operator()
@@ -94,12 +116,22 @@ class CellularInformation(object):
                 lac="n/a",
                 cell_id="n/a")
 
+        try:
+            number = cell_mgmt.number()
+
+        except CellMgmtError:
+            number = CellularNumber(
+                number="n/a")
+
         return CellularInformation(
             signal.mode,
+            signal.csq,
             signal.rssi_dbm,
+            signal.ecio_dbm,
             operator,
             cellular_location.lac,
-            cellular_location.cell_id)
+            cellular_location.cell_id,
+            number.number)
 
 
 class CellularObserver(object):
@@ -251,8 +283,11 @@ class Manager(object):
             pin=None,
             pdp_context_static=None,
             pdp_context_id=None,
-            pdp_context_apn=None,
-            pdp_context_type=None,
+            pdp_context_primary_apn=None,
+            pdp_context_primary_type=None,
+            pdp_context_secondary_apn=None,
+            pdp_context_secondary_type=None,
+            pdp_context_retry_timeout=None,
             keepalive_enabled=None,
             keepalive_host=None,
             keepalive_period_sec=None,
@@ -262,11 +297,17 @@ class Manager(object):
                 not isinstance(enabled, bool) or
                 not isinstance(pdp_context_static, bool) or
                 not isinstance(pdp_context_id, int) or
-                not (isinstance(pdp_context_apn, str) or
-                     isinstance(pdp_context_apn, unicode) or
-                     pdp_context_apn is None) or
-                not (isinstance(pdp_context_type, str) or
-                     pdp_context_type is None) or
+                not (isinstance(pdp_context_primary_apn, str) or
+                     isinstance(pdp_context_primary_apn, unicode) or
+                     pdp_context_primary_apn is None) or
+                not (isinstance(pdp_context_primary_type, str) or
+                     pdp_context_primary_type is None) or
+                not (isinstance(pdp_context_secondary_apn, str) or
+                     isinstance(pdp_context_secondary_apn, unicode) or
+                     pdp_context_secondary_apn is None) or
+                not (isinstance(pdp_context_secondary_type, str) or
+                     pdp_context_secondary_type is None) or
+                not isinstance(pdp_context_retry_timeout, int) or
                 not isinstance(keepalive_enabled, bool) or
                 not isinstance(keepalive_host, str) or
                 not isinstance(keepalive_period_sec, int) or
@@ -282,8 +323,11 @@ class Manager(object):
         self._pin = pin
         self._pdp_context_static = pdp_context_static
         self._pdp_context_id = pdp_context_id
-        self._pdp_context_apn = pdp_context_apn
-        self._pdp_context_type = pdp_context_type
+        self._pdp_context_primary_apn = pdp_context_primary_apn
+        self._pdp_context_primary_type = pdp_context_primary_type
+        self._pdp_context_secondary_apn = pdp_context_secondary_apn
+        self._pdp_context_secondary_type = pdp_context_secondary_type
+        self._pdp_context_retry_timeout = pdp_context_retry_timeout
         self._keepalive_enabled = keepalive_enabled
         self._keepalive_host = keepalive_host
         self._keepalive_period_sec = keepalive_period_sec
@@ -358,12 +402,6 @@ class Manager(object):
     def _main_thread(self):
         while True:
             try:
-                if self._pdp_context_static is True:
-                    self._cell_mgmt.set_pdp_context(
-                        self._pdp_context_id,
-                        self._pdp_context_apn,
-                        self._pdp_context_type)
-
                 self._loop()
 
             except StopException:
@@ -497,25 +535,26 @@ class Manager(object):
         if not self._attach():
             return
 
-        retry = 0
         while True:
             self._interrupt_point()
 
             self._status = Manager.Status.connecting
 
-            if not self._connect():
-                self._status = Manager.Status.connect_failure
+            if not self._try_connect(self._pdp_context_primary_apn,
+                                     self._pdp_context_primary_type,
+                                     self._pdp_context_retry_timeout):
 
-                retry += 1
-
-                if retry > 3:
+                if self._pdp_context_static is False or \
+                        self._pdp_context_secondary_apn is None or \
+                        self._pdp_context_secondary_apn == "":
                     break
 
-                self._sleep(10)
-                continue
+                if not self._try_connect(self._pdp_context_secondary_apn,
+                                         self._pdp_context_secondary_type,
+                                         self._pdp_context_retry_timeout):
+                    break
 
             self._status = Manager.Status.connected
-            retry = 0
 
             while True:
                 self._interrupt_point()
@@ -559,7 +598,23 @@ class Manager(object):
         self._status = Manager.Status.service_attached
         return True
 
-    def _connect(self):
+    def _try_connect(self, pdpc_apn, pdpc_type, retry_timeout):
+        retry = monotonic() + retry_timeout
+        while True:
+            self._interrupt_point()
+
+            self._status = Manager.Status.connecting
+            if not self._connect(pdpc_apn, pdpc_type):
+                self._status = Manager.Status.connect_failure
+
+                if monotonic() >= retry:
+                    break
+
+                self._sleep(10)
+            else:
+                return True
+
+    def _connect(self, pdpc_apn, pdpc_type):
         """Return True on success, False on failure.
         """
         self._network_information = None
@@ -570,6 +625,10 @@ class Manager(object):
             self._cell_mgmt.stop()
 
             try:
+                if self._pdp_context_static is True:
+                    self._cell_mgmt.set_pdp_context(
+                        self._pdp_context_id, pdpc_apn, pdpc_type)
+
                 pdpc = (item for item in self.pdp_context_list()
                         if item["id"] == self._pdp_context_id).next()
                 apn = pdpc["apn"]

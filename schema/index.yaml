@@ -296,7 +296,7 @@ externalDocs:
         "name": "wwan1",
         "mode": "umts",
         "signal": {
-          "csq": "14,99",
+          "csq": "14",
           "rssi": -76,
           "ecio": -8.5
         },
