@@ -1,6 +1,6 @@
 {
   "name": "cellular",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "author": "Aeluin Chen",
   "email": "aeluin.chen@moxa.com",
   "description": "Provides the cellular configuration interface",

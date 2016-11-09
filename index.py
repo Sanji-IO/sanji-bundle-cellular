@@ -322,7 +322,11 @@ class Index(Sanji):
             "keepalive": {
                 "enable": config["keepalive"]["enable"],
                 "targetHost": config["keepalive"]["targetHost"],
-                "intervalSec": config["keepalive"]["intervalSec"]
+                "intervalSec": config["keepalive"]["intervalSec"],
+                "reboot": {
+                    "enable": config["keepalive"]["reboot"]["enable"],
+                    "cycles": config["keepalive"]["reboot"]["cycles"]
+                }
             }
         }
 
