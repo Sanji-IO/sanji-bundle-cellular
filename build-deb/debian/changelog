@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.0.1-1) unstable; urgency=low
+
+  * fix: Missing "reboot" information of "keepalive".
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 09 Nov 2016 17:33:33 +0800
+
 sanji-bundle-cellular (3.0.0-1) unstable; urgency=low
 
   * feat: Support secondary APN.
