@@ -237,7 +237,10 @@ class Index(Sanji):
         sinfo = self._mgr.static_information()
         cinfo = self._mgr.cellular_information()
         ninfo = self._mgr.network_information()
-        pdpc_list = self._mgr.pdp_context_list()
+        try:
+            pdpc_list = self._mgr.pdp_context_list()
+        except CellMgmtError:
+            pdpc_list = []
 
         try:
             self._vnstat.update()
