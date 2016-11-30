@@ -13,6 +13,7 @@ def mock_retrying(f):
         return f()
     return wrapped_f
 
+
 try:
     sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
     patch('cellular_utility.cell_mgmt.retrying', lambda x: x).start()

@@ -182,7 +182,7 @@ class Index(Sanji):
         count 3 with timeout 20 seconds
     then exec "/bin/bash -c '/sbin/cell_mgmt power_off force && /bin/sleep 5 && /sbin/reboot -i -f -d'"
     every {cycles} cycles
-"""
+"""  # noqa
         with open("/etc/monit/conf.d/keepalive", "w") as f:
             f.write(config.format(target_host=target_host, cycles=cycles))
         service("monit", "restart")

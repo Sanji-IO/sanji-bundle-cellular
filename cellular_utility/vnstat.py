@@ -106,6 +106,7 @@ class VnStat(object):
 
         return txrx_data
 
+
 if __name__ == "__main__":
     vns = VnStat("wwan0")
     vns.update()
