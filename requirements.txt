@@ -3,5 +3,5 @@ enum34
 monotonic
 paho-mqtt==1.2
 sanji==1.0.0
-sh
+sh==1.12.3
 retrying
