@@ -1,4 +1,4 @@
-decorator
+decorator==4.0.10
 enum34
 monotonic
 paho-mqtt==1.2
