@@ -1,7 +1,7 @@
 decorator
 enum34
 monotonic
-paho-mqtt
+paho-mqtt==1.2
 sanji
 sh
 retrying
