@@ -1,3 +1,9 @@
+sanji-bundle-cellular (2.0.1+8-1) unstable; urgency=low
+
+  * Fix: fix 3rd package versions.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Fri, 23 Dec 2016 16:27:10 +0800
+
 sanji-bundle-cellular (2.0.1+7-1) unstable; urgency=low
 
   * Fix: `cell_mgmt` may blocked by `qmi-proxy`.
