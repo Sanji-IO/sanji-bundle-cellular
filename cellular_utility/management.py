@@ -532,9 +532,6 @@ class Manager(object):
                 continue
 
     def _operate(self):
-        if not self._attach():
-            return
-
         while True:
             self._interrupt_point()
 
@@ -637,6 +634,10 @@ class Manager(object):
                 return False
             if apn == "":
                 self._log.log_event_no_apn()
+                return False
+
+            # try to attach before connect
+            if not self._attach():
                 return False
 
             nwk_info = self._cell_mgmt.start(apn=apn)
