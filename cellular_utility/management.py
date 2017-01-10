@@ -392,8 +392,9 @@ class Manager(object):
 
         if sim_status == SimStatus.nosim:
             self._status = Manager.Status.nosim
+            return sim_status
 
-        elif sim_status == SimStatus.pin:
+        if sim_status == SimStatus.pin:
             if self._pin is None:
                 self._status = Manager.Status.pin
                 self._log.log_event_no_pin()
@@ -406,13 +407,14 @@ class Manager(object):
                 sim_status = self._cell_mgmt.sim_status()
                 if sim_status == SimStatus.ready:
                     self._status = Manager.Status.ready
+                    return sim_status
 
             except CellMgmtError:
                 _logger.warning(format_exc())
                 self._pin = None
                 self._log.log_event_pin_error()
 
-        elif sim_status == SimStatus.ready:
+        if sim_status == SimStatus.ready:
             self._status = Manager.Status.ready
 
         return sim_status
