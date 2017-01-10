@@ -505,12 +505,12 @@ class Manager(object):
                 self._sleep(10)
                 retry += 1
                 continue
-            elif sim_status != SimStatus.ready:
-                raise StopException
 
             self._initialize_static_information()
-
             self._cellular_information = CellularInformation.get()
+
+            if sim_status != SimStatus.ready:
+                raise StopException
 
             self._status = Manager.Status.ready
             return True
