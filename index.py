@@ -154,6 +154,11 @@ class Index(Sanji):
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"],
             log_period_sec=60)
 
+        # clear PIN code if pin error
+        if self._mgr.status() == Manager.Status.pin and pin != "":
+            self.model.db[0]["pinCode"] = ""
+            self.model.save_db()
+
         self._mgr.set_update_network_information_callback(
             self._publish_network_info)
 

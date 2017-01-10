@@ -355,6 +355,9 @@ class Manager(object):
 
         self._log = Log()
 
+        # verify SIM card at very beginning
+        self.verify_sim()
+
     def set_update_network_information_callback(
             self,
             callback):
@@ -382,6 +385,37 @@ class Manager(object):
     def pdp_context_list(self):
         """Return a list of PDP context."""
         return self._cell_mgmt.pdp_context_list()
+
+    def verify_sim(self):
+        sim_status = self._cell_mgmt.sim_status()
+        _logger.debug("sim_status = " + sim_status.name)
+
+        if sim_status == SimStatus.nosim:
+            self._status = Manager.Status.nosim
+
+        elif sim_status == SimStatus.pin:
+            if self._pin is None:
+                self._status = Manager.Status.pin
+                self._log.log_event_no_pin()
+                return sim_status
+
+            # set pin
+            try:
+                self._cell_mgmt.set_pin(self._pin)
+                self._sleep(3, critical_section=True)
+                sim_status = self._cell_mgmt.sim_status()
+                if sim_status == SimStatus.ready:
+                    self._status = Manager.Status.ready
+
+            except CellMgmtError:
+                _logger.warning(format_exc())
+                self._pin = None
+                self._log.log_event_pin_error()
+
+        elif sim_status == SimStatus.ready:
+            self._status = Manager.Status.ready
+
+        return sim_status
 
     def start(self):
         self._stop = False
@@ -464,40 +498,13 @@ class Manager(object):
 
             self._status = Manager.Status.initializing
 
-            sim_status = self._cell_mgmt.sim_status()
-            _logger.debug("sim_status = " + sim_status.name)
-
+            sim_status = self.verify_sim()
             if sim_status == SimStatus.nosim:
-                self._status = Manager.Status.nosim
-
                 self._sleep(10)
                 retry += 1
                 continue
-
-            if sim_status == SimStatus.pin:
-                if self._pin is None:
-                    self._status = Manager.Status.pin
-
-                    self._log.log_event_no_pin()
-                    self._initialize_static_information()
-                    raise StopException
-
-                # set pin
-                try:
-                    self._cell_mgmt.set_pin(self._pin)
-                    self._sleep(3)
-                    continue
-
-                except CellMgmtError:
-                    _logger.warning(format_exc())
-
-                    self._status = Manager.Status.pin
-
-                    self._log.log_event_pin_error()
-                    self._initialize_static_information()
-                    raise StopException
-
-            assert sim_status == SimStatus.ready
+            elif sim_status != SimStatus.ready:
+                raise StopException
 
             self._initialize_static_information()
 
@@ -625,6 +632,8 @@ class Manager(object):
                 if self._pdp_context_static is True:
                     self._cell_mgmt.set_pdp_context(
                         self._pdp_context_id, pdpc_apn, pdpc_type)
+                    if self.verify_sim() != SimStatus.ready:
+                        raise StopException
 
                 pdpc = (item for item in self.pdp_context_list()
                         if item["id"] == self._pdp_context_id).next()
@@ -676,11 +685,12 @@ class Manager(object):
         except CellMgmtError:
             _logger.warning(format_exc())
 
-    def _sleep(self, sec):
+    def _sleep(self, sec, critical_section=False):
         until = monotonic() + sec
 
         while monotonic() < until:
-            self._interrupt_point()
+            if not critical_section:
+                self._interrupt_point()
             sleep(1)
 
     def _checkalive_ping(self):
