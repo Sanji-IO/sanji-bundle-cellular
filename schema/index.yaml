@@ -100,11 +100,10 @@ definitions:
         - ecio
         properties:
           csq:
-            type: string
+            type: integer
             description: |
-              Signal quality, The first part of the response is RSSI
-              (Received signal strength indicator). The second part of the
-              response is the Bit Error Rate (BER)
+              Signal quality, Only shows the first part of the response, RSSI
+              (Received signal strength indicator).
           rssi:
             type: integer
             description: |
@@ -296,7 +295,7 @@ externalDocs:
         "name": "wwan1",
         "mode": "umts",
         "signal": {
-          "csq": "14",
+          "csq": 14,
           "rssi": -76,
           "ecio": -8.5
         },
