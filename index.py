@@ -346,6 +346,9 @@ class Index(Sanji):
 
         data = {
             "name": name,
+            "wan": True,
+            "type": "cellular",
+            "mode": "dhcp",
             "ip": nwk_info.ip,
             "netmask": nwk_info.netmask,
             "gateway": nwk_info.gateway,
