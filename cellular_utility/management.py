@@ -247,6 +247,7 @@ class Manager(object):
         power_cycle = 7
         service_searching = 8
         service_attached = 9
+        pin_error = 10
 
     class StaticInformation(object):
         def __init__(
@@ -392,27 +393,36 @@ class Manager(object):
 
         if sim_status == SimStatus.nosim:
             self._status = Manager.Status.nosim
+            return sim_status
 
-        elif sim_status == SimStatus.pin:
+        if sim_status == SimStatus.pin:
+            self._status = Manager.Status.pin
             if self._pin is None:
-                self._status = Manager.Status.pin
                 self._log.log_event_no_pin()
                 return sim_status
 
             # set pin
+            pin_retries_prev = self._cell_mgmt.get_pin_retry_remain()
             try:
                 self._cell_mgmt.set_pin(self._pin)
-                self._sleep(3, critical_section=True)
-                sim_status = self._cell_mgmt.sim_status()
-                if sim_status == SimStatus.ready:
-                    self._status = Manager.Status.ready
-
             except CellMgmtError:
                 _logger.warning(format_exc())
-                self._pin = None
-                self._log.log_event_pin_error()
+                sim_status = self._cell_mgmt.sim_status()
+                pin_retries_after = self._cell_mgmt.get_pin_retry_remain()
+                if sim_status == SimStatus.pin and \
+                        (pin_retries_after - pin_retries_prev < 0):
+                    self._status = Manager.Status.pin_error
+                    self._pin = None
+                    self._log.log_event_pin_error()
+                    return sim_status
 
-        elif sim_status == SimStatus.ready:
+            self._sleep(3, critical_section=True)
+            sim_status = self._cell_mgmt.sim_status()
+            if sim_status == SimStatus.ready:
+                self._status = Manager.Status.ready
+                return sim_status
+
+        if sim_status == SimStatus.ready:
             self._status = Manager.Status.ready
 
         return sim_status
@@ -503,12 +513,12 @@ class Manager(object):
                 self._sleep(10)
                 retry += 1
                 continue
-            elif sim_status != SimStatus.ready:
-                raise StopException
 
             self._initialize_static_information()
-
             self._cellular_information = CellularInformation.get()
+
+            if sim_status != SimStatus.ready:
+                raise StopException
 
             self._status = Manager.Status.ready
             return True

@@ -155,7 +155,7 @@ class Index(Sanji):
             log_period_sec=60)
 
         # clear PIN code if pin error
-        if self._mgr.status() == Manager.Status.pin and pin != "":
+        if self._mgr.status() == Manager.Status.pin_error and pin != "":
             self.model.db[0]["pinCode"] = ""
             self.model.save_db()
 
