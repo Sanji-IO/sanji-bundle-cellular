@@ -1,3 +1,14 @@
+sanji-bundle-cellular (3.1.0-1) unstable; urgency=low
+
+  * docs: `csq` should be integer not string.
+  * fix: Attach after update APN.
+  * fix: Unlock PIN after update APN.
+  * fix: Get info. if SIM exist.
+  * fix: Get PIN retries to check if PIN error.
+  * feat: Add `wan`, `type`, and `mode` in event.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 12 Jan 2017 21:26:46 +0800
+
 sanji-bundle-cellular (3.0.1-1) unstable; urgency=low
 
   * fix: Missing "reboot" information of "keepalive".
