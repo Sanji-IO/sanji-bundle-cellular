@@ -1,3 +1,9 @@
+sanji-bundle-cellular (2.0.1+5-1) unstable; urgency=low
+
+  * Fix: fix 3rd package versions.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Mon, 16 Jan 2017 19:40:34 +0800
+
 sanji-bundle-cellular (2.0.1+4-1) unstable; urgency=low
 
   * fix: power_cycle forever when SIM status is none.
