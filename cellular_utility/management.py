@@ -639,7 +639,11 @@ class Manager(object):
             self._cell_mgmt.stop()
 
             try:
-                if self._pdp_context_static is True:
+                pdpc = (item for item in self.pdp_context_list()
+                        if item["id"] == self._pdp_context_id).next()
+                apn = pdpc["apn"]
+
+                if self._pdp_context_static is True and apn != pdpc_apn:
                     self._cell_mgmt.set_pdp_context(
                         self._pdp_context_id, pdpc_apn, pdpc_type)
                     if self.verify_sim() != SimStatus.ready:

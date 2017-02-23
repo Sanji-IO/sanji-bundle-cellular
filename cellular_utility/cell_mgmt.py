@@ -683,40 +683,26 @@ class CellMgmt(object):
         """
         Return PDP context list.
 
-        Response of "AT+CGDCONT?"
-            +CGDCONT: <id>,<type>,<apn>[,...]
-            OK
+        Response of "get_profiles"
+            <id>,<apn>,<type>
         Example:
-            +CGDCONT: 1,"IP","internet","0.0.0.0",0,0
-            +CGDCONT: 2,"IPV4V6","TPC","0.0.0.0",0,0
-            OK
+            1,internet,IP
+            2,TPC,IPV4V6
         """
         _logger.debug("pdp_context_list: 'at+cgdcont?'")
         try:
             pdpc_list = []
-            res = self.at("at+cgdcont?")
-            if res["status"] != "ok":
-                return pdpc_list
+            res = self._cell_mgmt("get_profiles")
 
             for item in res["info"].splitlines(True):
-                match = self._at_cgdcont_regex.match(item)
-                if match:
-                    pdpc = self._split_param_by_comma_regex.findall(
-                        match.group(1))
-                    if len(pdpc) <= 3:
-                        continue
-                    pdpc_list.append(
-                        {"id": int(pdpc[0]),
-                         "type": "ipv4" if pdpc[1] == "IP"
-                                 else pdpc[1].lower(),
-                         "apn": pdpc[2]})
-                    '''
-                    pdpc = match.group(1).split(",")
-                    pdpc_list.append(
-                        {"id": int(pdpc[0]),
-                         "type": pdpc[1].strip("\""),
-                         "apn": pdpc[2].strip("\"")})
-                    '''
+                pdpc = self._split_param_by_comma_regex.findall(item)
+                if len(pdpc) <= 3:
+                    continue
+                pdpc_list.append(
+                    {"id": int(pdpc[0]),
+                     "type": "ipv4" if pdpc[2] == "IP"
+                             else pdpc[2].lower(),
+                     "apn": pdpc[1]})
             return pdpc_list
 
         except ErrorReturnCode_60:
