@@ -2,7 +2,7 @@ sanji-bundle-cellular (3.1.1-1) unstable; urgency=low
 
   * Use `cell_mgmt get_profiles` to get profiles.
 
- -- TC Huang <tc.huang@moxa.com>  Thu, 23 Feb 2017 21:19:53 +0800
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 23 Feb 2017 21:19:53 +0800
 
 sanji-bundle-cellular (3.1.0-1) unstable; urgency=low
 
