@@ -694,7 +694,7 @@ class CellMgmt(object):
             pdpc_list = []
             res = self._cell_mgmt("get_profiles")
 
-            for item in res["info"].splitlines(True):
+            for item in res.splitlines(True):
                 pdpc = self._split_param_by_comma_regex.findall(item)
                 if len(pdpc) <= 3:
                     continue
