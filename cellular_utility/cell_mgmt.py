@@ -315,6 +315,9 @@ class CellMgmt(object):
         r"[\n\t ]*PIN1 retries: '([0-9]+)'\n"
         r"[\n\t ]*PUK1 retries: '([0-9]+)'\n"
     )
+    _attach_status_regex = re.compile(
+        r"PS: attached\n"
+    )
 
     _number_regex = re.compile(
         r"^([^\n]*)[\n]{0,1}")
@@ -325,11 +328,7 @@ class CellMgmt(object):
         r"^[\r\n]*ERROR[\r\n]*$")
     _at_response_cme_err_regex = re.compile(
         r"^[\r\n]*\+CME ERROR: ([\S ]*)[\r\n]*$")
-    _at_sysinfo_attached_regex = re.compile(
-        r"^\^SYSINFO: 2,([23])[,\d]*$")
 
-    _at_cgdcont_regex = re.compile(
-        r"^\+CGDCONT: ([\s\S]+)")
     _split_param_by_comma_regex = re.compile(
         r",{0,1}\"{0,1}([^\s\",]*)\"{0,1},{0,1}")
 
@@ -389,15 +388,15 @@ class CellMgmt(object):
         Return True if service attached.
         """
 
-        _logger.debug("sysinfo: 'at^sysinfo'")
+        _logger.debug("cell_mgmt attach_status")
         try:
-            # ^SYSINFO: 2,2,...
-            # ^SYSINFO: 2,3,...
-            res = self.at("at^sysinfo")
-            if res["status"] != "ok":
-                return False
-            match = self._at_sysinfo_attached_regex.match(res["info"])
-            return True if match else False
+            # CS: attached/detached
+            # PS: attached/detached
+            # PS should be attached
+            output = str(self._cell_mgmt("attach_status"))
+            if self._attach_status_regex.search(output):
+                return True
+            return False
 
         except ErrorReturnCode_60:
             raise
@@ -714,6 +713,8 @@ class CellMgmt(object):
     @critical_section
     @handle_error_return_code
     @retry_on_busy
+    @retrying(
+        stop_max_attempt_number=3, wait_random_min=500, wait_random_max=1500)
     def set_pdp_context(self, id, apn, type="ipv4v6"):
         """
         Return True if PDP context set.
@@ -721,13 +722,9 @@ class CellMgmt(object):
         pdp_type = "ip" if type == "ipv4" else type
 
         _logger.debug(
-            "set_pdp_context: "
-            "'at+cgdcont={},\"{}\",\"{}\"'".format(id, pdp_type, apn))
+            "cell_mgmt set_profile {} {} {}".format(id, pdp_type, apn))
         try:
-            self.at("at+cfun=4")
-            self.at(
-                "at+cgdcont={},\"{}\",\"{}\"".format(id, pdp_type, apn))
-            self.at("at+cfun=1")
+            self._cell_mgmt("set_profile", id, apn, pdp_type)
 
         except ErrorReturnCode_60:
             raise
@@ -743,9 +740,9 @@ class CellMgmt(object):
         Return True if PIN unlocked.
         """
 
-        _logger.debug("cell_mgmt set_pin")
+        _logger.debug("cell_mgmt unlock_pin")
         try:
-            self._cell_mgmt("set_pin", pin)
+            self._cell_mgmt("unlock_pin", pin)
 
         except ErrorReturnCode_60:
             raise

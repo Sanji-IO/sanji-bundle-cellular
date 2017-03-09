@@ -1,3 +1,10 @@
+sanji-bundle-cellular (3.1.3-1) unstable; urgency=low
+
+  * refactor: Check attach status and update apn by cell_mgmt.
+  * fix: `cell_mgmt set_pin` was deprecated.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Mon, 06 Mar 2017 00:42:50 +0800
+
 sanji-bundle-cellular (3.1.2-1) unstable; urgency=low
 
   * fix: use `>>` instead of `>` in dependency.

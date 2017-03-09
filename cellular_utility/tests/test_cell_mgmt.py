@@ -199,6 +199,16 @@ class TestCellMgmt(unittest.TestCase):
         self.assertTrue(match)
         self.assertEqual("3", match.group(2))
 
+    def test_attach_status_regex_should_pass(self):
+        # arrange
+        SUT = "CS: attached\nPS: attached\n"
+
+        # act
+        found = CellMgmt._attach_status_regex.search(SUT)
+
+        # assert
+        self.assertTrue(found)
+
     def test_at_response_ok_regex_should_pass(self):
         # arrange
         SUT = "\n\nOK\n\n"
@@ -225,28 +235,6 @@ class TestCellMgmt(unittest.TestCase):
 
         # act
         match = CellMgmt._at_response_cme_err_regex.match(SUT)
-
-        # assert
-        self.assertTrue(match)
-
-    def test_at_sysinfo_attached_regex_should_pass(self):
-        # arrange
-        SUT = "^SYSINFO: 2,3,0,5,1"
-
-        # act
-        match = CellMgmt._at_sysinfo_attached_regex.match(SUT)
-
-        # assert
-        self.assertTrue(match)
-
-    def test_at_cgdcont_regex_should_pass(self):
-        # arrange
-        SUT = (
-            "+CGDCONT: 1,\"IPV4V6\",\"internet\","
-            "\"0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0\",0,0,0,0")
-
-        # act
-        match = CellMgmt._at_cgdcont_regex.match(SUT)
 
         # assert
         self.assertTrue(match)
