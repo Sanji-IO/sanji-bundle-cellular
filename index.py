@@ -256,7 +256,8 @@ class Index(Sanji):
             cycles=self.model.db[0]["keepalive"]["reboot"]["cycles"]
         )
 
-        return response(code=200, data=self._get())
+        # self._get() may wait until start/stop finished
+        return response(code=200, data=self.model.db[0])
 
     def _get(self):
         name = self._dev_name
