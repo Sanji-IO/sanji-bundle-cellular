@@ -9,7 +9,7 @@ import logging
 import re
 import sh
 from sh import (
-    ErrorReturnCode, ErrorReturnCode_2, ErrorReturnCode_3,
+    ErrorReturnCode, ErrorReturnCode_1, ErrorReturnCode_2, ErrorReturnCode_3,
     ErrorReturnCode_4, ErrorReturnCode_60, TimeoutException
 )
 from subprocess import CalledProcessError
@@ -756,9 +756,6 @@ class CellMgmt(object):
                 return SimStatus.pin
             else:
                 return SimStatus.nosim
-
-        except ErrorReturnCode_60 as e:
-            raise e
 
         except ErrorReturnCode:
             return SimStatus.nosim
