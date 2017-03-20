@@ -8,7 +8,10 @@ import os
 import logging
 import re
 import sh
-from sh import ErrorReturnCode, ErrorReturnCode_60, TimeoutException
+from sh import (
+    ErrorReturnCode, ErrorReturnCode_2, ErrorReturnCode_3,
+    ErrorReturnCode_4, ErrorReturnCode_60, TimeoutException
+)
 from subprocess import CalledProcessError
 import thread
 from threading import RLock
@@ -31,6 +34,12 @@ def handle_error_return_code(func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
 
+    except ErrorReturnCode_2:
+        _logger.warning("profile not found")
+    except ErrorReturnCode_3:
+        _logger.warning("operation not support")
+    except ErrorReturnCode_4:
+        _logger.warning("invalid input")
     except ErrorReturnCode:
         _logger.warning(format_exc())
     except TimeoutException:
@@ -389,20 +398,13 @@ class CellMgmt(object):
         """
 
         _logger.debug("cell_mgmt attach_status")
-        try:
-            # CS: attached/detached
-            # PS: attached/detached
-            # PS should be attached
-            output = str(self._cell_mgmt("attach_status"))
-            if self._attach_status_regex.search(output):
-                return True
-            return False
-
-        except ErrorReturnCode_60:
-            raise
-
-        except ErrorReturnCode:
-            raise CellMgmtError
+        # CS: attached/detached
+        # PS: attached/detached
+        # PS should be attached
+        output = str(self._cell_mgmt("attach_status"))
+        if self._attach_status_regex.search(output):
+            return True
+        return False
 
     @critical_section
     @handle_error_return_code
@@ -556,6 +558,7 @@ class CellMgmt(object):
         return CellularNumber()
 
     @critical_section
+    @retry_on_busy
     def status(self):
         """
         Return boolean as connected or not.
@@ -563,19 +566,11 @@ class CellMgmt(object):
 
         _logger.debug("cell_mgmt status")
 
-        for retry in xrange(0, BUSY_RETRY_COUNT + 1):
-            try:
-                self._cell_mgmt("status")
-
-                return True
-
-            except (ErrorReturnCode_60, TimeoutException):
-                if retry < BUSY_RETRY_COUNT:
-                    sleep(10)
-                    continue
-
-            except ErrorReturnCode:
-                break
+        try:
+            self._cell_mgmt("status")
+            return True
+        except ErrorReturnCode_1:
+            return False
 
         return False
 
@@ -677,7 +672,6 @@ class CellMgmt(object):
 
     @critical_section
     @handle_error_return_code
-    @retry_on_busy
     def pdp_context_list(self):
         """
         Return PDP context list.
@@ -707,12 +701,8 @@ class CellMgmt(object):
         except ErrorReturnCode_60:
             raise
 
-        except ErrorReturnCode:
-            raise CellMgmtError
-
     @critical_section
     @handle_error_return_code
-    @retry_on_busy
     @retrying(
         stop_max_attempt_number=3, wait_random_min=500, wait_random_max=1500)
     def set_pdp_context(self, id, apn, type="ipv4v6"):
@@ -729,12 +719,8 @@ class CellMgmt(object):
         except ErrorReturnCode_60:
             raise
 
-        except ErrorReturnCode:
-            raise CellMgmtError
-
     @critical_section
     @handle_error_return_code
-    @retry_on_busy
     def set_pin(self, pin):
         """
         Return True if PIN unlocked.
@@ -746,9 +732,6 @@ class CellMgmt(object):
 
         except ErrorReturnCode_60:
             raise
-
-        except ErrorReturnCode:
-            raise CellMgmtError
 
     @critical_section
     @handle_error_return_code
@@ -774,8 +757,8 @@ class CellMgmt(object):
             else:
                 return SimStatus.nosim
 
-        except ErrorReturnCode_60:
-            raise
+        except ErrorReturnCode_60 as e:
+            raise e
 
         except ErrorReturnCode:
             return SimStatus.nosim
