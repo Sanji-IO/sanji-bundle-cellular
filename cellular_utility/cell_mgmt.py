@@ -43,7 +43,7 @@ def handle_error_return_code(func, *args, **kwargs):
     except ErrorReturnCode:
         _logger.warning(format_exc())
     except TimeoutException:
-        _logger.warning("qmicli TimeoutException")
+        _logger.warning("TimeoutException")
         _logger.warning(format_exc())
 
     raise CellMgmtError
@@ -345,11 +345,9 @@ class CellMgmt(object):
     def __init__(self):
         self._exe_path = "/sbin/cell_mgmt"
 
-        # Add default timeout to cell_mgmt and qmicli
+        # Add default timeout to cell_mgmt
         # will raise TimeoutException
         self._cell_mgmt = sh_default_timeout(sh.cell_mgmt, 70)
-        self._qmicli = sh_default_timeout(
-            sh.Command(tool_path + "/call-qmicli.sh"), 70)
 
         self._invoke_period_sec = 0
 
@@ -767,26 +765,9 @@ class CellMgmt(object):
         Return the number of retries left for PIN.
         """
 
-        _logger.debug("get_pin_retry_remain")
-
-        qmi_port = self.m_info().qmi_port
-        if qmi_port is None:
-            _logger.warning("no qmi-port exist, return -1")
-            return -1
-
-        _logger.debug("qmicli -p -d " + qmi_port + " --uim-get-card-status")
-        output = self._qmicli("-p", "-d", qmi_port, "--uim-get-card-status")
-        output = str(output)
-
-        match = CellMgmt._pin_retry_remain_regex.match(output)
-        if not match:
-            _logger.warning("unexpected output: {}".format(output))
-            raise CellMgmtError
-
-        if match.group(1) == "disabled":
-            return -1
-
-        return int(match.group(2))
+        _logger.debug("cell_mgmt pin_retries")
+        output = self._cell_mgmt("pin_retries")
+        return int(output)
 
     @critical_section
     @handle_error_return_code
