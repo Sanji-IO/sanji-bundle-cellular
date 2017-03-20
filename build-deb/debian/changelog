@@ -1,3 +1,10 @@
+sanji-bundle-cellular (3.1.6-1) unstable; urgency=low
+
+  * fix: Log exceptions in "handle_error_return_code".
+  * fix: Remove `qmicli`, use `cell_mgmt`.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Mon, 20 Mar 2017 12:39:16 +0800
+
 sanji-bundle-cellular (3.1.5-1) unstable; urgency=low
 
   * fix: Update exception codes.
