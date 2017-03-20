@@ -757,9 +757,6 @@ class CellMgmt(object):
             else:
                 return SimStatus.nosim
 
-        except ErrorReturnCode_60 as e:
-            raise e
-
         except ErrorReturnCode:
             return SimStatus.nosim
 
