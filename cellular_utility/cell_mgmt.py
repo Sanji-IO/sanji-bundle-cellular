@@ -9,7 +9,7 @@ import logging
 import re
 import sh
 from sh import (
-    ErrorReturnCode, ErrorReturnCode_2, ErrorReturnCode_3,
+    ErrorReturnCode, ErrorReturnCode_1, ErrorReturnCode_2, ErrorReturnCode_3,
     ErrorReturnCode_4, ErrorReturnCode_60, TimeoutException
 )
 from subprocess import CalledProcessError
