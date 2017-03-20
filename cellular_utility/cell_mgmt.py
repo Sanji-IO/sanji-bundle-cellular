@@ -83,7 +83,6 @@ def retry_on_busy(func, *args, **kwargs):
                 raise
 
         except ErrorReturnCode:
-            _logger.warning(format_exc())
             raise
 
 
@@ -558,6 +557,7 @@ class CellMgmt(object):
         return CellularNumber()
 
     @critical_section
+    @handle_error_return_code
     @retry_on_busy
     def status(self):
         """
