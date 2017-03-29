@@ -10,7 +10,7 @@ import re
 import sh
 from sh import (
     ErrorReturnCode, ErrorReturnCode_1, ErrorReturnCode_2, ErrorReturnCode_3,
-    ErrorReturnCode_4, ErrorReturnCode_60, TimeoutException
+    ErrorReturnCode_4, ErrorReturnCode_99, ErrorReturnCode_60, TimeoutException
 )
 from subprocess import CalledProcessError
 import thread
@@ -40,6 +40,8 @@ def handle_error_return_code(func, *args, **kwargs):
         _logger.warning("operation not support")
     except ErrorReturnCode_4:
         _logger.warning("invalid input")
+    except ErrorReturnCode_99:
+        _logger.warning("module may crash")
     except ErrorReturnCode:
         _logger.warning(format_exc())
     except TimeoutException:
