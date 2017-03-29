@@ -1,3 +1,10 @@
+sanji-bundle-cellular (3.1.7-1) unstable; urgency=low
+
+  * fix: Remove lock release.
+  * fix: Add return code `99` as module crashed.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 29 Mar 2017 23:33:02 +0800
+
 sanji-bundle-cellular (3.1.6-1) unstable; urgency=low
 
   * fix: Log exceptions in "handle_error_return_code".
