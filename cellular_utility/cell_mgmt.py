@@ -106,13 +106,7 @@ def critical_section(func, *args, **kwargs):
             sleep(1)
             continue
 
-    _logger.warning("cell_mgmt timeout, release lock")
-    try:
-        os.remove("/tmp/cell_mgmt.lock")
-    except OSError as e:
-        _logger.warning(str(e))
-    except:
-        _logger.warning(format_exc())
+    _logger.warning("cell_mgmt timeout")
 
 
 def sh_default_timeout(func, timeout):
