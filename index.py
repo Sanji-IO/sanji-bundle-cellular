@@ -78,19 +78,20 @@ class Index(Sanji):
         self._mgr = None
         self._vnstat = None
 
-        self._init_thread = Thread(
-            name="sanji.cellular.init_thread",
-            target=self.__initial_procedure)
-        self._init_thread.daemon = True
-        self._init_thread.start()
         self.__init_monit_config(
             enable=(self.model.db[0]["enable"] and
                     self.model.db[0]["keepalive"]["enable"] and True and
                     self.model.db[0]["keepalive"]["reboot"]["enable"] and
                     True),
             target_host=self.model.db[0]["keepalive"]["targetHost"],
+            iface=self._dev_name,
             cycles=self.model.db[0]["keepalive"]["reboot"]["cycles"]
         )
+        self._init_thread = Thread(
+            name="sanji.cellular.init_thread",
+            target=self.__initial_procedure)
+        self._init_thread.daemon = True
+        self._init_thread.start()
 
     def __initial_procedure(self):
         """
@@ -112,6 +113,15 @@ class Index(Sanji):
                 cell_mgmt.power_cycle(timeout_sec=60)
 
         self._dev_name = wwan_node
+        self.__init_monit_config(
+            enable=(self.model.db[0]["enable"] and
+                    self.model.db[0]["keepalive"]["enable"] and True and
+                    self.model.db[0]["keepalive"]["reboot"]["enable"] and
+                    True),
+            target_host=self.model.db[0]["keepalive"]["targetHost"],
+            iface=self._dev_name,
+            cycles=self.model.db[0]["keepalive"]["reboot"]["cycles"]
+        )
         self.__create_manager()
 
         self._vnstat = VnStat(self._dev_name)
@@ -176,20 +186,22 @@ class Index(Sanji):
         return True
 
     def __init_monit_config(
-            self, enable=False, target_host="8.8.8.8", cycles=1):
+            self, enable=False, target_host="8.8.8.8", iface="", cycles=1):
         if enable is False:
             rm("-rf", "/etc/monit/conf.d/keepalive")
             service("monit", "restart")
             return
 
-        config = """check host targethost with address {target_host}
-    if failed icmp type echo
-        count 3 with timeout 20 seconds
-    then exec "/bin/bash -c '/sbin/cell_mgmt power_off force && /bin/sleep 5 && /sbin/reboot -i -f -d'"
+        ifacecmd = "" if iface == "" or iface is None \
+                   else "-I {}".format(iface)
+        config = """check program ping-test with path "/bin/ping {target_host} {ifacecmd} -c 3 -W 20"
+    if status != 0
+    then exec "/bin/bash -c '/usr/sbin/cell_mgmt power_off force && /bin/sleep 5 && /sbin/reboot -i -f -d'"
     every {cycles} cycles
 """  # noqa
         with open("/etc/monit/conf.d/keepalive", "w") as f:
-            f.write(config.format(target_host=target_host, cycles=cycles))
+            f.write(config.format(
+                target_host=target_host, ifacecmd=ifacecmd, cycles=cycles))
         service("monit", "restart")
 
     @Route(methods="get", resource="/network/cellulars")
@@ -253,6 +265,7 @@ class Index(Sanji):
                     self.model.db[0]["keepalive"]["reboot"]["enable"] and
                     True),
             target_host=self.model.db[0]["keepalive"]["targetHost"],
+            iface=self._dev_name,
             cycles=self.model.db[0]["keepalive"]["reboot"]["cycles"]
         )
 

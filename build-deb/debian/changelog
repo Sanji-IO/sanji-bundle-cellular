@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.1.8-1) unstable; urgency=low
+
+  * fix: Keepalive reboot should include "interface".
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 30 Mar 2017 14:03:43 +0800
+
 sanji-bundle-cellular (3.1.7-1) unstable; urgency=low
 
   * fix: Remove lock release.
