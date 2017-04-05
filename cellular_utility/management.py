@@ -454,7 +454,10 @@ class Manager(object):
                     self._observer = None
 
                 self._log.log_event_cellular_disconnect()
-                self._cell_mgmt.stop()
+                self._network_information = self._cell_mgmt.stop()
+                # update nwk_info
+                if self._update_network_information_callback is not None:
+                    self._update_network_information_callback(self._network_information)
                 break
 
             except Exception:
@@ -636,7 +639,10 @@ class Manager(object):
         try:
             self._log.log_event_connect_begin()
 
-            self._cell_mgmt.stop()
+            self._network_information = self._cell_mgmt.stop()
+            # update nwk_info
+            if self._update_network_information_callback is not None:
+                self._update_network_information_callback(self._network_information)
 
             try:
                 pdpc = (item for item in self.pdp_context_list()

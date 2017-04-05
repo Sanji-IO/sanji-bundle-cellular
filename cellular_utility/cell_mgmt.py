@@ -122,11 +122,13 @@ def sh_default_timeout(func, timeout):
 class NetworkInformation(object):
     def __init__(
             self,
+            status,
             ip,
             netmask,
             gateway,
             dns_list):
-        if (not isinstance(ip, str) or
+        if (not isinstance(status, bool) or
+                not isinstance(ip, str) or
                 not isinstance(netmask, str) or
                 not isinstance(gateway, str)):
             raise ValueError
@@ -138,10 +140,15 @@ class NetworkInformation(object):
             if not isinstance(dns, str):
                 raise ValueError
 
+        self._status = status
         self._ip = ip
         self._netmask = netmask
         self._gateway = gateway
         self._dns_list = dns_list
+
+    @property
+    def status(self):
+        return self._status
 
     @property
     def ip(self):
@@ -458,6 +465,7 @@ class CellMgmt(object):
         dns = match.group(1).split(" ")
 
         return NetworkInformation(
+            status=True,
             ip=ip_,
             netmask=netmask,
             gateway=gateway,
@@ -477,6 +485,12 @@ class CellMgmt(object):
             self._cell_mgmt("stop")
         except ErrorReturnCode:
             _logger.warning(format_exc() + ", ignored")
+        return NetworkInformation(
+            status=False,
+            ip="",
+            netmask="",
+            gateway="",
+            dns_list=[])
 
     @critical_section
     @handle_error_return_code
