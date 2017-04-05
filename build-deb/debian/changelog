@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.1.9-1) unstable; urgency=low
+
+  * fix: Update status after disconnected.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 05 Apr 2017 17:59:31 +0800
+
 sanji-bundle-cellular (3.1.8-1) unstable; urgency=low
 
   * fix: Keepalive reboot should include "interface".
