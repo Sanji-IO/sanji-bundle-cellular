@@ -363,6 +363,7 @@ class Index(Sanji):
             "wan": True,
             "type": "cellular",
             "mode": "dhcp",
+            "status": nwk_info.status,
             "ip": nwk_info.ip,
             "netmask": nwk_info.netmask,
             "gateway": nwk_info.gateway,
