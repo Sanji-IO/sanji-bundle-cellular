@@ -457,7 +457,8 @@ class Manager(object):
                 self._network_information = self._cell_mgmt.stop()
                 # update nwk_info
                 if self._update_network_information_callback is not None:
-                    self._update_network_information_callback(self._network_information)
+                    self._update_network_information_callback(
+                        self._network_information)
                 break
 
             except Exception:
@@ -642,7 +643,8 @@ class Manager(object):
             self._network_information = self._cell_mgmt.stop()
             # update nwk_info
             if self._update_network_information_callback is not None:
-                self._update_network_information_callback(self._network_information)
+                self._update_network_information_callback(
+                    self._network_information)
 
             try:
                 pdpc = (item for item in self.pdp_context_list()
