@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.2.0-1) unstable; urgency=low
+
+  * feat: TAC for LTE and NID, BID for CDMA.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Tue, 11 Apr 2017 18:29:55 +0800
+
 sanji-bundle-cellular (3.1.9-1) unstable; urgency=low
 
   * fix: Update status after disconnected.
