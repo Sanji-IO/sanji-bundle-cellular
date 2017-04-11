@@ -253,14 +253,23 @@ class Signal(object):
 class CellularLocation(object):
     def __init__(
             self,
-            cell_id=None,
-            lac=None):
+            cell_id="",
+            lac="",
+            tac="",
+            bid="",
+            nid=""):
         if (not isinstance(cell_id, str) or
-                not isinstance(lac, str)):
+                not isinstance(lac, str) or
+                not isinstance(tac, str) or
+                not isinstance(bid, str) or
+                not isinstance(nid, str)):
             raise ValueError
 
         self._cell_id = cell_id
         self._lac = lac
+        self._tac = tac
+        self._bid = bid
+        self._nid = nid
 
     @property
     def cell_id(self):
@@ -269,6 +278,18 @@ class CellularLocation(object):
     @property
     def lac(self):
         return self._lac
+
+    @property
+    def tac(self):
+        return self._tac
+
+    @property
+    def bid(self):
+        return self._bid
+
+    @property
+    def nid(self):
+        return self._nid
 
 
 class CellularNumber(object):
@@ -328,6 +349,22 @@ class CellMgmt(object):
     )
     _attach_status_regex = re.compile(
         r"PS: attached\n"
+    )
+
+    _location_info_lac_regex = re.compile(
+        r"LAC: ([\S]*)\n"
+    )
+    _location_info_tac_regex = re.compile(
+        r"TAC: ([\S]*)\n"
+    )
+    _location_info_cellid_regex = re.compile(
+        r"CellID: ([\S]*)\n"
+    )
+    _location_info_nid_regex = re.compile(
+        r"NID: ([\S]*)\n"
+    )
+    _location_info_bid_regex = re.compile(
+        r"BID: ([\S]*)\n"
     )
 
     _number_regex = re.compile(
@@ -785,13 +822,52 @@ class CellMgmt(object):
         """
         Return CellularLocation instance.
         """
+        cellid = ""
+        lac = ""
+        tac = ""
+        nid = ""
+        bid = ""
 
-        _logger.debug("get_cellular_location")
+        _logger.debug("cell_mgmt location_info")
 
-        minfo = self.m_info()
+        # [umts]
+        # LAC: xxx
+        # CellID: xxx
+        #
+        # [lte]
+        # TAC: xxx
+        # CellID: xxx
+        #
+        # [cdma]
+        # NID: xxx
+        # BID: xxx
+        output = str(self._cell_mgmt("location_info"))
+        found = self._location_info_lac_regex.search(output)
+        if found:
+            lac = found.group(1)
+
+        found = self._location_info_cellid_regex.search(output)
+        if found:
+            cellid = found.group(1)
+
+        found = self._location_info_tac_regex.search(output)
+        if found:
+            tac = found.group(1)
+
+        found = self._location_info_nid_regex.search(output)
+        if found:
+            nid = found.group(1)
+
+        found = self._location_info_bid_regex.search(output)
+        if found:
+            bid = found.group(1)
+
         return CellularLocation(
-            cell_id=minfo.cell_id,
-            lac=minfo.lac)
+            cell_id=cellid,
+            lac=lac,
+            tac=tac,
+            bid=bid,
+            nid=nid)
 
 
 if __name__ == "__main__":

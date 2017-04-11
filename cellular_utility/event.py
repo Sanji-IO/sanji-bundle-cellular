@@ -36,14 +36,22 @@ class Log(object):
         ci should be an instance of
           cellular_utility.management.CellularInformation
         """
-        self._log(
-            "mode {}, signal {} dBm, rssi {}, lac {}, cell_id {}".format(
-                cellular_information.mode,
-                str(cellular_information.signal_rssi_dbm),
-                str(cellular_information.signal_csq),
-                cellular_information.lac,
-                cellular_information.cell_id)
-        )
+        log = "mode {}, signal {} dBm, rssi {}".format(
+            cellular_information.mode,
+            str(cellular_information.signal_rssi_dbm),
+            str(cellular_information.signal_csq))
+        if len(cellular_information.lac):
+            log += ", lac {}".format(cellular_information.lac)
+        if len(cellular_information.tac):
+            log += ", tac {}".format(cellular_information.tac)
+        if len(cellular_information.nid):
+            log += ", nid {}".format(cellular_information.nid)
+        if len(cellular_information.cell_id):
+            log += ", cell_id {}".format(cellular_information.cell_id)
+        if len(cellular_information.bid):
+            log += ", bid {}".format(cellular_information.bid)
+
+        self._log(log)
 
     def log_event_connect_begin(self):
         """

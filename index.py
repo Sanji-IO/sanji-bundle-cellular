@@ -318,7 +318,10 @@ class Index(Sanji):
                      "ecio": cinfo.signal_ecio_dbm},
             "operatorName": "n/a" if cinfo is None else cinfo.operator,
             "lac": "n/a" if cinfo is None else cinfo.lac,
+            "tac": "n/a" if cinfo is None else cinfo.tac,
+            "nid": "n/a" if cinfo is None else cinfo.nid,
             "cellId": "n/a" if cinfo is None else cinfo.cell_id,
+            "bid": "n/a" if cinfo is None else cinfo.bid,
             "iccId": "n/a" if sinfo is None else sinfo.icc_id,
             "imei": "n/a" if sinfo is None else sinfo.imei,
             "pinRetryRemain": (

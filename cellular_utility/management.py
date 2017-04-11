@@ -35,7 +35,10 @@ class CellularInformation(object):
             signal_ecio_dbm=None,
             operator=None,
             lac=None,
+            tac=None,
+            nid=None,
             cell_id=None,
+            bid=None,
             number=None):
 
         if (not isinstance(mode, str) or
@@ -44,7 +47,10 @@ class CellularInformation(object):
                 not isinstance(signal_ecio_dbm, float) or
                 not isinstance(operator, str) or
                 not isinstance(lac, str) or
+                not isinstance(tac, str) or
+                not isinstance(nid, str) or
                 not isinstance(cell_id, str) or
+                not isinstance(bid, str) or
                 not isinstance(number, str)):
             raise ValueError
 
@@ -57,7 +63,10 @@ class CellularInformation(object):
         self._signal_ecio_dbm = signal_ecio_dbm
         self._operator = operator
         self._lac = lac
+        self._tac = tac
+        self._nid = nid
         self._cell_id = cell_id
+        self._bid = bid
         self._number = number
 
     @property
@@ -85,8 +94,20 @@ class CellularInformation(object):
         return self._lac
 
     @property
+    def tac(self):
+        return self._tac
+
+    @property
+    def nid(self):
+        return self._nid
+
+    @property
     def cell_id(self):
         return self._cell_id
+
+    @property
+    def bid(self):
+        return self._bid
 
     @property
     def number(self):
@@ -130,7 +151,10 @@ class CellularInformation(object):
             signal.ecio_dbm,
             operator,
             cellular_location.lac,
+            cellular_location.tac,
+            cellular_location.nid,
             cellular_location.cell_id,
+            cellular_location.bid,
             number.number)
 
 
@@ -457,7 +481,8 @@ class Manager(object):
                 self._network_information = self._cell_mgmt.stop()
                 # update nwk_info
                 if self._update_network_information_callback is not None:
-                    self._update_network_information_callback(self._network_information)
+                    self._update_network_information_callback(
+                        self._network_information)
                 break
 
             except Exception:
@@ -642,7 +667,8 @@ class Manager(object):
             self._network_information = self._cell_mgmt.stop()
             # update nwk_info
             if self._update_network_information_callback is not None:
-                self._update_network_information_callback(self._network_information)
+                self._update_network_information_callback(
+                    self._network_information)
 
             try:
                 pdpc = (item for item in self.pdp_context_list()
