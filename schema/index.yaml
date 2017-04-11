@@ -120,9 +120,18 @@ definitions:
       lac:
         type: string
         description: Location area code.
+      tac:
+        type: string
+        description: Tracking area code (LTE).
+      nid:
+        type: string
+        description: Network ID (CDMA).
       cellId:
         type: string
         description: Cell ID.
+      bid:
+        type: string
+        description: Base station ID (CDMA).
       iccId:
           type: string
           description: ICC ID of SIM card.
@@ -301,7 +310,10 @@ externalDocs:
         },
         "operatorName": "Chunghwa Telecom",
         "lac": "0xF339",
+        "tac": "",
+        "nid": "",
         "cellId": "0x3194",
+        "bid": "",
         "iccId": "",
         "phoneNumber": "",
         "imei": "356853050370859",
