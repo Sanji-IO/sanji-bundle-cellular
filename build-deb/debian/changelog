@@ -1,3 +1,10 @@
+sanji-bundle-cellular (3.3.0-1) unstable; urgency=low
+
+  * feat: Remove phone number query.
+  * feat: Add IMSI.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 13 Apr 2017 14:49:02 +0800
+
 sanji-bundle-cellular (3.2.0-1) unstable; urgency=low
 
   * feat: TAC for LTE and NID, BID for CDMA.

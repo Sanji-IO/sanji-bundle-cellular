@@ -135,15 +135,15 @@ definitions:
       iccId:
           type: string
           description: ICC ID of SIM card.
+      imsi:
+        type: string
+        description: IMSI of SIM card.
       imei:
         type: string
         description: IMEI of cellular module.
       pinRetryRemain:
         type: integer
         description: PIN Retry remaining.
-      phoneNumber:
-        type: string
-        description: Phone number of the SIM card.
       status:
         type: string
         description: Indicate current status of cellular connection. Could be one of "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed".
@@ -309,13 +309,13 @@ externalDocs:
           "ecio": -8.5
         },
         "operatorName": "Chunghwa Telecom",
-        "lac": "0xF339",
+        "lac": "11114",
         "tac": "",
         "nid": "",
-        "cellId": "0x3194",
+        "cellId": "1249",
         "bid": "",
         "iccId": "",
-        "phoneNumber": "",
+        "imsi": "466977502877452",
         "imei": "356853050370859",
         "pinRetryRemain": 3,
         "status": "connected",

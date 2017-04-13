@@ -13,8 +13,7 @@ from time import sleep
 from traceback import format_exc
 
 from cellular_utility.cell_mgmt import (
-    CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal,
-    CellularNumber
+    CellMgmt, CellMgmtError, SimStatus, CellularLocation, Signal
 )
 from cellular_utility.event import Log
 
@@ -38,8 +37,7 @@ class CellularInformation(object):
             tac=None,
             nid=None,
             cell_id=None,
-            bid=None,
-            number=None):
+            bid=None):
 
         if (not isinstance(mode, str) or
                 not isinstance(signal_csq, int) or
@@ -50,8 +48,7 @@ class CellularInformation(object):
                 not isinstance(tac, str) or
                 not isinstance(nid, str) or
                 not isinstance(cell_id, str) or
-                not isinstance(bid, str) or
-                not isinstance(number, str)):
+                not isinstance(bid, str)):
             raise ValueError
 
         if lac == "Unknown" or cell_id == "Unknown":
@@ -67,7 +64,6 @@ class CellularInformation(object):
         self._nid = nid
         self._cell_id = cell_id
         self._bid = bid
-        self._number = number
 
     @property
     def mode(self):
@@ -109,10 +105,6 @@ class CellularInformation(object):
     def bid(self):
         return self._bid
 
-    @property
-    def number(self):
-        return self._number
-
     @staticmethod
     def get():
         cell_mgmt = CellMgmt()
@@ -137,13 +129,6 @@ class CellularInformation(object):
                 lac="n/a",
                 cell_id="n/a")
 
-        try:
-            number = cell_mgmt.number()
-
-        except CellMgmtError:
-            number = CellularNumber(
-                number="n/a")
-
         return CellularInformation(
             signal.mode,
             signal.csq,
@@ -154,8 +139,7 @@ class CellularInformation(object):
             cellular_location.tac,
             cellular_location.nid,
             cellular_location.cell_id,
-            cellular_location.bid,
-            number.number)
+            cellular_location.bid)
 
 
 class CellularObserver(object):
@@ -277,16 +261,19 @@ class Manager(object):
         def __init__(
                 self,
                 pin_retry_remain=None,
-                icc_id=None,
+                iccid=None,
+                imsi=None,
                 imei=None):
 
             if (not isinstance(pin_retry_remain, int) or
-                    not isinstance(icc_id, str) or
+                    not isinstance(iccid, str) or
+                    not isinstance(imsi, str) or
                     not isinstance(imei, str)):
                 raise ValueError
 
             self._pin_retry_remain = pin_retry_remain
-            self._icc_id = icc_id
+            self._iccid = iccid
+            self._imsi = imsi
             self._imei = imei
 
         @property
@@ -294,8 +281,12 @@ class Manager(object):
             return self._pin_retry_remain
 
         @property
-        def icc_id(self):
-            return self._icc_id
+        def iccid(self):
+            return self._iccid
+
+        @property
+        def imsi(self):
+            return self._imsi
 
         @property
         def imei(self):
@@ -563,10 +554,12 @@ class Manager(object):
             try:
                 pin_retry_remain = self._cell_mgmt.get_pin_retry_remain()
                 minfo = self._cell_mgmt.m_info()
+                sinfo = self._cell_mgmt.get_cellular_sim_info()
 
                 self._static_information = Manager.StaticInformation(
                     pin_retry_remain=pin_retry_remain,
-                    icc_id=minfo.icc_id,
+                    iccid=sinfo.iccid,
+                    imsi=sinfo.imsi,
                     imei=minfo.imei)
 
                 break

@@ -322,11 +322,11 @@ class Index(Sanji):
             "nid": "n/a" if cinfo is None else cinfo.nid,
             "cellId": "n/a" if cinfo is None else cinfo.cell_id,
             "bid": "n/a" if cinfo is None else cinfo.bid,
-            "iccId": "n/a" if sinfo is None else sinfo.icc_id,
+            "imsi": "n/a" if sinfo is None else sinfo.imsi,
+            "iccId": "n/a" if sinfo is None else sinfo.iccid,
             "imei": "n/a" if sinfo is None else sinfo.imei,
             "pinRetryRemain": (
                 -1 if sinfo is None else sinfo.pin_retry_remain),
-            "phoneNumber": "n/a" if cinfo is None else cinfo.number,
 
             "status": status.name,
             "ip": "n/a" if ninfo is None else ninfo.ip,

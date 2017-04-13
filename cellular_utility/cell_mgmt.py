@@ -250,6 +250,27 @@ class Signal(object):
         return self._ecio_dbm
 
 
+class CellularSimInfo(object):
+    def __init__(
+            self,
+            iccid="",
+            imsi=""):
+        if (not isinstance(iccid, str) or
+                not isinstance(imsi, str)):
+            raise ValueError
+
+        self._iccid = iccid
+        self._imsi = imsi
+
+    @property
+    def iccid(self):
+        return self._iccid
+
+    @property
+    def imsi(self):
+        return self._imsi
+
+
 class CellularLocation(object):
     def __init__(
             self,
@@ -290,20 +311,6 @@ class CellularLocation(object):
     @property
     def nid(self):
         return self._nid
-
-
-class CellularNumber(object):
-    def __init__(
-            self,
-            number=None):
-        if not isinstance(number, str):
-            raise ValueError
-
-        self._number = number
-
-    @property
-    def number(self):
-        return self._number
 
 
 class CellMgmt(object):
@@ -351,6 +358,13 @@ class CellMgmt(object):
         r"PS: attached\n"
     )
 
+    _sim_info_iccid_regex = re.compile(
+        r"ICC-ID: ([\S]*)\n"
+    )
+    _sim_info_imsi_regex = re.compile(
+        r"IMSI: ([\S]*)\n"
+    )
+
     _location_info_lac_regex = re.compile(
         r"LAC: ([\S]*)\n"
     )
@@ -366,9 +380,6 @@ class CellMgmt(object):
     _location_info_bid_regex = re.compile(
         r"BID: ([\S]*)\n"
     )
-
-    _number_regex = re.compile(
-        r"^([^\n]*)[\n]{0,1}")
 
     _at_response_ok_regex = re.compile(
         r"^[\r\n]*([+\S\s :]*)[\r\n]+OK[\r\n]*$")
@@ -578,28 +589,6 @@ class CellMgmt(object):
         _logger.warning("unexpected output: " + output)
         # signal out of range
         return Signal()
-
-    @critical_section
-    @handle_error_return_code
-    @retry_on_busy
-    def number(self):
-        """Returns an instance of CellularNumber."""
-
-        _logger.debug("cell_mgmt number")
-
-        output = self._cell_mgmt("number")
-        output = str(output)
-
-        if self._invoke_period_sec != 0:
-            sleep(self._invoke_period_sec)
-
-        match = CellMgmt._number_regex.match(output)
-        if match:
-            return CellularNumber(
-                number=match.group(1))
-
-        _logger.warning("unexpected output: " + output)
-        return CellularNumber()
 
     @critical_section
     @handle_error_return_code
@@ -815,6 +804,36 @@ class CellMgmt(object):
         _logger.debug("cell_mgmt pin_retries")
         output = self._cell_mgmt("pin_retries")
         return int(output)
+
+    @critical_section
+    @handle_error_return_code
+    def get_cellular_sim_info(self):
+        """
+        Return CellularSimInfo instance.
+        """
+        iccid = ""
+        imsi = ""
+
+        _logger.debug("cell_mgmt iccid")
+        _logger.debug("cell_mgmt imsi")
+
+        # `cell_mgmt iccid`
+        # ICCID: xxx
+        output = str(self._cell_mgmt("iccid"))
+        found = self._sim_info_iccid_regex.search(output)
+        if found:
+            iccid = found.group(1)
+
+        # `cell_mgmt imsi`
+        # IMSI: xxx
+        output = str(self._cell_mgmt("imsi"))
+        found = self._sim_info_imsi_regex.search(output)
+        if found:
+            imsi = found.group(1)
+
+        return CellularSimInfo(
+            iccid=iccid,
+            imsi=imsi)
 
     @critical_section
     @handle_error_return_code
