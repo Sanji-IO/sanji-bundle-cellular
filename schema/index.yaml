@@ -141,9 +141,6 @@ definitions:
       pinRetryRemain:
         type: integer
         description: PIN Retry remaining.
-      phoneNumber:
-        type: string
-        description: Phone number of the SIM card.
       status:
         type: string
         description: Indicate current status of cellular connection. Could be one of "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed".
@@ -315,7 +312,6 @@ externalDocs:
         "cellId": "0x3194",
         "bid": "",
         "iccId": "",
-        "phoneNumber": "",
         "imei": "356853050370859",
         "pinRetryRemain": 3,
         "status": "connected",
