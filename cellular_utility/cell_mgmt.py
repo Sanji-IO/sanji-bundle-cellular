@@ -250,6 +250,27 @@ class Signal(object):
         return self._ecio_dbm
 
 
+class CellularSimInfo(object):
+    def __init__(
+            self,
+            iccid="",
+            imsi=""):
+        if (not isinstance(iccid, str) or
+                not isinstance(imsi, str)):
+            raise ValueError
+
+        self._iccid = iccid
+        self._imsi = imsi
+
+    @property
+    def iccid(self):
+        return self._iccid
+
+    @property
+    def imsi(self):
+        return self._imsi
+
+
 class CellularLocation(object):
     def __init__(
             self,
@@ -335,6 +356,13 @@ class CellMgmt(object):
     )
     _attach_status_regex = re.compile(
         r"PS: attached\n"
+    )
+
+    _sim_info_iccid_regex = re.compile(
+        r"ICC-ID: ([\S]*)\n"
+    )
+    _sim_info_imsi_regex = re.compile(
+        r"IMSI: ([\S]*)\n"
     )
 
     _location_info_lac_regex = re.compile(
@@ -776,6 +804,36 @@ class CellMgmt(object):
         _logger.debug("cell_mgmt pin_retries")
         output = self._cell_mgmt("pin_retries")
         return int(output)
+
+    @critical_section
+    @handle_error_return_code
+    def get_cellular_sim_info(self):
+        """
+        Return CellularSimInfo instance.
+        """
+        iccid = ""
+        imsi = ""
+
+        _logger.debug("cell_mgmt iccid")
+        _logger.debug("cell_mgmt imsi")
+
+        # `cell_mgmt iccid`
+        # ICCID: xxx
+        output = str(self._cell_mgmt("iccid"))
+        found = self._sim_info_iccid_regex.search(output)
+        if found:
+            iccid = found.group(1)
+
+        # `cell_mgmt imsi`
+        # IMSI: xxx
+        output = str(self._cell_mgmt("imsi"))
+        found = self._sim_info_imsi_regex.search(output)
+        if found:
+            imsi = found.group(1)
+
+        return CellularSimInfo(
+            iccid=iccid,
+            imsi=imsi)
 
     @critical_section
     @handle_error_return_code

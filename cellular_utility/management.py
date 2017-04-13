@@ -261,16 +261,19 @@ class Manager(object):
         def __init__(
                 self,
                 pin_retry_remain=None,
-                icc_id=None,
+                iccid=None,
+                imsi=None,
                 imei=None):
 
             if (not isinstance(pin_retry_remain, int) or
-                    not isinstance(icc_id, str) or
+                    not isinstance(iccid, str) or
+                    not isinstance(imsi, str) or
                     not isinstance(imei, str)):
                 raise ValueError
 
             self._pin_retry_remain = pin_retry_remain
-            self._icc_id = icc_id
+            self._iccid = iccid
+            self._imsi = imsi
             self._imei = imei
 
         @property
@@ -278,8 +281,12 @@ class Manager(object):
             return self._pin_retry_remain
 
         @property
-        def icc_id(self):
-            return self._icc_id
+        def iccid(self):
+            return self._iccid
+
+        @property
+        def imsi(self):
+            return self._imsi
 
         @property
         def imei(self):
@@ -547,10 +554,12 @@ class Manager(object):
             try:
                 pin_retry_remain = self._cell_mgmt.get_pin_retry_remain()
                 minfo = self._cell_mgmt.m_info()
+                sinfo = self._cell_mgmt.get_cellular_sim_info()
 
                 self._static_information = Manager.StaticInformation(
                     pin_retry_remain=pin_retry_remain,
-                    icc_id=minfo.icc_id,
+                    iccid=sinfo.iccid,
+                    imsi=sinfo.imsi,
                     imei=minfo.imei)
 
                 break
