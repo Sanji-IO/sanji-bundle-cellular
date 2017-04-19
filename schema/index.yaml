@@ -141,6 +141,9 @@ definitions:
       imei:
         type: string
         description: IMEI of cellular module.
+      esn:
+        type: string
+        description: ESN of cellular module.
       pinRetryRemain:
         type: integer
         description: PIN Retry remaining.
@@ -317,6 +320,7 @@ externalDocs:
         "iccId": "",
         "imsi": "466977502877452",
         "imei": "356853050370859",
+        "esn": "802202F0",
         "pinRetryRemain": 3,
         "status": "connected",
         "ip": "111.70.146.125",
