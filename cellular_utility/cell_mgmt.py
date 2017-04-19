@@ -250,6 +250,27 @@ class Signal(object):
         return self._ecio_dbm
 
 
+class CellularModuleIds(object):
+    def __init__(
+            self,
+            imei="",
+            esn=""):
+        if (not isinstance(imei, str) or
+                not isinstance(esn, str)):
+            raise ValueError
+
+        self._imei = imei
+        self._esn = esn
+
+    @property
+    def imei(self):
+        return self._imei
+
+    @property
+    def esn(self):
+        return self._esn
+
+
 class CellularSimInfo(object):
     def __init__(
             self,
@@ -356,6 +377,13 @@ class CellMgmt(object):
     )
     _attach_status_regex = re.compile(
         r"PS: attached\n"
+    )
+
+    _module_ids_imei_regex = re.compile(
+        r"IMEI: ([\S]*)\n"
+    )
+    _module_ids_esn_regex = re.compile(
+        r"ESN: ([\S]*)\n"
     )
 
     _sim_info_iccid_regex = re.compile(
@@ -804,6 +832,34 @@ class CellMgmt(object):
         _logger.debug("cell_mgmt pin_retries")
         output = self._cell_mgmt("pin_retries")
         return int(output)
+
+    @critical_section
+    @handle_error_return_code
+    def get_cellular_module_ids(self):
+        """
+        Return CellularModuleIds instance.
+        """
+        imei = ""
+        esn = ""
+
+        _logger.debug("cell_mgmt module_ids")
+
+        # `cell_mgmt module_ids`
+        # IMEI: xxx
+        # ESN: xxx
+        output = str(self._cell_mgmt("module_ids"))
+        found = self._module_ids_imei_regex.search(output)
+        if found:
+            imei = found.group(1)
+
+        found = self._module_ids_esn_regex.search(output)
+        if found:
+            esn = found.group(1)
+
+        return CellularModuleIds(
+            imei=imei,
+            esn=esn)
+
 
     @critical_section
     @handle_error_return_code

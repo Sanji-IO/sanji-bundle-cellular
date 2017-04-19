@@ -325,6 +325,7 @@ class Index(Sanji):
             "imsi": "n/a" if sinfo is None else sinfo.imsi,
             "iccId": "n/a" if sinfo is None else sinfo.iccid,
             "imei": "n/a" if sinfo is None else sinfo.imei,
+            "esn": "n/a" if sinfo is None else sinfo.esn,
             "pinRetryRemain": (
                 -1 if sinfo is None else sinfo.pin_retry_remain),
 
