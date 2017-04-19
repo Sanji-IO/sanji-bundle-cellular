@@ -330,6 +330,7 @@ class Index(Sanji):
                 -1 if sinfo is None else sinfo.pin_retry_remain),
 
             "status": status.name,
+            "mac": "00:00:00:00:00:00" if sinfo is None else sinfo.mac,
             "ip": "n/a" if ninfo is None else ninfo.ip,
             "netmask": "n/a" if ninfo is None else ninfo.netmask,
             "gateway": "n/a" if ninfo is None else ninfo.gateway,

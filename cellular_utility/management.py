@@ -8,6 +8,7 @@ from monotonic import monotonic
 import sh
 from sh import ErrorReturnCode, TimeoutException
 import sys
+import netifaces
 from threading import Thread
 from time import sleep
 from traceback import format_exc
@@ -264,13 +265,15 @@ class Manager(object):
                 iccid=None,
                 imsi=None,
                 imei=None,
-                esn=None):
+                esn=None,
+                mac=None):
 
             if (not isinstance(pin_retry_remain, int) or
                     not isinstance(iccid, str) or
                     not isinstance(imsi, str) or
                     not isinstance(imei, str) or
-                    not isinstance(esn, str)):
+                    not isinstance(esn, str) or
+                    not isinstance(mac, str)):
                 raise ValueError
 
             self._pin_retry_remain = pin_retry_remain
@@ -278,6 +281,7 @@ class Manager(object):
             self._imsi = imsi
             self._imei = imei
             self._esn = esn
+            self._mac = mac
 
         @property
         def pin_retry_remain(self):
@@ -298,6 +302,10 @@ class Manager(object):
         @property
         def esn(self):
             return self._esn
+
+        @property
+        def mac(self):
+            return self._mac
 
     def __init__(
             self,
@@ -563,13 +571,19 @@ class Manager(object):
                 minfo = self._cell_mgmt.m_info()
                 sinfo = self._cell_mgmt.get_cellular_sim_info()
                 mids = self._cell_mgmt.get_cellular_module_ids()
+                iface = netifaces.ifaddresses(self._dev_name)
+                try:
+                    mac = iface[netifaces.AF_LINK][0]['addr']
+                except:
+                    mac = "00:00:00:00:00:00"
 
                 self._static_information = Manager.StaticInformation(
                     pin_retry_remain=pin_retry_remain,
                     iccid=sinfo.iccid,
                     imsi=sinfo.imsi,
                     imei=minfo.imei,
-                    esn=mids.esn)
+                    esn=mids.esn,
+                    mac=mac)
 
                 break
 
