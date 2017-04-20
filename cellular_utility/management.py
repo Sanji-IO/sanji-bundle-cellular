@@ -286,7 +286,6 @@ class Manager(object):
         def mac(self):
             return self._mac
 
-
     class StaticInformation(object):
         def __init__(
                 self,

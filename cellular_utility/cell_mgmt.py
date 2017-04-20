@@ -860,7 +860,6 @@ class CellMgmt(object):
             imei=imei,
             esn=esn)
 
-
     @critical_section
     @handle_error_return_code
     def get_cellular_sim_info(self):
