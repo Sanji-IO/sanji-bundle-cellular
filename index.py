@@ -280,6 +280,7 @@ class Index(Sanji):
         config = self.model.db[0]
 
         status = self._mgr.status()
+        minfo = self._mgr.module_information()
         sinfo = self._mgr.static_information()
         cinfo = self._mgr.cellular_information()
         ninfo = self._mgr.network_information()
@@ -324,13 +325,13 @@ class Index(Sanji):
             "bid": "n/a" if cinfo is None else cinfo.bid,
             "imsi": "n/a" if sinfo is None else sinfo.imsi,
             "iccId": "n/a" if sinfo is None else sinfo.iccid,
-            "imei": "n/a" if sinfo is None else sinfo.imei,
-            "esn": "n/a" if sinfo is None else sinfo.esn,
+            "imei": "" if minfo is None else minfo.imei,
+            "esn": "" if minfo is None else minfo.esn,
             "pinRetryRemain": (
                 -1 if sinfo is None else sinfo.pin_retry_remain),
 
             "status": status.name,
-            "mac": "00:00:00:00:00:00" if sinfo is None else sinfo.mac,
+            "mac": "00:00:00:00:00:00" if minfo is None else minfo.mac,
             "ip": "n/a" if ninfo is None else ninfo.ip,
             "netmask": "n/a" if ninfo is None else ninfo.netmask,
             "gateway": "n/a" if ninfo is None else ninfo.gateway,
