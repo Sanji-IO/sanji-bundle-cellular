@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.4.0-1) unstable; urgency=low
+
+  * feat: Add ESN and MAC address.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 20 Apr 2017 18:41:58 +0800
+
 sanji-bundle-cellular (3.3.0-1) unstable; urgency=low
 
   * feat: Remove phone number query.
