@@ -8,6 +8,7 @@ from monotonic import monotonic
 import sh
 from sh import ErrorReturnCode, TimeoutException
 import sys
+import netifaces
 from threading import Thread
 from time import sleep
 from traceback import format_exc
@@ -257,6 +258,34 @@ class Manager(object):
         service_attached = 9
         pin_error = 10
 
+    class ModuleInformation(object):
+        def __init__(
+                self,
+                imei=None,
+                esn=None,
+                mac=None):
+
+            if (not isinstance(imei, str) or
+                    not isinstance(esn, str) or
+                    not isinstance(mac, str)):
+                raise ValueError
+
+            self._imei = imei
+            self._esn = esn
+            self._mac = mac
+
+        @property
+        def imei(self):
+            return self._imei
+
+        @property
+        def esn(self):
+            return self._esn
+
+        @property
+        def mac(self):
+            return self._mac
+
     class StaticInformation(object):
         def __init__(
                 self,
@@ -351,6 +380,7 @@ class Manager(object):
 
         self._status = Manager.Status.initializing
 
+        self._module_information = None
         self._static_information = None
 
         self._cell_mgmt = CellMgmt()
@@ -381,6 +411,9 @@ class Manager(object):
 
     def status(self):
         return self._status
+
+    def module_information(self):
+        return self._module_information
 
     def static_information(self):
         return self._static_information
@@ -516,9 +549,12 @@ class Manager(object):
     def _initialize(self):
         """Return True on success, False on failure."""
         self._status = Manager.Status.initializing
+        self._module_information = None
         self._static_information = None
         self._cellular_information = None
         self._network_information = None
+
+        self._initialize_module_information()
 
         retry = 0
         max_retry = 10
@@ -547,6 +583,29 @@ class Manager(object):
             self._log.log_event_nosim()
 
         return False
+
+    def _initialize_module_information(self):
+        _logger.debug("_initialize_module_information")
+        while True:
+            try:
+                mids = self._cell_mgmt.get_cellular_module_ids()
+                iface = netifaces.ifaddresses(self._dev_name)
+                try:
+                    mac = iface[netifaces.AF_LINK][0]['addr']
+                except:
+                    mac = "00:00:00:00:00:00"
+
+                self._module_information = Manager.ModuleInformation(
+                    imei=mids.imei,
+                    esn=mids.esn,
+                    mac=mac)
+
+                break
+
+            except CellMgmtError:
+                _logger.warning(format_exc())
+                self._sleep(10)
+                continue
 
     def _initialize_static_information(self):
         _logger.debug("_initialize_static_information")

@@ -141,12 +141,19 @@ definitions:
       imei:
         type: string
         description: IMEI of cellular module.
+      esn:
+        type: string
+        description: ESN of cellular module.
       pinRetryRemain:
         type: integer
         description: PIN Retry remaining.
       status:
         type: string
         description: Indicate current status of cellular connection. Could be one of "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed".
+      mac:
+        type: string
+        readOnly: true
+        description: The identical MAC address.
       ip:
         type: string
         pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
@@ -317,8 +324,10 @@ externalDocs:
         "iccId": "",
         "imsi": "466977502877452",
         "imei": "356853050370859",
+        "esn": "802202F0",
         "pinRetryRemain": 3,
         "status": "connected",
+        "mac": "00:00:00:00:00:00",
         "ip": "111.70.146.125",
         "netmask": "255.255.255.252",
         "gateway": "111.70.146.126",
