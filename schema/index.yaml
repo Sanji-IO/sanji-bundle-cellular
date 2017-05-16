@@ -211,7 +211,7 @@ definitions:
               Retry timeout in seconds for static APN to switch primary to
               secondary settings.
             minimum: 60
-            maximum: 86400
+            maximum: 86399
           primary:
             type: object
             description: Primary PDP context.
@@ -283,6 +283,8 @@ definitions:
             description: IP address to ping.
           intervalSec:
             type: integer
+            minimum: 60
+            maximum: 86399
             description: Check alive interval.
           reboot:
             type: object
@@ -295,9 +297,11 @@ definitions:
                   Enable/disable reboot policy for check alive failed.
               cycles:
                 type: integer
+                minimum: 1
+                maximum: 48
                 description: |
                   Define cycles to check if reboot is required; a cycle is
-                  a global value defined by system, default should be 30
+                  a global value defined by system, default should be 20
                   minutes.
     example:
           $ref: '#/externalDocs/x-mocks/Cellular'
