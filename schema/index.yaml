@@ -72,6 +72,47 @@ paths:
               }
             }
 
+  /network/cellulars/{id}/firmware:
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    get:
+      description: |
+        Get firmware information of indicated Cellular interface.
+      responses:
+        200:
+          description: firmware information of indicated Cellular interface.
+          schema:
+            $ref: '#/definitions/CellularFirmwareInfo'
+          examples:
+            {
+              "application/json": {
+                $ref: '#/externalDocs/x-mocks/CellularFirmwareInfoExample'
+              }
+            }
+    put:
+      description: Set preferred firmware
+      parameters:
+      - name: body
+        in: body
+        description: ''
+        required: true
+        schema:
+          $ref: '#/definitions/CellularFirmwareEntry'
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/CellularFirmwareEntry'
+          examples:
+            {
+              "application/json": {
+                $ref: '#/externalDocs/x-mocks/CellularFirmwareEntryExample'
+              }
+            }
+
 definitions:
   Cellular:
     title: Cellular
@@ -306,8 +347,54 @@ definitions:
     example:
           $ref: '#/externalDocs/x-mocks/Cellular'
 
+  CellularFirmwareInfo:
+    title: CellularFirmwareInfo
+    description: Display current, preferred, avaliable firmware properties, if current firmware is not  equal to preferred firmware, you should check your configuration. (fwver, config, carrier mismatch?).
+    properties:
+      switchable:
+        type: boolean
+        readOnly: true
+        description: Cellular firmware could be switched or not.
+      current:
+        $ref: '#/definitions/CellularFirmwareEntry'
+      preferred:
+        $ref: '#/definitions/CellularFirmwareEntry'
+      avaliable:
+        type: array
+        items:
+          $ref: '#/definitions/CellularFirmwareEntry'
+    example:
+      $ref : '#/externalDocs/x-mocks/CellularFirmwareInfoExample'
+
+  CellularFirmwareEntry:
+    title: CellularFirmwareEntry
+    type: object
+    description: sdfdf
+    required:
+    - fwver
+    - config
+    - carrier
+    properties:
+      fwver:
+        type: string
+        description: Firmware version
+        minLength: 0
+        maxLength: 16
+      config:
+        type: string
+        description: Config name
+        minLength: 0
+        maxLength: 16
+      carrier:
+        type: string
+        description: Carrier name
+        minLength: 0
+        maxLength: 16
+    example:
+      $ref : '#/externalDocs/x-mocks/CellularFirmwareEntryExample'
+
 externalDocs:
-  url: '#'
+  url: 'http://#'
   x-mocks:
     Cellular:
       {
@@ -376,3 +463,38 @@ externalDocs:
       [
         $ref: '#/externalDocs/x-mocks/Cellular'
       ]
+
+    CellularFirmwareInfoExample:
+      {
+        "switchable": true,
+        "current": {
+            "fwver": "05.05.58.01",
+            "config": "ATT_005.029_001",
+            "carrier": "ATT"
+        },
+        "preferred": {
+            "fwver": "05.05.58.01",
+            "config": "ATT_005.029_001",
+            "carrier": "ATT"
+        },
+        "avaliable": [
+          {
+            "fwver": "05.05.58.01",
+            "config": "ATT_005.029_001",
+            "carrier": "ATT"
+          },
+          {
+            "fwver": "05.05.58.02",
+            "config": "VZW_005.029_002",
+            "carrier": "VZW"
+          }
+        ]
+      }
+
+    CellularFirmwareEntryExample:
+      {
+        "fwver": "05.05.58.01",
+        "config": "ATT_005.029_001",
+        "carrier": "ATT"
+      }
+
