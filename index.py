@@ -38,7 +38,8 @@ class Index(Sanji):
                 Required("id"): int,
                 Required("retryTimeout", default=120): All(
                     int,
-                    Any(0, Range(min=10, max=86400-1))),
+                    Any(0, Range(min=10, max=86400 - 1))
+                ),
                 Required("primary"): {
                     Required("apn", default="internet"):
                         All(Any(unicode, str), Length(0, 100)),
@@ -57,7 +58,8 @@ class Index(Sanji):
                 Required("targetHost"): str,
                 Required("intervalSec"): All(
                     int,
-                    Any(0, Range(min=60, max=86400-1))),
+                    Any(0, Range(min=60, max=86400 - 1))
+                ),
                 Required("reboot",
                          default={"enable": False, "cycles": 1}): {
                     Required("enable", default=False): bool,
