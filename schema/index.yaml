@@ -349,7 +349,7 @@ definitions:
 
   CellularFirmwareInfo:
     title: CellularFirmwareInfo
-    description: Display current, preferred, avaliable firmware properties, if current firmware is not  equal to preferred firmware, you should check your configuration. (fwver, config, carrier mismatch?).
+    description: Display current, preferred, available firmware properties, if current firmware is not  equal to preferred firmware, you should check your configuration. (fwver, config, carrier mismatch?).
     properties:
       switchable:
         type: boolean
@@ -359,7 +359,7 @@ definitions:
         $ref: '#/definitions/CellularFirmwareEntry'
       preferred:
         $ref: '#/definitions/CellularFirmwareEntry'
-      avaliable:
+      available:
         type: array
         items:
           $ref: '#/definitions/CellularFirmwareEntry'
@@ -477,7 +477,7 @@ externalDocs:
             "config": "ATT_005.029_001",
             "carrier": "ATT"
         },
-        "avaliable": [
+        "available": [
           {
             "fwver": "05.05.58.01",
             "config": "ATT_005.029_001",
