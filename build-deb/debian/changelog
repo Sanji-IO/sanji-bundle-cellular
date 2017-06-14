@@ -1,3 +1,11 @@
+sanji-bundle-cellular (3.4.1-1) unstable; urgency=low
+
+  * deps: upgrade sanji from 1.0.0 to 1.0.1.
+  * deps: upgrade paho-mqtt from 1.2 to 1.2.3.
+  * deps: upgrade sh from 1.12.9 to 1.12.14.
+
+ -- Zack YL Shih <zackyl.shih@moxa.com>  Thu, 15 Jun 2017 01:00:21 +0800
+
 sanji-bundle-cellular (3.4.0-1) unstable; urgency=low
 
   * feat: Add ESN and MAC address.
