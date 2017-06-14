@@ -72,6 +72,47 @@ paths:
               }
             }
 
+  /network/cellulars/{id}/firmware:
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+    get:
+      description: |
+        Get firmware information of indicated Cellular interface.
+      responses:
+        200:
+          description: firmware information of indicated Cellular interface.
+          schema:
+            $ref: '#/definitions/CellularFirmwareInfo'
+          examples:
+            {
+              "application/json": {
+                $ref: '#/externalDocs/x-mocks/CellularFirmwareInfoExample'
+              }
+            }
+    put:
+      description: Set preferred firmware
+      parameters:
+      - name: body
+        in: body
+        description: ''
+        required: true
+        schema:
+          $ref: '#/definitions/CellularFirmwareEntry'
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/CellularFirmwareEntry'
+          examples:
+            {
+              "application/json": {
+                $ref: '#/externalDocs/x-mocks/CellularFirmwareEntryExample'
+              }
+            }
+
 definitions:
   Cellular:
     title: Cellular
@@ -141,12 +182,19 @@ definitions:
       imei:
         type: string
         description: IMEI of cellular module.
+      esn:
+        type: string
+        description: ESN of cellular module.
       pinRetryRemain:
         type: integer
         description: PIN Retry remaining.
       status:
         type: string
         description: Indicate current status of cellular connection. Could be one of "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed".
+      mac:
+        type: string
+        readOnly: true
+        description: The identical MAC address.
       ip:
         type: string
         pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
@@ -204,7 +252,7 @@ definitions:
               Retry timeout in seconds for static APN to switch primary to
               secondary settings.
             minimum: 60
-            maximum: 86400
+            maximum: 86399
           primary:
             type: object
             description: Primary PDP context.
@@ -276,6 +324,8 @@ definitions:
             description: IP address to ping.
           intervalSec:
             type: integer
+            minimum: 60
+            maximum: 86399
             description: Check alive interval.
           reboot:
             type: object
@@ -288,15 +338,63 @@ definitions:
                   Enable/disable reboot policy for check alive failed.
               cycles:
                 type: integer
+                minimum: 1
+                maximum: 48
                 description: |
                   Define cycles to check if reboot is required; a cycle is
-                  a global value defined by system, default should be 30
+                  a global value defined by system, default should be 20
                   minutes.
     example:
           $ref: '#/externalDocs/x-mocks/Cellular'
 
+  CellularFirmwareInfo:
+    title: CellularFirmwareInfo
+    description: Display current, preferred, available firmware properties, if current firmware is not  equal to preferred firmware, you should check your configuration. (fwver, config, carrier mismatch?).
+    properties:
+      switchable:
+        type: boolean
+        readOnly: true
+        description: Cellular firmware could be switched or not.
+      current:
+        $ref: '#/definitions/CellularFirmwareEntry'
+      preferred:
+        $ref: '#/definitions/CellularFirmwareEntry'
+      available:
+        type: array
+        items:
+          $ref: '#/definitions/CellularFirmwareEntry'
+    example:
+      $ref : '#/externalDocs/x-mocks/CellularFirmwareInfoExample'
+
+  CellularFirmwareEntry:
+    title: CellularFirmwareEntry
+    type: object
+    description: sdfdf
+    required:
+    - fwver
+    - config
+    - carrier
+    properties:
+      fwver:
+        type: string
+        description: Firmware version
+        minLength: 0
+        maxLength: 32
+      config:
+        type: string
+        description: Config name
+        minLength: 0
+        maxLength: 32
+      carrier:
+        type: string
+        description: Carrier name
+        minLength: 0
+        maxLength: 32
+    example:
+      $ref : '#/externalDocs/x-mocks/CellularFirmwareEntryExample'
+
 externalDocs:
-  url: '#'
+  url: 'http://#'
   x-mocks:
     Cellular:
       {
@@ -317,8 +415,10 @@ externalDocs:
         "iccId": "",
         "imsi": "466977502877452",
         "imei": "356853050370859",
+        "esn": "802202F0",
         "pinRetryRemain": 3,
         "status": "connected",
+        "mac": "00:00:00:00:00:00",
         "ip": "111.70.146.125",
         "netmask": "255.255.255.252",
         "gateway": "111.70.146.126",
@@ -363,3 +463,38 @@ externalDocs:
       [
         $ref: '#/externalDocs/x-mocks/Cellular'
       ]
+
+    CellularFirmwareInfoExample:
+      {
+        "switchable": true,
+        "current": {
+            "fwver": "05.05.58.01",
+            "config": "ATT_005.029_001",
+            "carrier": "ATT"
+        },
+        "preferred": {
+            "fwver": "05.05.58.01",
+            "config": "ATT_005.029_001",
+            "carrier": "ATT"
+        },
+        "available": [
+          {
+            "fwver": "05.05.58.01",
+            "config": "ATT_005.029_001",
+            "carrier": "ATT"
+          },
+          {
+            "fwver": "05.05.58.02",
+            "config": "VZW_005.029_002",
+            "carrier": "VZW"
+          }
+        ]
+      }
+
+    CellularFirmwareEntryExample:
+      {
+        "fwver": "05.05.58.01",
+        "config": "ATT_005.029_001",
+        "carrier": "ATT"
+      }
+

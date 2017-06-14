@@ -38,7 +38,8 @@ class Index(Sanji):
                 Required("id"): int,
                 Required("retryTimeout", default=120): All(
                     int,
-                    Any(0, Range(min=10, max=86400-1))),
+                    Any(0, Range(min=10, max=86400 - 1))
+                ),
                 Required("primary"): {
                     Required("apn", default="internet"):
                         All(Any(unicode, str), Length(0, 100)),
@@ -57,7 +58,8 @@ class Index(Sanji):
                 Required("targetHost"): str,
                 Required("intervalSec"): All(
                     int,
-                    Any(0, Range(min=60, max=86400-1))),
+                    Any(0, Range(min=60, max=86400 - 1))
+                ),
                 Required("reboot",
                          default={"enable": False, "cycles": 1}): {
                     Required("enable", default=False): bool,
@@ -280,6 +282,7 @@ class Index(Sanji):
         config = self.model.db[0]
 
         status = self._mgr.status()
+        minfo = self._mgr.module_information()
         sinfo = self._mgr.static_information()
         cinfo = self._mgr.cellular_information()
         ninfo = self._mgr.network_information()
@@ -311,27 +314,29 @@ class Index(Sanji):
         return {
             "id": config["id"],
             "name": name,
-            "mode": "n/a" if cinfo is None else cinfo.mode,
+            "mode": "" if cinfo is None else cinfo.mode,
             "signal": {"csq": 0, "rssi": 0, "ecio": 0.0} if cinfo is None else
                     {"csq": cinfo.signal_csq,
                      "rssi": cinfo.signal_rssi_dbm,
                      "ecio": cinfo.signal_ecio_dbm},
-            "operatorName": "n/a" if cinfo is None else cinfo.operator,
-            "lac": "n/a" if cinfo is None else cinfo.lac,
-            "tac": "n/a" if cinfo is None else cinfo.tac,
-            "nid": "n/a" if cinfo is None else cinfo.nid,
-            "cellId": "n/a" if cinfo is None else cinfo.cell_id,
-            "bid": "n/a" if cinfo is None else cinfo.bid,
-            "imsi": "n/a" if sinfo is None else sinfo.imsi,
-            "iccId": "n/a" if sinfo is None else sinfo.iccid,
-            "imei": "n/a" if sinfo is None else sinfo.imei,
+            "operatorName": "" if cinfo is None else cinfo.operator,
+            "lac": "" if cinfo is None else cinfo.lac,
+            "tac": "" if cinfo is None else cinfo.tac,
+            "nid": "" if cinfo is None else cinfo.nid,
+            "cellId": "" if cinfo is None else cinfo.cell_id,
+            "bid": "" if cinfo is None else cinfo.bid,
+            "imsi": "" if sinfo is None else sinfo.imsi,
+            "iccId": "" if sinfo is None else sinfo.iccid,
+            "imei": "" if minfo is None else minfo.imei,
+            "esn": "" if minfo is None else minfo.esn,
             "pinRetryRemain": (
                 -1 if sinfo is None else sinfo.pin_retry_remain),
 
             "status": status.name,
-            "ip": "n/a" if ninfo is None else ninfo.ip,
-            "netmask": "n/a" if ninfo is None else ninfo.netmask,
-            "gateway": "n/a" if ninfo is None else ninfo.gateway,
+            "mac": "00:00:00:00:00:00" if minfo is None else minfo.mac,
+            "ip": "" if ninfo is None else ninfo.ip,
+            "netmask": "" if ninfo is None else ninfo.netmask,
+            "gateway": "" if ninfo is None else ninfo.gateway,
             "dns": [] if ninfo is None else ninfo.dns_list,
             "usage": {
                 "txkbyte": usage["txkbyte"],
