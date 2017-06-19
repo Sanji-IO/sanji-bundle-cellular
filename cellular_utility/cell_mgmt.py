@@ -437,7 +437,7 @@ class CellMgmt(object):
     @retry_on_busy
     @retrying(
         stop_max_attempt_number=10, wait_random_min=500, wait_random_max=1500)
-    def at(self, cmd):
+    def at(self, cmd, timeout=None):
         """
         Send AT command.
         Return the AT command response with dict like
@@ -447,7 +447,10 @@ class CellMgmt(object):
             }
         """
         _logger.debug("cell_mgmt at {}".format(cmd))
-        output = self._cell_mgmt("at", cmd)
+        if timeout is None:
+            output = self._cell_mgmt("at", cmd)
+        else:
+            output = self._cell_mgmt("at", cmd, timeout)
         output = str(output)
 
         match = self._at_response_ok_regex.match(output)
