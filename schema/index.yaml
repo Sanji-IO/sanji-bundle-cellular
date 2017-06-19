@@ -364,7 +364,7 @@ definitions:
         items:
           $ref: '#/definitions/CellularFirmwareEntry'
     example:
-      $ref : '#/externalDocs/x-mocks/CellularFirmwareInfoExample'
+      $ref: '#/externalDocs/x-mocks/CellularFirmwareInfoExample'
 
   CellularFirmwareEntry:
     title: CellularFirmwareEntry
