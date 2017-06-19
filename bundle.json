@@ -21,6 +21,10 @@
     {
       "methods": ["get", "put"],
       "resource": "/network/cellulars/:id"
+    },
+    {
+      "methods": ["get", "put"],
+      "resource": "/network/cellulars/:id/firmware"
     }
   ]
 }

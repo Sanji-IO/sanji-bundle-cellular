@@ -381,6 +381,44 @@ class Index(Sanji):
         self.publish.event.put("/network/interfaces/{}".format(name),
                                data=data)
 
+    @Route(methods="get", resource="/network/cellulars/:id/firmware")
+    def get_fw(self, message, response):
+        if not self.__init_completed():
+            return response(code=400, data={"message": "resource not exist"})
+
+        id_ = int(message.param["id"])
+        if id_ != 1:
+            return response(code=400, data={"message": "resource not exist"})
+
+        m_info = self._mgr._cell_mgmt.m_info()
+        if m_info.module != "MC7354":
+            return response(code=200, data={
+                "switchable": False,
+                "current": None,
+                "preferred": None,
+                "avaliable": None
+            })
+
+        fw_info = self._mgr._cell_mgmt.get_cellular_fw()
+        return response(code=200, data=fw_info)
+
+    @Route(methods="put", resource="/network/cellulars/:id/firmware")
+    def put_fw(self, message, response):
+        if not self.__init_completed():
+            return response(code=400, data={"message": "resource not exist"})
+
+        id_ = int(message.param["id"])
+        if id_ != 1:
+            return response(code=400, data={"message": "resource not exist"})
+
+        response(code=200)
+
+        self._mgr._cell_mgmt.set_cellular_fw(
+            fwver=message.data["fwver"],
+            config=message.data["config"],
+            carrier=message.data["carrier"]
+        )
+
 
 if __name__ == "__main__":
     cellular = Index(connection=Mqtt())
