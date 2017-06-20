@@ -1,3 +1,11 @@
+sanji-bundle-cellular (3.5.0-1) unstable; urgency=low
+
+  * doc: fix style.
+  * feat: add switch carrier implement.
+  * feat: at command support timeout variable.
+
+ -- Zack YL Shih <zackyl.shih@moxa.com>  Tue, 20 Jun 2017 17:16:17 +0800
+
 sanji-bundle-cellular (3.4.1-1) unstable; urgency=low
 
   * deps: upgrade sanji from 1.0.0 to 1.0.1.
