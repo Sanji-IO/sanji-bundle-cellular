@@ -437,7 +437,7 @@ class CellMgmt(object):
     @retry_on_busy
     @retrying(
         stop_max_attempt_number=10, wait_random_min=500, wait_random_max=1500)
-    def at(self, cmd):
+    def at(self, cmd, timeout=None):
         """
         Send AT command.
         Return the AT command response with dict like
@@ -447,7 +447,10 @@ class CellMgmt(object):
             }
         """
         _logger.debug("cell_mgmt at {}".format(cmd))
-        output = self._cell_mgmt("at", cmd)
+        if timeout is None:
+            output = self._cell_mgmt("at", cmd)
+        else:
+            output = self._cell_mgmt("at", cmd, timeout)
         output = str(output)
 
         match = self._at_response_ok_regex.match(output)
@@ -942,6 +945,103 @@ class CellMgmt(object):
             tac=tac,
             bid=bid,
             nid=nid)
+
+    @critical_section
+    @handle_error_return_code
+    def get_cellular_fw(self):
+        """
+        Return Cellular FW information.
+        Example entry: 9999999_9902266_SWI9X15C_05.05.58.01_00_VZW_005.029_001
+        """
+        self.at("ATE0")
+        self.at("AT!ENTERCND=\"A710\"")
+
+        # get current fw version
+        current_fw = self.at("AT+CGMR")
+        _logger.debug("{}".format(current_fw))
+        fw_regex = r"SWI9X15C_(.*?) r"
+        fw_matches = re.finditer(fw_regex, current_fw["info"])
+        for _, match in enumerate(fw_matches):
+            current_fw = match.group(1)
+            break
+
+        # get all carrier profiles
+        at_obj = self.at("AT!priid?", 3)
+        _logger.debug(at_obj)
+        if at_obj["status"] != "ok":
+            return None
+
+        regex = r"^Carrier PRI: (.*?)$"
+        matches = re.finditer(regex, at_obj["info"], re.MULTILINE)
+        pri_list = [
+            (lambda match: match.group(1))(match)
+            for _, match in enumerate(matches)
+        ]
+
+        result = {
+            "switchable": True,
+            "current": {},
+            "preferred": {},
+            "available": []
+        }
+
+        for entry in pri_list:
+            entry_cols = entry.split("_")
+            result["available"].append({
+                # "fwver": entry_cols[3],
+                "fwver": current_fw,  # FIXME: Use fixed fwver now
+                "config": "_".join(entry_cols[5:8]),
+                "carrier": entry_cols[5],
+            })
+        _logger.debug("{}".format(result))
+
+        regex = r"^(.*?):\s+(\S*)$"
+        at_obj = self.at("AT!GOBIIMPREF?")
+        _logger.debug(at_obj)
+        if at_obj["status"] != "ok":
+            return None
+        matches = re.finditer(regex, at_obj["info"], re.MULTILINE)
+        status_lines = [
+            (lambda match: (match.group(1), match.group(2)))(match)
+            for _, match in enumerate(matches)
+        ]
+
+        for entry in status_lines:
+            key = entry[0].strip()
+            if key == "preferred fw version":
+                # FIXME: Use fixed fwver now
+                result["preferred"]["fwver"] = current_fw
+            elif key == "preferred carrier name":
+                result["preferred"]["carrier"] = entry[1]
+            elif key == "preferred config name":
+                result["preferred"]["config"] = entry[1]
+            elif key == "current fw version":
+                # FIXME: Use fixed fwver now
+                result["current"]["fwver"] = current_fw
+            elif key == "current carrier name":
+                result["current"]["carrier"] = entry[1]
+            elif key == "current config name":
+                result["current"]["config"] = entry[1]
+            else:
+                pass
+
+        return result
+
+    @critical_section
+    @handle_error_return_code
+    def set_cellular_fw(self, fwver, config, carrier):
+        """
+        Return Cellular FW information.
+        """
+        atcmd = "AT!GOBIIMPREF=\"{}\",\"{}\",\"{}\"".format(
+            fwver, carrier, config)
+        _logger.debug("cell_mgmt ATE0")
+        self.at("ATE0")
+        _logger.debug("cell_mgmt AT!ENTERCND=A710")
+        self.at("AT!ENTERCND=\"A710\"")
+        _logger.debug("cell_mgmt {}".format(atcmd))
+        self.at(atcmd)
+        self.power_cycle()
 
 
 if __name__ == "__main__":
