@@ -15,6 +15,7 @@ from voluptuous import All, Any, Length, Match, Range, Required, Schema
 from voluptuous import REMOVE_EXTRA, Optional, In
 
 from cellular_utility.cell_mgmt import CellMgmt, CellMgmtError
+from cellular_utility.cell_mgmt import CellAllModuleNotSupportError
 from cellular_utility.management import Manager
 from cellular_utility.vnstat import VnStat, VnStatError
 
@@ -109,6 +110,8 @@ class Index(Sanji):
 
             try:
                 wwan_node = cell_mgmt.m_info().wwan_node
+                break
+            except CellAllModuleNotSupportError:
                 break
             except CellMgmtError:
                 _logger.warning("get wwan_node failure: " + format_exc())
