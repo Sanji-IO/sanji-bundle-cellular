@@ -308,6 +308,30 @@ definitions:
       pinCode:
         type: string
         description: PIN code of SIM card. Takes no effect when SIM card PIN weren't not set.
+      auth:
+        type: object
+        description: The negotiated authentication.
+        required:
+        - protocol
+        properties:
+          protocol:
+            type: string
+            description: The negotiated authentication protocol.
+            enum:
+            - none
+            - chap
+            - pap
+            - both
+          username:
+            type: string
+            description: Username for PAP and/or CHAP.
+            minLength: 0
+            maxLength: 255
+          password:
+            type: string
+            description: Password for PAP and/or CHAP.
+            minLength: 0
+            maxLength: 255
       keepalive:
         type: object
         description: Keep-alive configuration.
@@ -449,6 +473,11 @@ externalDocs:
           ]
         },
         "pinCode": "0000",
+        "auth": {
+          "protocol": "none",
+          "username": "",
+          "password": "",
+        },
         "keepalive": {
           "enable": true,
           "targetHost": "8.8.8.8",
