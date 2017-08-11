@@ -54,6 +54,14 @@ class Index(Sanji):
                 }
             },
             Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
+            Optional("auth"): {
+                Required("protocol", default="none"):
+                    In(frozenset(["none", "chap", "pap", "both"])),
+                Optional("username"):
+                    All(Any(unicode, str), Length(0, 255)),
+                Optional("password"):
+                    All(Any(unicode, str), Length(0, 255))
+            },
             Required("keepalive"): {
                 Required("enable"): bool,
                 Required("targetHost"): str,
@@ -152,6 +160,10 @@ class Index(Sanji):
             pdpc_secondary_apn = ""
             pdpc_secondary_type = "ipv4v6"
         pdpc_retry_timeout = self.model.db[0]["pdpContext"]["retryTimeout"]
+        auth = self.model.db[0].get("auth", {})
+        auth_protocol = auth.get("protocol", "none")
+        auth_username = auth.get("username", "")
+        auth_password = auth.get("password", "")
 
         self._mgr = Manager(
             dev_name=self._dev_name,
@@ -164,6 +176,9 @@ class Index(Sanji):
             pdp_context_secondary_apn=pdpc_secondary_apn,
             pdp_context_secondary_type=pdpc_secondary_type,
             pdp_context_retry_timeout=pdpc_retry_timeout,
+            auth_protocol=auth_protocol,
+            auth_username=auth_username,
+            auth_password=auth_password,
             keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"],
@@ -349,6 +364,7 @@ class Index(Sanji):
             "enable": config["enable"],
             "pdpContext": config["pdpContext"],
             "pinCode": config["pinCode"],
+            "auth": config["auth"],
             "keepalive": {
                 "enable": config["keepalive"]["enable"],
                 "targetHost": config["keepalive"]["targetHost"],

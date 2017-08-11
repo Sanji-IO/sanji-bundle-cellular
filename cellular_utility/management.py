@@ -333,6 +333,9 @@ class Manager(object):
             pdp_context_secondary_apn=None,
             pdp_context_secondary_type=None,
             pdp_context_retry_timeout=None,
+            auth_protocol=None,
+            auth_username=None,
+            auth_password=None,
             keepalive_enabled=None,
             keepalive_host=None,
             keepalive_period_sec=None,
@@ -342,17 +345,21 @@ class Manager(object):
                 not isinstance(enabled, bool) or
                 not isinstance(pdp_context_static, bool) or
                 not isinstance(pdp_context_id, int) or
-                not (isinstance(pdp_context_primary_apn, str) or
-                     isinstance(pdp_context_primary_apn, unicode) or
+                not (isinstance(pdp_context_primary_apn, basestring) or
                      pdp_context_primary_apn is None) or
-                not (isinstance(pdp_context_primary_type, str) or
+                not (isinstance(pdp_context_primary_type, basestring) or
                      pdp_context_primary_type is None) or
-                not (isinstance(pdp_context_secondary_apn, str) or
-                     isinstance(pdp_context_secondary_apn, unicode) or
+                not (isinstance(pdp_context_secondary_apn, basestring) or
                      pdp_context_secondary_apn is None) or
-                not (isinstance(pdp_context_secondary_type, str) or
+                not (isinstance(pdp_context_secondary_type, basestring) or
                      pdp_context_secondary_type is None) or
                 not isinstance(pdp_context_retry_timeout, int) or
+                not (isinstance(auth_protocol, basestring) or
+                     auth_protocol is None) or
+                not (isinstance(auth_username, basestring) or
+                     auth_username is None) or
+                not (isinstance(auth_password, basestring) or
+                     auth_password is None) or
                 not isinstance(keepalive_enabled, bool) or
                 not isinstance(keepalive_host, str) or
                 not isinstance(keepalive_period_sec, int) or
@@ -373,6 +380,9 @@ class Manager(object):
         self._pdp_context_secondary_apn = pdp_context_secondary_apn
         self._pdp_context_secondary_type = pdp_context_secondary_type
         self._pdp_context_retry_timeout = pdp_context_retry_timeout
+        self._auth_protocol = auth_protocol
+        self._auth_username = auth_username
+        self._auth_password = auth_password
         self._keepalive_enabled = keepalive_enabled
         self._keepalive_host = keepalive_host
         self._keepalive_period_sec = keepalive_period_sec
@@ -747,7 +757,11 @@ class Manager(object):
             if not self._attach():
                 return False
 
-            nwk_info = self._cell_mgmt.start(apn=apn)
+            nwk_info = self._cell_mgmt.start(
+                apn=apn,
+                auth=self._auth_protocol,
+                username=self._auth_username,
+                password=self._auth_password)
 
             self._log.log_event_connect_success(nwk_info)
 
