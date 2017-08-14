@@ -503,7 +503,7 @@ class CellMgmt(object):
     @critical_section
     @handle_error_return_code
     @retry_on_busy
-    def start(self, apn):
+    def start(self, apn, auth="none", username="", password=""):
         """
         Start cellular connection.
         Return dict like:
@@ -520,8 +520,9 @@ class CellMgmt(object):
         args = [
             "start", "ignore-dns-gw",
             "APN=" + apn,
-            "Username=",
-            "Password=",
+            "Auth={}".format(auth),
+            "Username={}".format(username),
+            "Password={}".format(password),
             "PIN="
         ]
 
