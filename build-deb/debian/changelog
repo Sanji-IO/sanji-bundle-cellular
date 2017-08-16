@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.1-1) unstable; urgency=low
+
+  * fix: Get failed while "auth" not exist in config.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 16 Aug 2017 11:16:23 +0800
+
 sanji-bundle-cellular (3.6.0-1) unstable; urgency=low
 
   * feat: Support authentication.

@@ -364,7 +364,7 @@ class Index(Sanji):
             "enable": config["enable"],
             "pdpContext": config["pdpContext"],
             "pinCode": config["pinCode"],
-            "auth": config["auth"],
+            "auth": config.get("auth", {"protocol": "none"}),
             "keepalive": {
                 "enable": config["keepalive"]["enable"],
                 "targetHost": config["keepalive"]["targetHost"],
