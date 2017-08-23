@@ -256,13 +256,31 @@ definitions:
           primary:
             type: object
             description: Primary PDP context.
-            items:
-              $ref: '#/definitions/CellularProfileEntry'
+            properties:
+              apn:
+                type: string
+                description: Edit APN of the specified PDP context.
+              type:
+                type: string
+                description: Indicate the PDP type to use.
+                enum:
+                - ipv4
+                - ipv6
+                - ipv4v6
           secondary:
             type: object
             description: Secondary PDP context.
-            items:
-              $ref: '#/definitions/CellularProfileEntry'
+            properties:
+              apn:
+                type: string
+                description: Edit APN of the specified PDP context.
+              type:
+                type: string
+                description: Indicate the PDP type to use.
+                enum:
+                - ipv4
+                - ipv6
+                - ipv4v6
           list:
             readOnly: true
             type: array
@@ -290,6 +308,30 @@ definitions:
       pinCode:
         type: string
         description: PIN code of SIM card. Takes no effect when SIM card PIN weren't not set.
+      auth:
+        type: object
+        description: The negotiated authentication.
+        required:
+        - protocol
+        properties:
+          protocol:
+            type: string
+            description: The negotiated authentication protocol.
+            enum:
+            - none
+            - chap
+            - pap
+            - both
+          username:
+            type: string
+            description: Username for PAP and/or CHAP.
+            minLength: 0
+            maxLength: 255
+          password:
+            type: string
+            description: Password for PAP and/or CHAP.
+            minLength: 0
+            maxLength: 255
       keepalive:
         type: object
         description: Keep-alive configuration.
@@ -328,47 +370,6 @@ definitions:
                   minutes.
     example:
           $ref: '#/externalDocs/x-mocks/Cellular'
-
-  CellularProfileEntry:
-    title: CellularProfileEntry
-    description: A profile for connection
-    required:
-    - apn
-    properties:
-      apn:
-        type: string
-        description: Edit APN of the specified PDP context.
-      type:
-        type: string
-        description: Indicate the PDP type to use.
-        enum:
-        - ipv4
-        - ipv6
-        - ipv4v6
-      auth:
-        type: object
-        description: The negotiated authentication.
-        required:
-        - protocol
-        properties:
-          protocol:
-            type: string
-            description: The negotiated authentication protocol.
-            enum:
-            - none
-            - chap
-            - pap
-            - both
-          username:
-            type: string
-            description: Username for PAP and/or CHAP.
-            minLength: 0
-            maxLength: 255
-          password:
-            type: string
-            description: Password for PAP and/or CHAP.
-            minLength: 0
-            maxLength: 255
 
   CellularFirmwareInfo:
     title: CellularFirmwareInfo
@@ -458,11 +459,6 @@ externalDocs:
           "primary": {
             "apn": "internet",
             "type": "ipv4v6",
-            "auth": {
-              "protocol": "none",
-              "username": "",
-              "password": "",
-            }
           },
           "secondary": {
             "apn": "internet",
@@ -477,6 +473,11 @@ externalDocs:
           ]
         },
         "pinCode": "0000",
+        "auth": {
+          "protocol": "none",
+          "username": "",
+          "password": "",
+        },
         "keepalive": {
           "enable": true,
           "targetHost": "8.8.8.8",
