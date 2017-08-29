@@ -254,15 +254,9 @@ definitions:
             minimum: 60
             maximum: 86399
           primary:
-            type: object
-            description: Primary PDP context.
-            items:
-              $ref: '#/definitions/CellularProfileEntry'
+            $ref: '#/definitions/CellularProfileEntry'
           secondary:
-            type: object
-            description: Secondary PDP context.
-            items:
-              $ref: '#/definitions/CellularProfileEntry'
+            $ref: '#/definitions/CellularProfileEntry'
           list:
             readOnly: true
             type: array
