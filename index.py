@@ -30,6 +30,23 @@ _logger = logging.getLogger("sanji.cellular")
 
 class Index(Sanji):
 
+    CONF_PROFILE_SCHEMA = Schema(
+        {
+            Required("apn", default="internet"):
+                All(Any(unicode, str), Length(0, 100)),
+            Optional("type", default="ipv4v6"):
+                In(frozenset(["ipv4", "ipv6", "ipv4v6"])),
+            Optional("auth"): {
+                Required("protocol", default="none"):
+                    In(frozenset(["none", "chap", "pap", "both"])),
+                Optional("username"):
+                    All(Any(unicode, str), Length(0, 255)),
+                Optional("password"):
+                    All(Any(unicode, str), Length(0, 255))
+            }
+        },
+        extra=REMOVE_EXTRA)
+
     CONF_SCHEMA = Schema(
         {
             "id": int,
@@ -41,27 +58,10 @@ class Index(Sanji):
                     int,
                     Any(0, Range(min=10, max=86400 - 1))
                 ),
-                Required("primary"): {
-                    Required("apn", default="internet"):
-                        All(Any(unicode, str), Length(0, 100)),
-                    Optional("type", default="ipv4v6"):
-                        In(frozenset(["ipv4", "ipv6", "ipv4v6"]))
-                },
-                Required("secondary", default={}): {
-                    Optional("apn"): All(Any(unicode, str), Length(0, 100)),
-                    Optional("type", default="ipv4v6"):
-                        In(frozenset(["ipv4", "ipv6", "ipv4v6"]))
-                }
+                Required("primary"): CONF_PROFILE_SCHEMA,
+                Required("secondary", default={}): CONF_PROFILE_SCHEMA
             },
             Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
-            Optional("auth"): {
-                Required("protocol", default="none"):
-                    In(frozenset(["none", "chap", "pap", "both"])),
-                Optional("username"):
-                    All(Any(unicode, str), Length(0, 255)),
-                Optional("password"):
-                    All(Any(unicode, str), Length(0, 255))
-            },
             Required("keepalive"): {
                 Required("enable"): bool,
                 Required("targetHost"): str,
@@ -147,23 +147,25 @@ class Index(Sanji):
                     "apn", "internet")
             pdpc_primary_type = \
                 self.model.db[0]["pdpContext"]["primary"].get("type", "ipv4v6")
+            pdpc_primary_auth = \
+                self.model.db[0]["pdpContext"]["primary"].get("auth", {})
         else:
             pdpc_primary_apn = "internet"
             pdpc_primary_type = "ipv4v6"
+            pdpc_primary_auth = {}
         if "secondary" in self.model.db[0]["pdpContext"]:
             pdpc_secondary_apn = \
                 self.model.db[0]["pdpContext"]["secondary"].get("apn", "")
             pdpc_secondary_type = \
                 self.model.db[0]["pdpContext"]["secondary"].get(
                     "type", "ipv4v6")
+            pdpc_secondary_auth = \
+                self.model.db[0]["pdpContext"]["secondary"].get("auth", {})
         else:
             pdpc_secondary_apn = ""
             pdpc_secondary_type = "ipv4v6"
+            pdpc_secondary_auth = {}
         pdpc_retry_timeout = self.model.db[0]["pdpContext"]["retryTimeout"]
-        auth = self.model.db[0].get("auth", {})
-        auth_protocol = auth.get("protocol", "none")
-        auth_username = auth.get("username", "")
-        auth_password = auth.get("password", "")
 
         self._mgr = Manager(
             dev_name=self._dev_name,
@@ -173,12 +175,18 @@ class Index(Sanji):
             pdp_context_id=self.model.db[0]["pdpContext"]["id"],
             pdp_context_primary_apn=pdpc_primary_apn,
             pdp_context_primary_type=pdpc_primary_type,
+            pdp_context_primary_auth=pdpc_primary_auth.get("protocol", "none"),
+            pdp_context_primary_username=pdpc_primary_auth.get("username", ""),
+            pdp_context_primary_password=pdpc_primary_auth.get("password", ""),
             pdp_context_secondary_apn=pdpc_secondary_apn,
             pdp_context_secondary_type=pdpc_secondary_type,
+            pdp_context_secondary_auth=pdpc_secondary_auth.get(
+                "protocol", "none"),
+            pdp_context_secondary_username=pdpc_secondary_auth.get(
+                "username", ""),
+            pdp_context_secondary_password=pdpc_secondary_auth.get(
+                "password", ""),
             pdp_context_retry_timeout=pdpc_retry_timeout,
-            auth_protocol=auth_protocol,
-            auth_username=auth_username,
-            auth_password=auth_password,
             keepalive_enabled=self.model.db[0]["keepalive"]["enable"],
             keepalive_host=self.model.db[0]["keepalive"]["targetHost"],
             keepalive_period_sec=self.model.db[0]["keepalive"]["intervalSec"],
@@ -364,7 +372,6 @@ class Index(Sanji):
             "enable": config["enable"],
             "pdpContext": config["pdpContext"],
             "pinCode": config["pinCode"],
-            "auth": config.get("auth", {"protocol": "none"}),
             "keepalive": {
                 "enable": config["keepalive"]["enable"],
                 "targetHost": config["keepalive"]["targetHost"],
