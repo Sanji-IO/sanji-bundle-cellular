@@ -455,12 +455,17 @@ externalDocs:
             "auth": {
               "protocol": "none",
               "username": "",
-              "password": "",
+              "password": ""
             }
           },
           "secondary": {
             "apn": "internet",
             "type": "ipv4v6",
+            "auth": {
+              "protocol": "none",
+              "username": "",
+              "password": ""
+            }
           },
           "list": [
             {
