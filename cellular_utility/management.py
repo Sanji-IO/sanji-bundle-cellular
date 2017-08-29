@@ -722,8 +722,8 @@ class Manager(object):
 
     def _try_connect(
             self,
-            pdpc_apn,
-            pdpc_type,
+            apn,
+            type,
             auth,
             username,
             password,
@@ -734,7 +734,7 @@ class Manager(object):
 
             self._status = Manager.Status.connecting
             if not self._connect(
-                    pdpc_apn, pdpc_type, auth, username, password):
+                    apn, type, auth, username, password):
                 self._status = Manager.Status.connect_failure
 
                 if monotonic() >= retry:
@@ -744,7 +744,7 @@ class Manager(object):
             else:
                 return True
 
-    def _connect(self, pdpc_apn, pdpc_type, auth, username, password):
+    def _connect(self, apn, type, auth, username, password):
         """Return True on success, False on failure.
         """
         self._network_information = None
@@ -763,9 +763,9 @@ class Manager(object):
                         if item["id"] == self._pdp_context_id).next()
                 apn = pdpc["apn"]
 
-                if self._pdp_context_static is True and apn != pdpc_apn:
+                if self._pdp_context_static is True and apn != apn:
                     self._cell_mgmt.set_pdp_context(
-                        self._pdp_context_id, pdpc_apn, pdpc_type)
+                        self._pdp_context_id, apn, type)
                     if self.verify_sim() != SimStatus.ready:
                         raise StopException
 
