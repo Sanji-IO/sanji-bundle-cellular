@@ -39,6 +39,7 @@ class TestCellularStatic(unittest.TestCase):
                     "type": "ipv4v6"
                 },
                 "secondary": {
+                    "apn": "internet",
                     "type": "ipv4v6"
                 }
             },
@@ -74,6 +75,7 @@ class TestCellularStatic(unittest.TestCase):
                     "type": "ipv4v6"
                 },
                 "secondary": {
+                    "apn": "internet",
                     "type": "ipv4v6"
                 }
             },
@@ -109,6 +111,7 @@ class TestCellularStatic(unittest.TestCase):
                     "type": "ipv4v6"
                 },
                 "secondary": {
+                    "apn": "internet",
                     "type": "ipv4v6"
                 }
             },
