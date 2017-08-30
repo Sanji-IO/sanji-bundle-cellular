@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.3-1) unstable; urgency=low
+
+  * test: Fix unittest.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 30 Aug 2017 18:28:55 +0800
+
 sanji-bundle-cellular (3.6.2-2) unstable; urgency=low
 
   * chore: Update dependend utility version.
