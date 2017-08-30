@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.2-2) unstable; urgency=low
+
+  * chore: Update dependend utility version.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Wed, 30 Aug 2017 17:03:40 +0800
+
 sanji-bundle-cellular (3.6.2-1) unstable; urgency=low
 
   * fix: Setup authentication for secondary profile.

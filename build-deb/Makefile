@@ -4,7 +4,7 @@ NAME        = $(shell cat $(PROJ_DIR)/bundle.json | sed -n 's/"name"//p' | tr -d
 VERSION     = $(shell cat $(PROJ_DIR)/bundle.json | sed -n 's/"version"//p' | tr -d '", :')
 
 PROJECT     = sanji-bundle-$(NAME)
-DEBVERSION  = 1
+DEBVERSION  = 2
 DIST        ?= unstable
 
 STAGING_DIR = $(abspath $(PROJECT)-$(VERSION))
