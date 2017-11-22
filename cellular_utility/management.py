@@ -330,12 +330,15 @@ class Manager(object):
             pdp_context_id=None,
             pdp_context_primary_apn=None,
             pdp_context_primary_type=None,
+            pdp_context_primary_auth=None,
+            pdp_context_primary_username=None,
+            pdp_context_primary_password=None,
             pdp_context_secondary_apn=None,
             pdp_context_secondary_type=None,
+            pdp_context_secondary_auth=None,
+            pdp_context_secondary_username=None,
+            pdp_context_secondary_password=None,
             pdp_context_retry_timeout=None,
-            auth_protocol=None,
-            auth_username=None,
-            auth_password=None,
             keepalive_enabled=None,
             keepalive_host=None,
             keepalive_period_sec=None,
@@ -349,17 +352,23 @@ class Manager(object):
                      pdp_context_primary_apn is None) or
                 not (isinstance(pdp_context_primary_type, basestring) or
                      pdp_context_primary_type is None) or
+                not (isinstance(pdp_context_primary_auth, basestring) or
+                     pdp_context_primary_auth is None) or
+                not (isinstance(pdp_context_primary_username, basestring) or
+                     pdp_context_primary_username is None) or
+                not (isinstance(pdp_context_primary_password, basestring) or
+                     pdp_context_primary_password is None) or
                 not (isinstance(pdp_context_secondary_apn, basestring) or
                      pdp_context_secondary_apn is None) or
                 not (isinstance(pdp_context_secondary_type, basestring) or
                      pdp_context_secondary_type is None) or
+                not (isinstance(pdp_context_secondary_auth, basestring) or
+                     pdp_context_secondary_auth is None) or
+                not (isinstance(pdp_context_secondary_username, basestring) or
+                     pdp_context_secondary_username is None) or
+                not (isinstance(pdp_context_secondary_password, basestring) or
+                     pdp_context_secondary_password is None) or
                 not isinstance(pdp_context_retry_timeout, int) or
-                not (isinstance(auth_protocol, basestring) or
-                     auth_protocol is None) or
-                not (isinstance(auth_username, basestring) or
-                     auth_username is None) or
-                not (isinstance(auth_password, basestring) or
-                     auth_password is None) or
                 not isinstance(keepalive_enabled, bool) or
                 not isinstance(keepalive_host, str) or
                 not isinstance(keepalive_period_sec, int) or
@@ -377,12 +386,15 @@ class Manager(object):
         self._pdp_context_id = pdp_context_id
         self._pdp_context_primary_apn = pdp_context_primary_apn
         self._pdp_context_primary_type = pdp_context_primary_type
+        self._pdp_context_primary_auth = pdp_context_primary_auth
+        self._pdp_context_primary_username = pdp_context_primary_username
+        self._pdp_context_primary_password = pdp_context_primary_password
         self._pdp_context_secondary_apn = pdp_context_secondary_apn
         self._pdp_context_secondary_type = pdp_context_secondary_type
+        self._pdp_context_secondary_auth = pdp_context_secondary_auth
+        self._pdp_context_secondary_username = pdp_context_secondary_username
+        self._pdp_context_secondary_password = pdp_context_secondary_password
         self._pdp_context_retry_timeout = pdp_context_retry_timeout
-        self._auth_protocol = auth_protocol
-        self._auth_username = auth_username
-        self._auth_password = auth_password
         self._keepalive_enabled = keepalive_enabled
         self._keepalive_host = keepalive_host
         self._keepalive_period_sec = keepalive_period_sec
@@ -646,6 +658,9 @@ class Manager(object):
 
             if not self._try_connect(self._pdp_context_primary_apn,
                                      self._pdp_context_primary_type,
+                                     self._pdp_context_primary_auth,
+                                     self._pdp_context_primary_username,
+                                     self._pdp_context_primary_password,
                                      self._pdp_context_retry_timeout):
 
                 if self._pdp_context_static is False or \
@@ -655,6 +670,9 @@ class Manager(object):
 
                 if not self._try_connect(self._pdp_context_secondary_apn,
                                          self._pdp_context_secondary_type,
+                                         self._pdp_context_secondary_auth,
+                                         self._pdp_context_secondary_username,
+                                         self._pdp_context_secondary_password,
                                          self._pdp_context_retry_timeout):
                     break
 
@@ -702,13 +720,21 @@ class Manager(object):
         self._status = Manager.Status.service_attached
         return True
 
-    def _try_connect(self, pdpc_apn, pdpc_type, retry_timeout):
+    def _try_connect(
+            self,
+            apn,
+            type,
+            auth,
+            username,
+            password,
+            retry_timeout):
         retry = monotonic() + retry_timeout
         while True:
             self._interrupt_point()
 
             self._status = Manager.Status.connecting
-            if not self._connect(pdpc_apn, pdpc_type):
+            if not self._connect(
+                    apn, type, auth, username, password):
                 self._status = Manager.Status.connect_failure
 
                 if monotonic() >= retry:
@@ -718,7 +744,7 @@ class Manager(object):
             else:
                 return True
 
-    def _connect(self, pdpc_apn, pdpc_type):
+    def _connect(self, apn, type, auth, username, password):
         """Return True on success, False on failure.
         """
         self._network_information = None
@@ -737,9 +763,9 @@ class Manager(object):
                         if item["id"] == self._pdp_context_id).next()
                 apn = pdpc["apn"]
 
-                if self._pdp_context_static is True and apn != pdpc_apn:
+                if self._pdp_context_static is True and apn != apn:
                     self._cell_mgmt.set_pdp_context(
-                        self._pdp_context_id, pdpc_apn, pdpc_type)
+                        self._pdp_context_id, apn, type)
                     if self.verify_sim() != SimStatus.ready:
                         raise StopException
 
@@ -759,9 +785,9 @@ class Manager(object):
 
             nwk_info = self._cell_mgmt.start(
                 apn=apn,
-                auth=self._auth_protocol,
-                username=self._auth_username,
-                password=self._auth_password)
+                auth=auth,
+                username=username,
+                password=password)
 
             self._log.log_event_connect_success(nwk_info)
 
