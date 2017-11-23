@@ -9,10 +9,16 @@
       "id": 1,
       "retryTimeout": 600,
       "primary": {
+        "auth": {
+          "protocol": "none"
+        },
         "apn": "internet",
         "type": "ipv4v6"
       },
       "secondary": {
+        "auth": {
+          "protocol": "none"
+        },
         "type": "ipv4v6"
       }
     },
