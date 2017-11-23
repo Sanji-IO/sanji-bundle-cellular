@@ -370,7 +370,7 @@ class Manager(object):
                      pdp_context_secondary_password is None) or
                 not isinstance(pdp_context_retry_timeout, int) or
                 not isinstance(keepalive_enabled, bool) or
-                not isinstance(keepalive_host, str) or
+                not isinstance(keepalive_host, basestring) or
                 not isinstance(keepalive_period_sec, int) or
                 not isinstance(log_period_sec, int)):
             raise ValueError
