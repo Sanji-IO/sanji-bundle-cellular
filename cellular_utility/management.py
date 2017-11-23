@@ -40,16 +40,16 @@ class CellularInformation(object):
             cell_id=None,
             bid=None):
 
-        if (not isinstance(mode, str) or
+        if (not isinstance(mode, basestring) or
                 not isinstance(signal_csq, int) or
                 not isinstance(signal_rssi_dbm, int) or
                 not isinstance(signal_ecio_dbm, float) or
-                not isinstance(operator, str) or
-                not isinstance(lac, str) or
-                not isinstance(tac, str) or
-                not isinstance(nid, str) or
-                not isinstance(cell_id, str) or
-                not isinstance(bid, str)):
+                not isinstance(operator, basestring) or
+                not isinstance(lac, basestring) or
+                not isinstance(tac, basestring) or
+                not isinstance(nid, basestring) or
+                not isinstance(cell_id, basestring) or
+                not isinstance(bid, basestring)):
             raise ValueError
 
         if lac == "Unknown" or cell_id == "Unknown":
@@ -265,9 +265,9 @@ class Manager(object):
                 esn=None,
                 mac=None):
 
-            if (not isinstance(imei, str) or
-                    not isinstance(esn, str) or
-                    not isinstance(mac, str)):
+            if (not isinstance(imei, basestring) or
+                    not isinstance(esn, basestring) or
+                    not isinstance(mac, basestring)):
                 raise ValueError
 
             self._imei = imei
@@ -295,9 +295,9 @@ class Manager(object):
                 imei=None):
 
             if (not isinstance(pin_retry_remain, int) or
-                    not isinstance(iccid, str) or
-                    not isinstance(imsi, str) or
-                    not isinstance(imei, str)):
+                    not isinstance(iccid, basestring) or
+                    not isinstance(imsi, basestring) or
+                    not isinstance(imei, basestring)):
                 raise ValueError
 
             self._pin_retry_remain = pin_retry_remain
@@ -344,7 +344,7 @@ class Manager(object):
             keepalive_period_sec=None,
             log_period_sec=None):
 
-        if (not isinstance(dev_name, str) or
+        if (not isinstance(dev_name, basestring) or
                 not isinstance(enabled, bool) or
                 not isinstance(pdp_context_static, bool) or
                 not isinstance(pdp_context_id, int) or
@@ -376,7 +376,7 @@ class Manager(object):
             raise ValueError
 
         if pin is not None:
-            if not isinstance(pin, str) or len(pin) != 4:
+            if not isinstance(pin, basestring) or len(pin) != 4:
                 raise ValueError
 
         self._dev_name = dev_name
