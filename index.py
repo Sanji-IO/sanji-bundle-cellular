@@ -64,7 +64,7 @@ class Index(Sanji):
             Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
             Required("keepalive"): {
                 Required("enable"): bool,
-                Required("targetHost"): str,
+                Required("targetHost"): basestring,
                 Required("intervalSec"): All(
                     int,
                     Any(0, Range(min=60, max=86400 - 1))

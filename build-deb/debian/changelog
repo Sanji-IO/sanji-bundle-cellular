@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.4-1) unstable; urgency=low
+
+  * fix: Use `basestring` instead of `str`.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 23 Nov 2017 14:30:50 +0800
+
 sanji-bundle-cellular (3.6.3-1) unstable; urgency=low
 
   * test: Fix unittest.
