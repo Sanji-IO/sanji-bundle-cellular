@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.6-1) unstable; urgency=low
+
+  * fix: APN won't be updated.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 07 Dec 2017 15:09:50 +0800
+
 sanji-bundle-cellular (3.6.5-1) unstable; urgency=low
 
   * fix: Use `basestring` instead of `str`.

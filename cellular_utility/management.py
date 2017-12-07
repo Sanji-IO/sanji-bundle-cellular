@@ -761,9 +761,8 @@ class Manager(object):
             try:
                 pdpc = (item for item in self.pdp_context_list()
                         if item["id"] == self._pdp_context_id).next()
-                apn = pdpc["apn"]
 
-                if self._pdp_context_static is True and apn != apn:
+                if self._pdp_context_static is True and pdpc["apn"] != apn:
                     self._cell_mgmt.set_pdp_context(
                         self._pdp_context_id, apn, type)
                     if self.verify_sim() != SimStatus.ready:
@@ -771,11 +770,10 @@ class Manager(object):
 
                 pdpc = (item for item in self.pdp_context_list()
                         if item["id"] == self._pdp_context_id).next()
-                apn = pdpc["apn"]
             except:
                 self._log.log_event_no_pdp_context()
                 return False
-            if apn == "":
+            if pdpc["apn"] == "":
                 self._log.log_event_no_apn()
                 return False
 
@@ -784,7 +782,7 @@ class Manager(object):
                 return False
 
             nwk_info = self._cell_mgmt.start(
-                apn=apn,
+                apn=pdpc["apn"],
                 auth=auth,
                 username=username,
                 password=password)
