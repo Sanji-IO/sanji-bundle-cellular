@@ -36,7 +36,7 @@ class Index(Sanji):
                 All(Any(unicode, str), Length(0, 100)),
             Optional("type", default="ipv4v6"):
                 In(frozenset(["ipv4", "ipv6", "ipv4v6"])),
-            Optional("auth"): {
+            Optional("auth", default={}): {
                 Required("protocol", default="none"):
                     In(frozenset(["none", "chap", "pap", "both"])),
                 Optional("username"):
@@ -335,6 +335,10 @@ class Index(Sanji):
             self.model.db[0] = config
             self.model.save_db()
 
+        config["pdpContext"]["primary"] = \
+            Index.CONF_PROFILE_SCHEMA(config["pdpContext"]["primary"])
+        config["pdpContext"]["secondary"] = \
+            Index.CONF_PROFILE_SCHEMA(config["pdpContext"]["secondary"])
         config["pdpContext"]["list"] = pdpc_list
 
         return {
