@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.7-1) unstable; urgency=low
+
+  * fix: Provide default value for "auth".
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Tue, 16 Jan 2018 13:21:19 +0800
+
 sanji-bundle-cellular (3.6.6-1) unstable; urgency=low
 
   * fix: APN won't be updated.
