@@ -1,3 +1,10 @@
+sanji-bundle-cellular (3.6.7-2) unstable; urgency=low
+
+  * chore: Add missing dependency `iputils-ping`.
+  * chore: Add version for dependency `vnstat`.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 18 Jan 2018 15:16:36 +0800
+
 sanji-bundle-cellular (3.6.7-1) unstable; urgency=low
 
   * fix: Provide default value for "auth".
