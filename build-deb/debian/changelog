@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.7-3) unstable; urgency=low
+
+  * chore: fix version of `moxa-cellular-utils`.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 01 Feb 2018 13:34:07 +0800
+
 sanji-bundle-cellular (3.6.7-2) unstable; urgency=low
 
   * chore: Add missing dependency `iputils-ping`.
