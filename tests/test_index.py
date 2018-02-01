@@ -36,11 +36,17 @@ class TestCellularStatic(unittest.TestCase):
                 "retryTimeout": 1200,
                 "primary": {
                     "apn": "internet",
-                    "type": "ipv4v6"
+                    "type": "ipv4v6",
+                    "auth": {
+                        "protocol": "none"
+                    }
                 },
                 "secondary": {
                     "apn": "internet",
-                    "type": "ipv4v6"
+                    "type": "ipv4v6",
+                    "auth": {
+                        "protocol": "none"
+                    }
                 }
             },
             "pinCode": "0000",
@@ -72,11 +78,17 @@ class TestCellularStatic(unittest.TestCase):
                 "retryTimeout": 1200,
                 "primary": {
                     "apn": "internet",
-                    "type": "ipv4v6"
+                    "type": "ipv4v6",
+                    "auth": {
+                        "protocol": "none"
+                    }
                 },
                 "secondary": {
                     "apn": "internet",
-                    "type": "ipv4v6"
+                    "type": "ipv4v6",
+                    "auth": {
+                        "protocol": "none"
+                    }
                 }
             },
             "pinCode": u"0000",
@@ -108,11 +120,17 @@ class TestCellularStatic(unittest.TestCase):
                 "retryTimeout": 1200,
                 "primary": {
                     "apn": "internet",
-                    "type": "ipv4v6"
+                    "type": "ipv4v6",
+                    "auth": {
+                        "protocol": "none"
+                    }
                 },
                 "secondary": {
                     "apn": "internet",
-                    "type": "ipv4v6"
+                    "type": "ipv4v6",
+                    "auth": {
+                        "protocol": "none"
+                    }
                 }
             },
             "pinCode": u"",

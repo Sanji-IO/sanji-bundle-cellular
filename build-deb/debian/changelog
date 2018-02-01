@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.8-1) unstable; urgency=low
+
+  * test: fix unittest.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Thu, 01 Feb 2018 14:39:15 +0800
+
 sanji-bundle-cellular (3.6.7-3) unstable; urgency=low
 
   * chore: fix version of `moxa-cellular-utils`.
