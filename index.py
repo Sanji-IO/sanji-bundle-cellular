@@ -61,7 +61,7 @@ class Index(Sanji):
                 Required("primary"): CONF_PROFILE_SCHEMA,
                 Required("secondary", default={}): CONF_PROFILE_SCHEMA
             },
-            Required("pinCode", default=""): Any(Match(r"[0-9]{4,4}"), ""),
+            Required("pinCode", default=""): Any(Match(r"[0-9]{4,8}"), ""),
             Required("keepalive"): {
                 Required("enable"): bool,
                 Required("targetHost"): basestring,

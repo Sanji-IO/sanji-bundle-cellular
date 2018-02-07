@@ -376,7 +376,7 @@ class Manager(object):
             raise ValueError
 
         if pin is not None:
-            if not isinstance(pin, basestring) or len(pin) != 4:
+            if not isinstance(pin, basestring) or len(pin) < 4 or len(pin) > 8:
                 raise ValueError
 
         self._dev_name = dev_name
