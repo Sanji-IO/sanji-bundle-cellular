@@ -1,3 +1,9 @@
+sanji-bundle-cellular (3.6.9-1) unstable; urgency=low
+
+  * fix: PIN code length sopport 4-8 
+
+ -- GaryWL Hsu <garywl.hsu@moxa.com>  Tue, 06 Feb 2018 23:18:51 -0800
+
 sanji-bundle-cellular (3.6.8-1) unstable; urgency=low
 
   * test: fix unittest.
