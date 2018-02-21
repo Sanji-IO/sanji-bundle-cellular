@@ -224,7 +224,7 @@ class Index(Sanji):
                    else "-I {}".format(iface)
         config = """check program ping-test with path "/bin/ping {target_host} {ifacecmd} -c 3 -W 20"
     if status != 0
-    then exec "/bin/bash -c '/usr/sbin/cell_mgmt power_off force && /bin/sleep 5 && /sbin/reboot -i -f -d'"
+    then exec "/bin/bash -c '/usr/sbin/cell_mgmt power_off force && /bin/sleep 5 && /usr/local/sbin/reboot -i -f -d'"
     every {cycles} cycles
 """  # noqa
         with open("/etc/monit/conf.d/keepalive", "w") as f:
