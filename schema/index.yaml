@@ -190,7 +190,31 @@ definitions:
         description: PIN Retry remaining.
       status:
         type: string
-        description: Indicate current status of cellular connection. Could be one of "nosim", "pin", "noservice", "ready", "connected", "connecting", "connect-failed".
+        description: |
+          Indicate current status of cellular connection.
+          - initializing: get module and SIM card info, unlock SIM card if necessary
+          - nosim: no SIM card or unknown error with SIM card status
+          - pin: SIM card is locked with a PIN code
+          - ready: SIM card is ready for connect (unlocked or lock is disabled)
+          - connecting: during connect state
+          - connect_failure: connect failed or keepalive failed (if keepalive enabled)
+          - connected: connect success with keepalive success or success with keepalive disabled
+          - power_cycle: power cycle the module to recover issues
+          - service_searching: roaming
+          - service_attached: attached with a base station
+          - pin_error: PIN code error
+        enum:
+        - initializing
+        - nosim
+        - pin
+        - ready
+        - connecting
+        - connect_failure
+        - connected
+        - power_cycle
+        - service_searching
+        - service_attached
+        - pin_error
       mac:
         type: string
         readOnly: true
