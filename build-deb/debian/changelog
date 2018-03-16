@@ -1,3 +1,10 @@
+sanji-bundle-cellular (3.6.10-1) unstable; urgency=low
+
+  * fix: correct `reboot` path.
+  * docs: update schema.
+
+ -- Aeluin Chen <aeluin.chen@moxa.com>  Fri, 16 Mar 2018 11:01:41 +0800
+
 sanji-bundle-cellular (3.6.9-1) unstable; urgency=low
 
   * fix: PIN code length sopport 4-8 
